@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bidon Takip</title>
+<meta name="theme-color" content="#1F4D3A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111915" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style id="sayfaStil"></style>
+<style>
+:root{
+  --zemin:#F3F1EA; --kart:#FFFFFF; --yazi:#16231D; --soluk:#5C6B63; --cizgi:#D9D5C8;
+  --tuz:#1F4D3A; --tuz-acik:#DCEBE2; --bidon:#1D63C9; --uyari:#B4570A; --uyari-acik:#FBEBD6; --hata:#B3261E; --hata-acik:#F9DEDC;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --zemin:#111915; --kart:#1B2620; --yazi:#EDF1EC; --soluk:#9AAAA1; --cizgi:#2E3C34;
+    --tuz:#6FBF93; --tuz-acik:#1E3529; --bidon:#6AA2F2; --uyari:#F0A04B; --uyari-acik:#3A2A14; --hata:#F28B82; --hata-acik:#3C1F1D;
+  }
+}
+*{box-sizing:border-box}
+html{height:100%}
+body{margin:0;min-height:100%;background:var(--zemin);color:var(--yazi);font:500 17px/1.4 Barlow,system-ui,sans-serif;
+  padding:env(safe-area-inset-top,0) 0 calc(84px + env(safe-area-inset-bottom,0))}
+main{max-width:600px;margin:0 auto;padding:14px}
+h1{font-size:22px;margin:4px 0 10px;font-weight:700}
+.ust{display:flex;justify-content:space-between;align-items:center}
+.ust button{width:auto;min-height:40px;padding:0 12px;font-size:15px}
+.kart{background:var(--kart);border:1px solid var(--cizgi);border-radius:10px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:14px;color:var(--soluk);margin:10px 0 4px}
+input[type=range]{padding:0}
+input,select,textarea{width:100%;min-height:50px;font:inherit;font-size:18px;color:var(--yazi);background:var(--zemin);
+  border:1px solid var(--cizgi);border-radius:8px;padding:0 12px}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--bidon);outline-offset:1px}
+button{width:100%;min-height:54px;border:0;border-radius:8px;font:700 18px Barlow,system-ui,sans-serif;cursor:pointer;
+  background:var(--tuz);color:#fff}
+@media (prefers-color-scheme: dark){button{color:#0C1510}}
+button.ikincil{background:transparent;color:var(--yazi);border:1.5px solid var(--cizgi)}
+button.mavi{background:var(--bidon)}
+button.mavi{color:#fff}
+@media (prefers-color-scheme: dark){button.mavi{color:#0C1510}}
+.satir{padding:6px 0}
+button.tehlike{background:transparent;color:var(--hata);border:1.5px solid var(--hata)}
+button:disabled{opacity:.5}
+.sira{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sira3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.sira4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sira4m{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sira4m button{font-size:15px;padding:0 4px}
+.sekme{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--kart);
+  border-top:1px solid var(--cizgi);padding-bottom:env(safe-area-inset-bottom,0)}
+.sekme button{background:transparent;color:var(--soluk);border-radius:0;min-height:62px;font-size:16px}
+.sekme button.aktif{color:var(--tuz);box-shadow:inset 0 3px 0 var(--tuz)}
+.durum{padding:10px 12px;border-radius:8px;margin:10px 0;font-size:16px}
+.durum.bilgi{background:var(--tuz-acik)}
+.durum.uyari{background:var(--uyari-acik);color:var(--uyari)}
+.durum.hata{background:var(--hata-acik);color:var(--hata)}
+.deneme{background:var(--uyari-acik);color:var(--uyari);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:15px}
+.sayac{font-size:15px;color:var(--soluk);margin:6px 2px 12px}
+.sayac b{color:var(--yazi);font-size:18px}
+.gizle{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:16px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--cizgi);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--soluk);font-size:14px}
+tr.toplam td{font-weight:700;border-top:2px solid var(--yazi)}
+.kaydir{overflow-x:auto}
+.buyuk{font-size:44px;font-weight:700;line-height:1}
+.kucuk{font-size:14px;color:var(--soluk)}
+.ikili{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ikili .kart{margin:0}
+.onizleme{width:100%;max-height:200px;object-fit:contain;border-radius:8px;background:#0003;margin-bottom:6px}
+video{width:100%;max-height:260px;object-fit:cover;border-radius:10px;background:#000}
+.liste{max-height:340px;overflow-y:auto;margin-top:8px}
+.oge{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--cizgi);font-size:16px}
+.oge small{display:block;font-size:13px}
+.oge.uyari{color:var(--uyari)} .oge.kayitsiz{color:var(--hata)}
+.oge button{width:44px;min-height:40px;font-size:18px;padding:0;flex:none}
+.ozet{font-size:16px;margin:8px 0}
+.ozet b{font-size:20px}
+.baski-onizleme{border:1px dashed var(--cizgi);padding:10px;overflow:auto;background:#fff;border-radius:8px}
+
+/* QR etiket (ekran + baskı) */
+#baski{display:none}
+.etiket{display:flex;align-items:center;gap:1.5mm;padding:1mm 1.5mm;box-sizing:border-box;overflow:hidden;
+  background:#fff;color:#000;break-after:page;font-family:Arial,Helvetica,sans-serif}
+.etiket:last-child{break-after:auto}
+.etiket .qr svg{width:100%;height:100%;display:block}
+.etiket .qr svg path{fill:#000}
+.et-yazi{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.et-ust{font-size:2.4mm;letter-spacing:.2mm;font-weight:700}
+.et-id{font-weight:700;white-space:nowrap}
+@media print{
+  body > *:not(#baski){display:none!important}
+  #baski{display:block!important}
+  body{padding:0;background:#fff}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="ust"><h1>Bidon Takip <span class="kucuk">v2.7</span></h1><button class="ikincil" id="ayarBtn">Ayarlar</button></div>
+  <div class="deneme gizle" id="tarayiciUyari"></div>
+  <div class="deneme gizle" id="kuyrukBanner"></div>
+  <div class="deneme gizle" id="denemeBanner">DENEME MODU: veriler sadece bu telefonda/tarayıcıda durur, Google Sheet'e gitmez.</div>
+
+  <!-- AYAR -->
+  <section id="ayar" class="kart gizle">
+    <label for="url">Apps Script web uygulaması adresi (boşsa deneme modu)</label>
+    <input id="url" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec">
+    <label for="sifre">Şifre</label>
+    <input id="sifre" type="password" autocomplete="off">
+    <label for="operator">Adın (her işlemde "işlemi yapan" olarak kaydedilir)</label>
+    <input id="operator" autocomplete="off" placeholder="örn. Ahmet">
+    <label for="okuma">Etiket okuma</label>
+    <select id="okuma">
+      <option value="ucretsiz">Ücretsiz: telefonda okur (varsayılan)</option>
+      <option value="ai">Yapay zekâ: daha doğru ama ücretli</option>
+    </select>
+    <div id="denemeAyar">
+      <label for="demoKey">Deneme için API anahtarı (isteğe bağlı, etiketi AI'a okutmak için)</label>
+      <input id="demoKey" type="password" autocomplete="off" placeholder="sk-ant-...">
+      <div class="kucuk" style="margin-top:4px">Sadece kendi telefonunda test için. Canlıda anahtarı buraya girme, Apps Script'te dursun.</div>
+    </div>
+    <div style="height:12px"></div>
+    <button id="ayarKaydet">Ayarı kaydet</button>
+    <div style="height:10px"></div>
+    <button class="tehlike" id="demoSil">Deneme verisini sil</button>
+  </section>
+
+  <!-- GİRİŞ (foto) -->
+  <section id="sGiris">
+    <div class="sayac" id="bugunSayac">Bugün giriş: <b>–</b></div>
+    <div class="kart">
+      <input type="file" id="foto" accept="image/*" capture="environment" class="gizle">
+      <input type="file" id="fotoQR" accept="image/*" capture="environment" class="gizle">
+      <button id="cek">Fotoğraf çek (QR + etiket)</button>
+      <div style="height:10px"></div>
+      <button class="ikincil" id="elle">Elle gir</button>
+      <div style="height:10px"></div>
+      <button class="ikincil" id="galeri">Galeriden seç</button>
+      <input type="file" id="fotoGaleri" accept="image/*" class="gizle">
+      <div class="kucuk" style="margin-top:8px">Çok bidon gelince "Toplu" sekmesini kullan.</div>
+      <div id="durum"></div>
+    </div>
+
+    <div class="kart gizle" id="form">
+      <img id="onizleme" class="onizleme gizle" alt="">
+      <label for="fId">Bidon ID (QR)</label>
+      <input id="fId" autocapitalize="characters" autocomplete="off">
+      <div style="height:8px"></div>
+      <button class="ikincil" id="qrTekrar">QR için tekrar fotoğraf çek</button>
+      <label for="fUrun">Ürün</label>
+      <input id="fUrun" list="urunListe" autocapitalize="characters" autocomplete="off">
+      <label for="fTarih">Etiket tarihi (GG.AA.YYYY)</label>
+      <input id="fTarih" inputmode="numeric" placeholder="13.08.2026" autocomplete="off">
+      <label for="fKisi">Kişi (küçük etiket)</label>
+      <input id="fKisi" autocapitalize="characters" autocomplete="off">
+      <label for="fMense">Menşe (büyük etiket)</label>
+      <input id="fMense" autocapitalize="characters" autocomplete="off">
+      <label for="fBolge">Bölge (bidonu koyduğun yer)</label>
+      <input id="fBolge" list="bolgeListe" autocapitalize="characters" autocomplete="off" placeholder="örn. M1">
+      <div style="height:14px"></div>
+      <div class="sira">
+        <button class="ikincil" id="iptal">Vazgeç</button>
+        <button id="kaydet">Giriş yap</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPLU -->
+  <section id="sToplu" class="gizle">
+    <div class="kart">
+      <div class="sira4m">
+        <button id="mGiris" class="ikincil">Giriş</button>
+        <button id="mCikis" class="mavi">Çıkış</button>
+        <button id="mIade" class="ikincil">İade</button>
+        <button id="mTasi" class="ikincil">Yerleştir</button>
+      </div>
+      <div class="kucuk" id="mYardim" style="margin-top:8px"></div>
+
+      <div id="bolgeAlan" class="gizle">
+        <label for="cBolge" id="cBolgeLbl">Bölge</label>
+        <input id="cBolge" list="bolgeListe" autocapitalize="characters" autocomplete="off" placeholder="örn. M1 (bölge QR'ını da okutabilirsin)">
+      </div>
+      <div id="ortak" class="gizle">
+        <label for="cUrun">Ortak ürün</label>
+        <input id="cUrun" list="urunListe" autocapitalize="characters" autocomplete="off">
+        <label for="cTarih">Etiket tarihi (GG.AA.YYYY)</label>
+        <input id="cTarih" inputmode="numeric" placeholder="13.08.2026" autocomplete="off">
+        <div class="sira">
+          <div><label for="cKisi">Kişi</label><input id="cKisi" autocapitalize="characters" autocomplete="off"></div>
+          <div><label for="cMense">Menşe</label><input id="cMense" autocapitalize="characters" autocomplete="off"></div>
+        </div>
+      </div>
+      <div id="notAlan">
+        <label for="cNot" id="cNotLbl">Parti / hat (isteğe bağlı)</label>
+        <input id="cNot" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="kart">
+      <video id="video" playsinline muted class="gizle"></video>
+      <div class="sira" style="margin-top:8px">
+        <button id="kamAc">Kamerayı aç</button>
+        <button id="kamKapat" class="ikincil">Durdur</button>
+      </div>
+      <div id="kamAraclar" class="sira gizle" style="margin-top:10px">
+        <button class="ikincil" id="fener">Fener</button>
+        <input id="zoom" type="range" class="gizle" aria-label="Yakınlaştır">
+      </div>
+      <input type="file" id="fotoToplu" accept="image/*" capture="environment" class="gizle">
+      <div style="height:10px"></div>
+      <button class="ikincil" id="fotoEkle">Fotoğrafla ekle (kamera açılmazsa)</button>
+      <div class="sira" style="margin-top:10px;grid-template-columns:1fr auto">
+        <input id="elleId" placeholder="ID'yi elle yaz" autocapitalize="characters" autocomplete="off">
+        <button id="elleEkle" style="width:90px">Ekle</button>
+      </div>
+      <div id="tDurum"></div>
+    </div>
+
+    <div class="kart">
+      <div class="ozet" id="tOzet">Liste boş</div>
+      <button class="ikincil" id="tGeri">Son okutmayı sil</button>
+      <div class="liste" id="tListe"></div>
+      <div class="sira" style="margin-top:12px">
+        <button class="ikincil" id="tTemizle">Listeyi temizle</button>
+        <button id="tKaydet">Kaydet</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STOK -->
+  <section id="sStok" class="gizle">
+    <div class="ikili" style="margin-bottom:12px">
+      <div class="kart"><div class="buyuk" id="sSaha">0</div><div class="kucuk">sahada</div></div>
+      <div class="kart"><div class="buyuk" id="sUretim">0</div><div class="kucuk">üretimde</div></div>
+    </div>
+    <div class="kart">
+      <b>Ürün bazında stok</b>
+      <div class="kaydir"><table id="stokTablo"></table></div>
+    </div>
+    <div class="kart">
+      <b>Bölge bazında (sahada)</b>
+      <div class="kaydir"><table id="bolgeTablo"></table></div>
+    </div>
+    <div class="kart">
+      <label for="rGun" style="margin-top:0">Günlük hareket</label>
+      <input id="rGun" type="date">
+      <div class="kaydir"><table id="gunTablo"></table></div>
+    </div>
+    <div class="kart">
+      <label for="ara" style="margin-top:0">Bidon ara</label>
+      <input id="ara" placeholder="Bidon ID veya bölge" autocapitalize="characters" autocomplete="off">
+      <div id="araSonuc" style="margin-top:8px"></div>
+    </div>
+    <div class="kart">
+      <div class="sira">
+        <div><label for="xBas" style="margin-top:0">Hareketler: başlangıç</label><input id="xBas" type="date"></div>
+        <div><label for="xBit" style="margin-top:0">bitiş</label><input id="xBit" type="date"></div>
+      </div>
+      <div class="kucuk" style="margin:6px 0 12px">Tarih aralığı sadece Hareketler sayfasına uygulanır; Bidonlar sayfası her zaman tamamdır. Tarihler boşsa tüm hareketler iner. "Sahadaki bidonlar" dosyası sadece aktif (sahadaki) bidonları içerir.</div>
+      <button id="indirSaha">Sahadaki tüm bidonları indir (Excel)</button>
+      <div style="height:10px"></div>
+      <button class="ikincil" id="indirHepsi">Tüm kayıt + hareketler (Excel)</button>
+    </div>
+    <button class="ikincil" id="yenile">Yenile</button>
+  </section>
+
+  <!-- QR -->
+  <section id="sQR" class="gizle">
+    <div class="kart">
+      <label for="qTur" style="margin-top:0">Etiket türü</label>
+      <select id="qTur"><option value="bidon">Bidon etiketi (numaralı, her biri farklı)</option><option value="bolge">Bölge etiketi (M1, Y2… adlı)</option></select>
+      <div id="qBolgeAlan" class="gizle">
+        <label for="qBolgeAd">Bölge adları (virgülle ayır)</label>
+        <input id="qBolgeAd" value="M1, Y2, Z5, Y5" autocapitalize="characters" autocomplete="off">
+        <div class="kucuk" style="margin-top:4px">Her ad için bir etiket basılır. Bölge QR'ı bidon numarası olarak kaydedilmez; Toplu ekranında okutunca bölge alanı dolar.</div>
+      </div>
+      <div class="sira">
+        <div><label for="qOnek">Önek</label><input id="qOnek" value="BD-" autocapitalize="characters" autocomplete="off"></div>
+        <div><label for="qHane">Hane sayısı</label><input id="qHane" type="number" value="5" min="1" max="8"></div>
+      </div>
+      <div class="sira">
+        <div><label for="qBas">Başlangıç no</label><input id="qBas" type="number" value="1" min="1"></div>
+        <div><label for="qAdet">Adet</label><input id="qAdet" type="number" value="100" min="1" max="1000"></div>
+      </div>
+      <div class="kucuk" id="qSon" style="margin-top:6px"></div>
+      <div class="sira">
+        <div><label for="qW">Etiket genişlik (mm)</label><input id="qW" type="number" value="60" min="20"></div>
+        <div><label for="qH">Etiket yükseklik (mm)</label><input id="qH" type="number" value="30" min="10"></div>
+      </div>
+      <div class="sira">
+        <div><label for="qQ">QR boyutu (mm)</label><input id="qQ" type="number" value="24" min="10"></div>
+        <div><label for="qDpi">Yazıcı</label>
+          <select id="qDpi"><option value="203">203 dpi</option><option value="300">300 dpi</option></select></div>
+      </div>
+      <label for="qGap">Etiketler arası boşluk (mm) — sadece TSPL için</label>
+      <input id="qGap" type="number" value="3" min="0">
+      <label style="display:flex;gap:10px;align-items:center;font-size:16px;color:var(--yazi);margin-top:14px">
+        <input id="qYazi" type="checkbox" checked style="width:24px;min-height:24px;flex:none"> Numarayı etiketin üstüne de yaz (kapalıysa sadece QR basılır)
+      </label>
+      <div style="height:12px"></div>
+      <div class="baski-onizleme" id="qOnizleme"></div>
+      <div class="kucuk" id="qOzet" style="margin:6px 0 12px"></div>
+      <button id="qYazdir">Yazdır (bilgisayarda, TSC sürücüsü ile)</button>
+      <div style="height:10px"></div>
+      <button class="mavi" id="qPdf">PDF indir (etiket boyutunda, her cihazda)</button>
+      <div style="height:10px"></div>
+      <button class="ikincil" id="qTspl">TSPL dosyası indir (.txt)</button>
+      <div id="qDurum"></div>
+    </div>
+  </section>
+</main>
+
+<div id="baski"></div>
+
+<datalist id="urunListe"></datalist>
+<datalist id="bolgeListe"></datalist>
+
+<nav class="sekme">
+  <button id="tGiris" class="aktif">Giriş</button>
+  <button id="tToplu">Toplu</button>
+  <button id="tStok">Stok</button>
+  <button id="tQR">QR</button>
+</nav>
+
+<script>
+/* Etiket okuma (cihazda, ücretsiz): beyaz etiketi bul -> düzelt -> OCR -> ayrıştır.
+   Tarayıcıda ve Node'da aynı çalışır. */
+(function(root){
+  const yeniCanvas = (w,h) => {
+    if(root.document){ const c = root.document.createElement('canvas'); c.width = w; c.height = h; return c; }
+    return require('canvas').createCanvas(w,h);
+  };
+
+  /* ---------- 1) beyaz etiket adayları ---------- */
+  function adaylar(rgba, w, h, esik, er){
+    er = er||1;
+    const m = new Uint8Array(w*h);
+    for(let i=0;i<w*h;i++){
+      const r=rgba[i*4], g=rgba[i*4+1], b=rgba[i*4+2];
+      const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+      if(mx>=esik && (mx-mn)/mx<0.34) m[i]=1;
+    }
+    let e = m;                                           // 3x3 aşındırma (er kez): yapışık etiketleri ayırır
+    for(let n=0;n<er;n++){
+      const z = new Uint8Array(w*h);
+      for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+        const p=y*w+x;
+        if(e[p]&&e[p-1]&&e[p+1]&&e[p-w]&&e[p+w]&&e[p-w-1]&&e[p-w+1]&&e[p+w-1]&&e[p+w+1]) z[p]=1;
+      }
+      e = z;
+    }
+    const lab = new Int32Array(w*h), st = new Int32Array(w*h), out = [];
+    let id=0;
+    for(let s=0;s<w*h;s++){
+      if(!e[s]||lab[s]) continue;
+      id++; let sp=0; st[sp++]=s; lab[s]=id;
+      let minx=w,miny=h,maxx=0,maxy=0,area=0; const xs=[], ys=[];
+      while(sp){
+        const p=st[--sp], x=p%w, y=(p/w)|0; area++;
+        if(area%2===0){ xs.push(x); ys.push(y); }
+        if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y;
+        if(x>0&&e[p-1]&&!lab[p-1]){lab[p-1]=id;st[sp++]=p-1}
+        if(x<w-1&&e[p+1]&&!lab[p+1]){lab[p+1]=id;st[sp++]=p+1}
+        if(y>0&&e[p-w]&&!lab[p-w]){lab[p-w]=id;st[sp++]=p-w}
+        if(y<h-1&&e[p+w]&&!lab[p+w]){lab[p+w]=id;st[sp++]=p+w}
+      }
+      const bw=maxx-minx+1, bh=maxy-miny+1, fill=area/(bw*bh), frac=area/(w*h), asp=bw/bh;
+      if(frac>0.003 && frac<0.45 && bw>w*0.07 && bh>h*0.04 && asp>0.3 && asp<4){
+        // en küçük alanlı döndürülmüş dikdörtgen -> eğim açısı
+        let best=null;
+        for(let a=-45;a<=45;a+=2){
+          const t=a*Math.PI/180, c=Math.cos(t), s2=Math.sin(t);
+          let u0=1e9,u1=-1e9,v0=1e9,v1=-1e9;
+          for(let i=0;i<xs.length;i++){ const u=xs[i]*c+ys[i]*s2, v=-xs[i]*s2+ys[i]*c;
+            if(u<u0)u0=u; if(u>u1)u1=u; if(v<v0)v0=v; if(v>v1)v1=v; }
+          const A=(u1-u0)*(v1-v0);
+          if(!best||A<best.A) best={A,a,t,u0,u1,v0,v1,c,s2};
+        }
+        const uc=(best.u0+best.u1)/2, vc=(best.v0+best.v1)/2;
+        out.push({ cx: uc*best.c - vc*best.s2, cy: uc*best.s2 + vc*best.c, lw: best.u1-best.u0+2+2*er, lh: best.v1-best.v0+2+2*er,
+                   aci: best.a, fill, score: area, rectFill: area/(best.A||1) });
+      }
+    }
+    out.sort((a,b)=>b.score-a.score);
+    return out;
+  }
+
+  /* ---------- 2) kırp + düzelt + kontrast ---------- */
+  function kirp(img, sc, c, aciEk, hedefW){
+    const pad = 3, W = c.lw + pad*2, H = c.lh + pad*2;
+    const k = hedefW / W;
+    const cw = Math.round(W*k), ch = Math.round(H*k);
+    const cv = yeniCanvas(cw, ch), x = cv.getContext('2d');
+    x.fillStyle='#fff'; x.fillRect(0,0,cw,ch);
+    x.imageSmoothingQuality='high';
+    x.translate(cw/2, ch/2); x.rotate(-(c.aci + aciEk)*Math.PI/180); x.scale(k/sc, k/sc); x.translate(-c.cx*sc, -c.cy*sc);
+    x.drawImage(img, 0, 0);
+    x.setTransform(1,0,0,1,0,0);
+    const d = x.getImageData(0,0,cw,ch), p = d.data, hist = new Uint32Array(256);
+    for(let i=0;i<p.length;i+=4){ const g=(p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11)|0; p[i]=g; hist[g]++; }
+    const n=cw*ch; let a=0, lo=0, hi=255, acc=0;
+    for(let i=0;i<256;i++){ acc+=hist[i]; if(acc>n*0.02){lo=i;break;} }
+    acc=0; for(let i=255;i>=0;i--){ acc+=hist[i]; if(acc>n*0.15){hi=i;break;} }   // beyaz zemin üst yüzde
+    const rng=Math.max(40,hi-lo);
+    for(let i=0;i<p.length;i+=4){ let v=((p[i]-lo)*255/rng); v=v<0?0:v>255?255:v; p[i]=p[i+1]=p[i+2]=v; p[i+3]=255; }
+    x.putImageData(d,0,0);
+    return cv;
+  }
+
+  /* ---------- 3) metni ayrıştır ---------- */
+  const katla = s => s.toLocaleUpperCase('tr-TR').replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ğ/g,'G').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/[^A-Z0-9]/g,'');
+  function lev(a,b){
+    const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+    let prev=Array.from({length:n+1},(_,j)=>j);
+    for(let i=1;i<=m;i++){ const cur=[i]; for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev=cur; }
+    return prev[n];
+  }
+  const benzer = (a,b) => { a=katla(a); b=katla(b); if(!a||!b) return 0; return 1 - lev(a,b)/Math.max(a.length,b.length); };
+  const KARIS = { '0':['6','8','9'], '6':['0','5','8'], '8':['0','6','3'], '1':['7','4'], '4':['1'], '7':['1'], '5':['6','3'], '3':['8','5'], '9':['0'], '2':['7'] };
+  function tarihDuzelt(g,a,y,yil0){
+    const gecerli=(g,a,y)=> g>=1&&g<=31&&a>=1&&a<=12&&y>=yil0-1&&y<=yil0+1;
+    if(gecerli(g,a,y)) return {g,a,y,degisti:false};
+    const gs=String(g).padStart(2,'0'), as=String(a).padStart(2,'0'), ys=String(y);
+    const alt=(s)=>{ const o=[s]; for(let i=0;i<s.length;i++) for(const r of (KARIS[s[i]]||[])) o.push(s.slice(0,i)+r+s.slice(i+1)); return o; };
+    for(const gg of alt(gs)) for(const aa of alt(as)) for(const yy of alt(ys)){
+      if(gecerli(+gg,+aa,+yy)) return {g:+gg,a:+aa,y:+yy,degisti:true};
+    }
+    return null;
+  }
+  function temizSatir(s){ return s.replace(/[^A-Za-zÇĞİıÖŞÜçğöşü0-9.\s\-\/,]/g,' ').replace(/\s+/g,' ').trim(); }
+
+  function isimTemizle(s, bilinen){
+    let t = s.split(' ').filter(w => w.length>2 || w.includes('.')).join(' ').trim();
+    if(!t) t = s.trim();
+    t = t.toLocaleUpperCase('tr-TR');
+    let en=null, es=0; for(const b of (bilinen||[])){ const sk=benzer(t,b); if(sk>es){ es=sk; en=b; } }
+    return (en && es>=0.72) ? en.toLocaleUpperCase('tr-TR') : t;
+  }
+  function coz(metin, urunler, yil0, bilinen){
+    const satirlar = metin.split(/\n/).map(temizSatir).filter(s=>s.length>=2);
+    // tarih satırı
+    let ti=-1, T=null;
+    for(let i=0;i<satirlar.length;i++){
+      const s = satirlar[i].replace(/[Oo]/g,'0').replace(/[Il|]/g,'1');
+      const m = /(\d{1,2})\D{1,3}(\d{1,2})\D{1,3}(\d{3,4})/.exec(s) || /(\d{2})(\d{2})(\d{4})/.exec(s.replace(/\D/g,'').length===8?s.replace(/\D/g,''):'');
+      if(m){ let yy=m[3]; if(yy.length===3 && yy.startsWith('20')) yy=String(yil0);   // 202? -> bu yıl
+             const d=tarihDuzelt(+m[1],+m[2],+yy,yil0); if(d){ ti=i; T=d; break; } }
+    }
+    if(ti<0) return null;
+    // ürün: tarihten önceki satırlarda en benzer
+    let pi=-1, pu='', ps=0;
+    for(let i=0;i<satirlar.length;i++){
+      if(i===ti) continue;
+      for(const u of urunler){ const sk=benzer(satirlar[i],u); if(sk>ps){ ps=sk; pu=u; pi=i; } }
+    }
+    const urunBulundu = ps>=0.45;
+    if(!urunBulundu){ pu = ti>0 ? katla(satirlar[ti-1])&&satirlar[ti-1].toLocaleUpperCase('tr-TR') : ''; pi = ti-1; }
+    // kişi: tarihten sonraki ilk geçerli satır; menşe: ürün ile tarih arasındaki harf satırı
+    const harf = s => /^[A-Za-zÇĞİıÖŞÜçğöşü.\s]+$/.test(s) && katla(s).length>=3;
+    const yasak = /BASKILI|SLOTLU|BOLGE|TAVA|ML\b|B1/i;
+    let kisi='', mense='';
+    for(let i=ti+1;i<satirlar.length && !kisi;i++){ const s=satirlar[i]; if(harf(s)&&!yasak.test(katla(s)+' '+s)&&benzer(s,pu)<0.6){ kisi=isimTemizle(s, bilinen&&bilinen.kisi); } }
+    for(let i=Math.max(0,pi)+1;i<ti;i++){ const s=satirlar[i]; if(harf(s)&&benzer(s,pu)<0.6){ mense=isimTemizle(s, bilinen&&bilinen.mense); break; } }
+    if(!urunBulundu && !pu) return null;
+    const tarih = String(T.g).padStart(2,'0')+'.'+String(T.a).padStart(2,'0')+'.'+T.y;
+    const sag = urunBulundu && !T.degisti && ps>=0.8 && !!(kisi||mense);
+    return { urun: pu, tarih, kisi, mense, duzeltildi: T.degisti, etiket: kisi ? 'kucuk' : (mense ? 'buyuk' : 'kucuk'), guven: sag ? 'yuksek' : 'dusuk', kaynakMetin: satirlar.join(' / ') };
+  }
+
+  /* ---------- 4) oylama kutusu: aynı (ürün+tarih) iki ayrı okumada çıkınca kabul ---------- */
+  function oyKutusu(){
+    const oylar = {};
+    return {
+      ekle(r){
+        const k = r.urun+'|'+r.tarih;
+        const v = oylar[k] || (oylar[k] = { n:0, kisiler:{}, menseler:{}, ornek:r });
+        v.n++; v.kisiler[r.kisi]=(v.kisiler[r.kisi]||0)+1; v.menseler[r.mense]=(v.menseler[r.mense]||0)+1;
+        if(r.duzeltildi===false) v.ornek = Object.assign({}, v.ornek, { duzeltildi:false });
+      },
+      enIyiSayi(){ let n=0; for(const k in oylar) if(oylar[k].n>n) n=oylar[k].n; return n; },
+      karar(zorunlu){
+        let en=null; for(const k in oylar){ if(!en || oylar[k].n>en.n) en=oylar[k]; }
+        if(!en || (!zorunlu && en.n<2)) return null;
+        let kisi='', kn=0; for(const [k,v] of Object.entries(en.kisiler)){ if(k && v>kn){ kisi=k; kn=v; } }
+        let mense='', mn=0; for(const [k,v] of Object.entries(en.menseler)){ if(k && v>mn){ mense=k; mn=v; } }
+        return Object.assign({}, en.ornek, { kisi, mense, etiket: kisi ? 'kucuk' : (mense ? 'buyuk' : 'kucuk'),
+                                              guven: (en.n>=2 && !en.ornek.duzeltildi) ? 'yuksek' : 'dusuk' });
+      }
+    };
+  }
+  function analiz(img){
+    const iw = img.naturalWidth||img.videoWidth||img.width, ih = img.naturalHeight||img.videoHeight||img.height;
+    const aw = 480, ah = Math.round(aw*ih/iw), ac = yeniCanvas(aw, ah), ax = ac.getContext('2d'); ax.drawImage(img,0,0,aw,ah);
+    return { aw, ah, sc: iw/aw, rgba: ax.getImageData(0,0,aw,ah).data };
+  }
+
+  /* ---------- 5a) tek fotoğraf: çoklu okuma + oylama ---------- */
+  // ocr: async (canvas, psm) => metin
+  async function oku(img, ocr, urunler, opsiyon){
+    const o = Object.assign({ maxAday: 5, maxOcr: 14, bilinen: null, genislik: 700, ilk: null, yil: new Date().getFullYear(), log: null, ilerleme: null, iptal: null }, opsiyon||{});
+    const { aw, ah, sc, rgba } = analiz(img);
+    const kutu = oyKutusu(); let ocrSay = 0, ilkVerildi = false;
+    const dene = async (cv, psm, bilgi) => {
+      if(ocrSay>=o.maxOcr || (o.iptal && o.iptal())) return null;
+      ocrSay++; if(o.ilerleme) o.ilerleme(ocrSay, o.maxOcr);
+      const metin = await ocr(cv, psm);
+      const r = coz(metin, urunler, o.yil, o.bilinen);
+      if(o.log) o.log(Object.assign({psm, metin: metin.replace(/\n/g,' / ').slice(0,70), sonuc: r&&(r.urun+'|'+r.tarih+'|'+r.kisi+'|'+r.mense)}, bilgi));
+      if(r){ kutu.ekle(r); if(!ilkVerildi && r.kisi && o.ilk){ ilkVerildi = true; o.ilk(r); } }   // ilk okuma hemen ekrana
+      return kutu.karar(false);
+    };
+    const tum=[];
+    for(const [esik,er] of [[185,1],[185,3],[160,1],[135,1]]){
+      for(const c of adaylar(rgba,aw,ah,esik,er)){
+        if(tum.some(t=>Math.abs(t.cx-c.cx)<c.lw*0.4 && Math.abs(t.cy-c.cy)<c.lh*0.4)) continue;
+        if(tum.length>=o.maxAday) break;
+        tum.push(c);
+        const cv = kirp(img, sc, c, 0, o.genislik);
+        for(const psm of ['6','11']){ const k = await dene(cv, psm, {aday:tum.length, ek:0}); if(k) return Object.assign(k,{okumaSayisi:ocrSay}); }
+      }
+      if(tum.length>=o.maxAday) break;
+    }
+    for(const ek of [-12,12,-24,24]){
+      for(const [ci,c] of tum.slice(0,3).entries()){
+        const k = await dene(kirp(img, sc, c, ek, o.genislik), '11', {aday:ci+1, ek});
+        if(k) return Object.assign(k,{okumaSayisi:ocrSay});
+      }
+    }
+    const son = kutu.karar(true); if(son) son.okumaSayisi = ocrSay;
+    return son;
+  }
+
+  root.EtiketOku = { oku, coz, adaylar, kirp };
+  if(typeof module!=='undefined') module.exports = root.EtiketOku;
+})(typeof window!=='undefined' ? window : globalThis);
+</script>
+<script>
+const $ = id => document.getElementById(id);
+const MODEL = 'claude-sonnet-5-5';
+const URUN_VARSAYILAN = ['ACI BİBER', 'BİBERİYE', 'SARI YAKAN'];
+const AYAR = {
+  url: localStorage.getItem('bt_url') || '',
+  sifre: localStorage.getItem('bt_sifre') || '',
+  demoKey: localStorage.getItem('bt_demokey') || '',
+  operator: localStorage.getItem('bt_op') || '',
+  okuma: localStorage.getItem('bt_okuma') || 'ucretsiz'
+};
+let DB = { bidonlar: [], hareketler: [], sonNo: {} };
+let sonKaynak = 'foto';
+let okuToken = 0;
+let aktifSekme = 'Giris';       // yeni fotoğraf/kapatma gelince arkadaki okumayı iptal eder
+
+/* ---------- yardımcılar ---------- */
+const demo = () => !AYAR.url;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const trBuyuk = s => (s || '').toString().trim().toLocaleUpperCase('tr-TR');
+const simdiStr = () => new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Istanbul' });
+const bugunISO = () => simdiStr().slice(0, 10);
+function trToISO(t){ const m = /^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/.exec((t || '').trim()); return m ? `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}` : ''; }
+function isoToTR(i){ const [y,m,d] = i.split('-'); return `${d}.${m}.${y}`; }
+function mesaj(id, msg, tur = 'bilgi'){ $(id).innerHTML = msg ? `<div class="durum ${tur}">${esc(msg)}</div>` : ''; }
+const bul = id => DB.bidonlar.find(b => String(b.id) === String(id));
+function idTemizle(ham){
+  if(!ham) return '';
+  const m = /[?&#](?:id|bidon)=([^&#]+)/i.exec(ham);
+  return decodeURIComponent(m ? m[1] : ham).trim();
+}
+function urunListesi(){
+  return [...new Set([...(DB.urunler && DB.urunler.length ? DB.urunler : URUN_VARSAYILAN), ...DB.bidonlar.map(b => b.urun).filter(Boolean)])].sort((a,b) => a.localeCompare(b, 'tr'));
+}
+const ISLEM_AD = { GIRIS:'Giriş', CIKIS:'Çıkış', IADE:'İade', TASI:'Yerleştirme' };
+const BOLGE_VARSAYILAN = ['M1', 'Y2', 'Z5', 'Y5'];       // Excel bölge şemasındaki bölgeler, öneri olarak
+function bolgeListesi(){ return [...new Set([...BOLGE_VARSAYILAN, ...DB.bidonlar.map(b => b.bolge).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'tr')); }
+function bidonOnekleri(){                                // bidon QR'larının ön ekleri (BD- gibi); bunlara uymayan kod = bölge kodu
+  const s = new Set(['BD-']); Object.keys(DB.sonNo || {}).forEach(k => k && s.add(k));
+  DB.bidonlar.forEach(b => { const m = /^[^0-9]*-/.exec(String(b.id)); if(m) s.add(m[0]); });
+  return [...s];
+}
+const bidonKodu = kod => bidonOnekleri().some(p => String(kod).toUpperCase().startsWith(p.toUpperCase()));
+
+/* ---------- veri katmanı (gerçek = Apps Script, boşsa deneme = localStorage) ---------- */
+const demoOku = () => JSON.parse(localStorage.getItem('bt_demo') || '{"bidonlar":[],"hareketler":[],"sonNo":{}}');
+const demoYaz = db => localStorage.setItem('bt_demo', JSON.stringify(db));
+const yeniId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+
+// Sunucudaki kuralların aynısı: Giriş (üretimdeyse olmaz), Çıkış (sadece sahadaki), İade (sadece üretimdeki), kayıtsız bidon olmaz.
+function uygula(db, tip, liste, parti, operator, neden){   // k.bolge: bidon başına bölge
+  const z = simdiStr(), g = z.slice(0, 10);
+  const m = new Map(db.bidonlar.map(b => [String(b.id), b]));
+  const gorulen = new Set(), atlanan = []; let yeni = 0, islenen = 0;
+  liste.forEach(k => {
+    const id = String(k.id || '').trim();
+    if(!id || gorulen.has(id)) return;
+    gorulen.add(id);
+    let b = m.get(id);
+    if(tip === 'GIRIS'){ if(b && b.durum === 'URETIMDE'){ atlanan.push({ id, neden:'Üretimde, önce iade yap' }); return; } }
+    else if(!b){ atlanan.push({ id, neden:'Kayıtsız bidon, önce giriş yap' }); return; }
+    else if(tip === 'CIKIS' && b.durum !== 'SAHADA'){ atlanan.push({ id, neden:'Zaten üretimde' }); return; }
+    else if(tip === 'IADE' && b.durum !== 'URETIMDE'){ atlanan.push({ id, neden:'Üretimde değil' }); return; }
+    else if(tip === 'TASI' && !String(k.bolge || '').trim()){ atlanan.push({ id, neden:'Bölge boş' }); return; }
+    else if(tip === 'TASI' && b.durum !== 'SAHADA'){ atlanan.push({ id, neden:'Üretimde, önce iade yap' }); return; }
+    else if(tip === 'TASI' && String(b.bolge || '') === String(k.bolge).trim()){ atlanan.push({ id, neden:'Zaten bu bölgede' }); return; }
+    if(!b){
+      b = { id, urun:k.urun||'', tarih:k.tarih||'', kisi:k.kisi||'', mense:k.mense||'', bolge:'', durum:'', giris:z, son:z };
+      db.bidonlar.push(b); m.set(id, b); yeni++;
+    } else if(tip === 'GIRIS'){
+      if(k.urun) b.urun = k.urun; if(k.tarih) b.tarih = k.tarih; if(k.kisi) b.kisi = k.kisi; if(k.mense) b.mense = k.mense;
+    }
+    b.durum = (tip === 'CIKIS') ? 'URETIMDE' : 'SAHADA'; b.son = z; islenen++;
+    if(String(k.bolge || '').trim() && tip !== 'CIKIS') b.bolge = String(k.bolge).trim();
+    db.hareketler.push({ zaman:z, gun:g, id, islem:tip, urun:b.urun, tarih:b.tarih, kisi:b.kisi, parti:parti||'', neden:neden||'', operator:operator||'', kaynak:k.kaynak||'', bolge:b.bolge||'' });
+  });
+  return { ok:true, islenen, yeni, atlanan };
+}
+
+function promptMetni(){
+  return `Bu fotoğrafta bir plastik bidon üzerinde etiketler var. Türkçe yazılı etiketleri oku.
+İki tür etiket olabilir:
+1) KÜÇÜK etiket: 3 satır -> ÜRÜN, TARİH (GG.AA.YYYY), KİŞİ ADI.
+2) BÜYÜK etiket: ÜRÜN, MENŞE (örn. ÇANAKKALE), TARİH. Kişi adı yok.
+QR kodlu beyaz kağıt etiketi YOK SAY.
+Bilinen ürünler: ${urunListesi().join(', ')}. Okuduğun ürün bunlardan birine çok benziyorsa onu yaz, yoksa okuduğunu aynen yaz.
+Küçük etiket varsa onu esas al. Sadece büyük etiket varsa onu kullan. Hiçbiri okunmuyorsa boş bırak.
+Hem küçük hem büyük etiket varsa menşeyi büyük etiketten al.
+SADECE şu JSON'u döndür, başka hiçbir şey yazma:
+{"urun":"","tarih":"GG.AA.YYYY","kisi":"","mense":"","etiket":"kucuk|buyuk|yok","guven":"yuksek|dusuk"}`;
+}
+async function aiDirekt(b64){
+  if(!AYAR.demoKey) throw new Error('Deneme modunda etiketi AI ile okutmak için Ayarlar\'a API anahtarı gir ya da elle doldur.');
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{ 'content-type':'application/json', 'x-api-key':AYAR.demoKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+    body: JSON.stringify({ model:MODEL, max_tokens:400, messages:[{ role:'user', content:[
+      { type:'image', source:{ type:'base64', media_type:'image/jpeg', data:b64 } }, { type:'text', text:promptMetni() } ] }] })
+  });
+  const g = await r.json();
+  if(!r.ok) throw new Error((g.error && g.error.message) || 'API hatası');
+  const t = g.content.map(c => c.text || '').join('').replace(/```json|```/g, '').trim();
+  return { ok:true, veri: JSON.parse(t) };
+}
+
+// Ağ hatası (internet yok) => e.ag = true. Sunucu reddederse normal hata.
+async function gonder(g){
+  let r;
+  try{ r = await fetch(AYAR.url, { method:'POST', body: JSON.stringify({ ...g, sifre: AYAR.sifre }) }); }
+  catch(e){ const x = new Error('Bağlantı yok'); x.ag = true; throw x; }
+  let j;
+  try{ j = await r.json(); }
+  catch(e){ throw new Error('Sunucu yanıtı geçersiz. Adres /exec ile mi bitiyor, erişim "Herkes" mi?'); }
+  if(!j.ok) throw new Error(j.hata || 'Bilinmeyen hata');
+  return j;
+}
+async function api(g){
+  if(demo()){
+    if(g.islem === 'oku') return aiDirekt(g.foto);
+    if(g.islem === 'islem'){ const db = demoOku(); const s = uygula(db, g.tip, g.kayitlar, g.parti, g.operator, g.neden); demoYaz(db); return s; }
+    if(g.islem === 'qrbasim'){ const db = demoOku(); db.sonNo[g.onek] = Math.max(db.sonNo[g.onek] || 0, g.bit); (db.araliklar = db.araliklar || []).push({ onek:g.onek, bas:g.bas, bit:g.bit }); demoYaz(db); return { ok:true }; }
+  }
+  return gonder(g);
+}
+
+/* ---- internet yokken bekleyen işlemler ---- */
+const kuyruk = () => JSON.parse(localStorage.getItem('bt_kuyruk') || '[]');
+function kuyrukYaz(k){ localStorage.setItem('bt_kuyruk', JSON.stringify(k)); kuyrukGoster(); }
+function kuyrukGoster(){
+  const k = kuyruk(), b = $('kuyrukBanner');
+  b.classList.toggle('gizle', !k.length);
+  if(k.length) b.innerHTML = `${k.length} işlem gönderilmeyi bekliyor.` + (k[0].hata ? ` Son hata: ${esc(k[0].hata)}` : ' İnternet gelince otomatik gider.') +
+    ' <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">' + ['gonder|Şimdi gönder','ilk|İlk işlemi sil','hepsi|Hepsini sil'].map(x => { const [a, t] = x.split('|'); return `<button class="ikincil" data-act="${a}" style="width:auto;min-height:36px;padding:0 10px;font-size:14px">${t}</button>`; }).join('') + '</div>';
+}
+let kuyrukCalisiyor = false;
+async function kuyrukGonder(){
+  if(kuyrukCalisiyor || demo() || !kuyruk().length) return;
+  kuyrukCalisiyor = true;
+  try{
+    let k = kuyruk();
+    while(k.length){
+      try{
+        const s = await gonder(k[0]);
+        if(s.atlanan && s.atlanan.length) alert(`Bekleyen işlemde ${s.atlanan.length} bidon atlandı (sunucudaki durum farklı): ` + s.atlanan.map(a => a.id + ' – ' + a.neden).join('; '));
+        k.shift(); kuyrukYaz(k);
+      }catch(e){
+        if(!e.ag){ k[0].hata = e.message; kuyrukYaz(k); }
+        break;
+      }
+    }
+  } finally { kuyrukCalisiyor = false; }
+  if(!kuyruk().length) yukle();
+}
+window.addEventListener('online', kuyrukGonder);
+setInterval(kuyrukGonder, 30000);
+$('kuyrukBanner').onclick = e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const a = b.dataset.act, k = kuyruk();
+  if(a === 'gonder') kuyrukGonder();
+  else if(a === 'ilk' && k.length){
+    const x = k[0];
+    if(confirm(`İlk bekleyen işlem silinsin mi? (${ISLEM_AD[x.tip] || x.tip}, ${x.kayitlar.length} bidon: ${x.kayitlar.slice(0, 3).map(r => r.id).join(', ')}…)\nBu işlem sunucuya hiç gönderilmeyecek.`)){
+      k.shift(); kuyrukYaz(k); if(k.length) kuyrukGonder(); else yukle();
+    }
+  } else if(a === 'hepsi' && k.length){
+    if(confirm(`${k.length} bekleyen işlemin hepsi silinsin mi?\nBunlar sunucuya hiç gönderilmeyecek.`)){ kuyrukYaz([]); yukle(); }
+  }
+};
+
+async function islemYap(tip, kayitlar, parti, istekId, neden){
+  if(!AYAR.operator) throw new Error('Önce Ayarlar\'a adını yaz (işlemi yapan olarak kaydedilir).');
+  const g = { islem:'islem', tip, kayitlar, parti: parti || '', neden: neden || '', operator: AYAR.operator, istekId: istekId || yeniId() };
+  if(demo()){ const s = await api(g); DB = demoOku(); yenileUI(); return s; }
+  try{
+    const s = await gonder(g);
+    const atl = new Set((s.atlanan || []).map(a => String(a.id)));
+    uygula(DB, tip, kayitlar.filter(k => !atl.has(String(k.id))), g.parti, g.operator, g.neden);
+    yenileUI(); yukle();
+    return s;
+  }catch(e){
+    if(!e.ag) throw e;
+    const k = kuyruk();
+    if(k.reduce((a, x) => a + x.kayitlar.length, 0) + kayitlar.length > 500) throw new Error('Bekleyen işlem 500 bidonu aştı. İnternet gelene kadar yeni işlem alınmıyor; "Şimdi gönder"i dene.');
+    k.push(g); kuyrukYaz(k);                               // aynı istekId ile, tekrar gönderilse çift kayıt olmaz
+    const s = uygula(DB, tip, kayitlar, g.parti, g.operator, g.neden);
+    yenileUI();
+    return { ...s, beklemede:true };
+  }
+}
+async function yukle(){
+  if(!demo() && kuyruk().length) return;                    // bekleyen işlem varken sunucu verisi ezmesin
+  try{
+    if(demo()){ DB = demoOku(); }
+    else {
+      const j = await gonder({ islem:'liste' });             // şifre URL'ye değil, POST gövdesine gider
+      DB = { bidonlar:j.bidonlar, hareketler:j.hareketler, sonNo:j.sonNo || {}, araliklar:j.araliklar || [], urunler:j.urunler || [] };
+    }
+    yenileUI();
+  }catch(e){ mesaj('durum', 'Veri yüklenemedi: ' + e.message, 'hata'); }
+}
+function yenileUI(){
+  $('urunListe').innerHTML = urunListesi().map(u => `<option>${esc(u)}</option>`).join('');
+  $('bolgeListe').innerHTML = bolgeListesi().map(u => `<option>${esc(u)}</option>`).join('');
+  const n = DB.hareketler.filter(h => h.islem === 'GIRIS' && h.gun === bugunISO()).length;
+  $('bugunSayac').innerHTML = `Bugün giriş: <b>${n}</b> bidon`;
+  $('denemeBanner').classList.toggle('gizle', !demo());
+  qrSonGoster(); kuyrukGoster();
+  if(!$('sStok').classList.contains('gizle')) stok();
+}
+
+/* ---------- etiket okuma: ücretsiz (telefonda) veya AI (ücretli) ---------- */
+let tessWorker = null, tessYukleniyor = null, sonPsm = '';
+function scriptYukle(src){
+  return new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok;
+    e.onerror = () => no(new Error('Etiket okuyucu indirilemedi. İlk kullanımda internet gerekir.')); document.head.appendChild(e); });
+}
+async function tessHazir(){
+  if(tessWorker) return tessWorker;
+  if(!tessYukleniyor) tessYukleniyor = (async () => {
+    if(!window.Tesseract) await scriptYukle('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+    mesaj('durum', 'Etiket okuyucu hazırlanıyor (ilk seferde yaklaşık 5 MB iner, sonra telefonda kalır)…');
+    tessWorker = await Tesseract.createWorker('tur', 1, { langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_best_int' });
+    if(($('durum').textContent || '').includes('hazırlanıyor')) mesaj('durum', '');
+    return tessWorker;
+  })().catch(e => { tessYukleniyor = null; throw e; });
+  return tessYukleniyor;
+}
+async function tessOcr(cv, psm){
+  const w = await tessHazir();
+  if(psm !== sonPsm){ await w.setParameters({ tessedit_pageseg_mode:psm }); sonPsm = psm; }
+  return (await w.recognize(cv)).data.text;
+}
+function bilinenler(){
+  const k = new Set(), m = new Set();
+  DB.bidonlar.forEach(b => { if(b.kisi) k.add(b.kisi); if(b.mense) m.add(b.mense); });
+  return { kisi:[...k], mense:[...m] };
+}
+async function etiketOku(img, jpg, opt){
+  if(AYAR.okuma === 'ai') return api({ islem:'oku', foto: jpg.split(',')[1] });
+  await tessHazir();
+  const r = await EtiketOku.oku(img, tessOcr, urunListesi(), Object.assign({ yil: +simdiStr().slice(0, 4), bilinen: bilinenler() }, opt || {}));
+  return { ok:true, veri: r || { urun:'', tarih:'', kisi:'', mense:'', etiket:'yok', guven:'dusuk' } };
+}
+
+/* ---------- ayar ---------- */
+$('ayarBtn').onclick = () => {
+  $('url').value = AYAR.url; $('sifre').value = AYAR.sifre; $('demoKey').value = AYAR.demoKey; $('operator').value = AYAR.operator; $('okuma').value = AYAR.okuma;
+  ayarGoster();
+  ayarGorunum($('ayar').classList.contains('gizle'));
+};
+function ayarGoster(){ $('denemeAyar').classList.toggle('gizle', !!$('url').value.trim() || $('okuma').value !== 'ai'); }
+$('url').oninput = ayarGoster; $('okuma').onchange = ayarGoster;
+$('ayarKaydet').onclick = () => {
+  AYAR.url = $('url').value.trim(); AYAR.sifre = $('sifre').value; AYAR.demoKey = $('demoKey').value.trim(); AYAR.operator = $('operator').value.trim(); AYAR.okuma = $('okuma').value;
+  localStorage.setItem('bt_op', AYAR.operator); localStorage.setItem('bt_okuma', AYAR.okuma); localStorage.setItem('bt_url', AYAR.url); localStorage.setItem('bt_sifre', AYAR.sifre); localStorage.setItem('bt_demokey', AYAR.demoKey);
+  ayarGorunum(false); yukle();
+};
+$('demoSil').onclick = () => {
+  if(confirm('Deneme verisi (bu telefondaki) tamamen silinsin mi? Google Sheet etkilenmez.')){
+    localStorage.removeItem('bt_demo'); DB = { bidonlar:[], hareketler:[], sonNo:{} }; yenileUI();
+  }
+};
+
+/* ---------- sekmeler ---------- */
+const SEKMELER = { Giris:'sGiris', Toplu:'sToplu', Stok:'sStok', QR:'sQR' };
+function ayarGorunum(ac){
+  $('ayar').classList.toggle('gizle', !ac);
+  Object.entries(SEKMELER).forEach(([k, s]) => $(s).classList.toggle('gizle', ac || k !== aktifSekme));
+}
+function sekme(ad){
+  aktifSekme = ad; $('ayar').classList.add('gizle');
+  Object.entries(SEKMELER).forEach(([k, s]) => { $(s).classList.toggle('gizle', k !== ad); $('t' + k).classList.toggle('aktif', k === ad); });
+  if(ad !== 'Toplu') kameraDurdur();
+  if(ad === 'Stok'){ yukle(); stok(); }
+  if(ad === 'QR'){ qrSonGoster(); qrOnizle(); }
+}
+Object.keys(SEKMELER).forEach(k => { $('t' + k).onclick = () => sekme(k); });
+
+/* ---------- görsel / QR okuma (foto) ---------- */
+function gorselYukle(dosya){
+  return new Promise((ok, no) => {
+    const img = new Image();
+    img.onload = () => ok(img); img.onerror = () => no(new Error('Fotoğraf açılamadı'));
+    img.src = URL.createObjectURL(dosya);
+  });
+}
+function kanvas(img, maks){
+  const o = Math.min(1, maks / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.naturalWidth * o); c.height = Math.round(img.naturalHeight * o);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return c;
+}
+async function qrOku(img){
+  const c = kanvas(img, 2000);
+  if('BarcodeDetector' in window){
+    try{ const s = await new BarcodeDetector({ formats:['qr_code'] }).detect(c); if(s.length) return s[0].rawValue; }catch(e){}
+  }
+  for(const maks of [2000, 1200, 800]){
+    const k = kanvas(img, maks), x = k.getContext('2d');
+    const d = x.getImageData(0, 0, k.width, k.height);
+    const r = jsQR(d.data, d.width, d.height, { inversionAttempts:'attemptBoth' });
+    if(r && r.data) return r.data;
+  }
+  return '';
+}
+
+/* ---------- GİRİŞ (tek tek, foto) ---------- */
+function formAc(v, onizleme){
+  $('form').classList.remove('gizle');
+  ['fUrun','fTarih','fKisi','fMense'].forEach(i => delete $(i).dataset.dokunuldu);
+  $('fId').value = v.id || ''; $('fUrun').value = v.urun || ''; $('fTarih').value = v.tarih || '';
+  $('fKisi').value = v.kisi || ''; $('fMense').value = v.mense || '';
+  $('fBolge').value = v.bolge !== undefined ? v.bolge : (localStorage.getItem('bt_sonbolge') || '');   // bölge bölge koyuyorsan son bölge hazır gelir
+  if(onizleme){ $('onizleme').src = onizleme; $('onizleme').classList.remove('gizle'); } else $('onizleme').classList.add('gizle');
+  $('form').scrollIntoView({ behavior:'smooth' });
+}
+function formKapat(){ okuToken++; $('form').classList.add('gizle'); mesaj('durum', ''); }
+['fUrun','fTarih','fKisi','fMense'].forEach(i => $(i).addEventListener('input', () => { $(i).dataset.dokunuldu = '1'; }));
+
+$('cek').onclick = () => $('foto').click();
+$('galeri').onclick = () => $('fotoGaleri').click();
+async function fotoIsle(dosya){
+  const token = ++okuToken; sonKaynak = 'foto'; $('cek').disabled = true; mesaj('durum', 'Okunuyor…');
+  const aktif = () => token === okuToken;
+  try{
+    const img = await gorselYukle(dosya);
+    const jpg = kanvas(img, 1600).toDataURL('image/jpeg', 0.85);
+    let id = ''; try{ const kodlar = (await qrHepsi(img)).map(idTemizle).filter(Boolean); id = kodlar.find(bidonKodu) || kodlar[0] || ''; }catch(e){}
+    const notlar = () => {
+      if(!id) return ['QR bulunamadı. Aşağıdan tekrar çek ya da elle yaz.'];
+      const b = bul(id);
+      return b ? [b.durum === 'URETIMDE' ? 'Bu bidon üretimde görünüyor. Önce İade yapılmalı.' : 'Bu bidon zaten kayıtlı, bilgileri güncellenecek.'] : [];
+    };
+    const alan = x => ({ id, urun:trBuyuk(x.urun), tarih:x.tarih || '', kisi:trBuyuk(x.kisi), mense:trBuyuk(x.mense) });
+    let formAcik = false;
+    const ilk = r => {                                   // ilk okuma hemen ekrana, doğrulama arkada sürer
+      if(!aktif() || formAcik) return;
+      formAcik = true; formAc(alan(r), jpg);
+      mesaj('durum', 'İlk okuma geldi, doğrulanıyor… Şimdilik kontrol et.', 'uyari');
+    };
+    let ai;
+    try{ ai = await etiketOku(img, jpg, { ilk, iptal: () => !aktif(), ilerleme: n => { if(aktif() && !formAcik) mesaj('durum', `Okunuyor… (${n})`); } }); }
+    catch(e){ ai = { err: e }; }
+    if(!aktif()) return;
+    const msg = notlar();
+    if(ai.err){
+      msg.unshift('Etiket okunamadı: ' + ai.err.message);
+      if(!formAcik) formAc({ id }, jpg);
+      mesaj('durum', msg.join(' '), 'uyari');
+    } else {
+      const x = ai.veri; let degisti = false;
+      if(!formAcik){ formAc(alan(x), jpg); formAcik = true; }
+      else {                                              // kullanıcının dokunmadığı alanları doğrulanmış sonuçla güncelle
+        const harita = { urun:'fUrun', tarih:'fTarih', kisi:'fKisi', mense:'fMense' };
+        Object.entries(harita).forEach(([k, i]) => {
+          const el = $(i), yeni = alan(x)[k];
+          if(!el.dataset.dokunuldu && yeni && el.value !== yeni){ el.value = yeni; degisti = true; }
+        });
+      }
+      const uyar = [];
+      if(x.etiket === 'yok') uyar.push('Etiket okunamadı, elle doldur.');
+      else {
+        if(degisti) uyar.push('Doğrulama sonucu bazı alanlar güncellendi, kontrol et.');
+        if(x.etiket === 'buyuk') uyar.push('Sadece büyük etiket okundu (kişi yok).');
+        if(x.guven === 'dusuk') uyar.push('Okuma emin değil, kontrol et.');
+      }
+      const hepsi = uyar.concat(msg);
+      mesaj('durum', hepsi.length ? hepsi.join(' ') : 'Okuma doğrulandı. Kontrol edip giriş yap.', hepsi.length ? 'uyari' : 'bilgi');
+    }
+  }catch(err){ if(aktif()) mesaj('durum', err.message, 'hata'); }
+  $('cek').disabled = false;
+}
+$('foto').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if(f) fotoIsle(f); };
+$('fotoGaleri').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if(f) fotoIsle(f); };
+$('qrTekrar').onclick = () => $('fotoQR').click();
+$('fotoQR').onchange = async e => {
+  const dosya = e.target.files[0]; e.target.value = ''; if(!dosya) return;
+  try{
+    const id = idTemizle(await qrOku(await gorselYukle(dosya)));
+    if(id){ $('fId').value = id; mesaj('durum', 'QR okundu.'); } else mesaj('durum', 'QR yine bulunamadı. Daha yakından çek ya da elle yaz.', 'uyari');
+  }catch(err){ mesaj('durum', err.message, 'hata'); }
+};
+$('elle').onclick = () => { sonKaynak = 'elle'; mesaj('durum', ''); formAc({}, null); $('fId').focus(); };
+$('iptal').onclick = formKapat;
+let girisBekleyen = null; // aynı kayıt tekrar gönderilirse aynı istek numarası (çift HAREKET olmasın)
+$('kaydet').onclick = async () => {
+  const id = $('fId').value.trim();
+  if(!id){ mesaj('durum', 'Bidon ID boş.', 'hata'); return; }
+  const tarih = $('fTarih').value.trim();
+  if(tarih && !trToISO(tarih)){ mesaj('durum', 'Tarih GG.AA.YYYY olmalı (örn. 13.08.2026).', 'hata'); return; }
+  const kayit = { id, urun:trBuyuk($('fUrun').value), tarih, kisi:trBuyuk($('fKisi').value), mense:trBuyuk($('fMense').value), bolge:$('fBolge').value.trim(), kaynak:sonKaynak };
+  const imza = JSON.stringify(kayit);
+  if(!girisBekleyen || girisBekleyen.imza !== imza) girisBekleyen = { imza, id:yeniId() };
+  $('kaydet').disabled = true;
+  try{
+    const s = await islemYap('GIRIS', [kayit], '', girisBekleyen.id);
+    localStorage.setItem('bt_sonbolge', kayit.bolge);
+    if(!s.beklemede) girisBekleyen = null;            // kuyruğa girdiyse numara kalır: aynı kayıt tekrar basılırsa sunucu bir kez yazar
+    if(s.atlanan && s.atlanan.length) mesaj('durum', `${s.atlanan[0].id}: ${s.atlanan[0].neden}`, 'uyari');
+    else { formKapat(); mesaj('durum', s.beklemede ? `Kaydedildi, internet gelince gönderilecek: ${id}` : 'Giriş yapıldı: ' + id, s.beklemede ? 'uyari' : 'bilgi'); }
+  }catch(err){ mesaj('durum', err.message, 'hata'); }
+  $('kaydet').disabled = false;
+};
+
+/* ---------- TOPLU (canlı kamera) ---------- */
+let tmod = 'CIKIS';
+let liste = [];           // { id, tur:'ok'|'uyari'|'kayitsiz', mesaj }
+let akim = null, bd = null, cv = null, cx = null, ac = null;
+const MOD_YARDIM = {
+  GIRIS: 'Yeni gelen bidonlar. Ortak bilgiyi yaz, sonra bidonların QR\'larını sırayla okut.',
+  CIKIS: 'Üretime verilen bidonlar. QR\'ları okut, en sonda Kaydet. Parça parça yapabilirsin.',
+  TASI:  'Bidonları bir bölgeye koy / bölgeler arası taşı. Önce bölgeyi yaz ya da bölgenin QR\'ını okut, sonra bidonların QR\'larını okut, Kaydet.',
+  IADE:  'Üretimden geri dönen bidonlar. QR\'ları okut, en sonda Kaydet.'
+};
+function modSec(m){
+  tmod = m; liste = [];
+  ['GIRIS','CIKIS','IADE','TASI'].forEach(k => { $('m' + k[0] + k.slice(1).toLowerCase()).className = k === m ? 'mavi' : 'ikincil'; });
+  $('mYardim').textContent = MOD_YARDIM[m];
+  $('ortak').classList.toggle('gizle', m !== 'GIRIS');
+  $('notAlan').classList.toggle('gizle', m === 'GIRIS' || m === 'TASI');
+  $('bolgeAlan').classList.toggle('gizle', m === 'CIKIS');
+  $('cBolgeLbl').textContent = m === 'TASI' ? 'Bölge (zorunlu)' : 'Bölge (isteğe bağlı)';
+  $('cNotLbl').textContent = m === 'IADE' ? 'İade nedeni (kalite, yanlış çıkış, numune… isteğe bağlı)' : 'Parti / hat (isteğe bağlı)';
+  mesaj('tDurum', ''); listeCiz();
+}
+$('mGiris').onclick = () => modSec('GIRIS'); $('mCikis').onclick = () => modSec('CIKIS'); $('mIade').onclick = () => modSec('IADE'); $('mTasi').onclick = () => modSec('TASI');
+
+function degerlendir(id){
+  const b = bul(id);
+  if(tmod === 'GIRIS'){
+    if(!b) return { tur:'ok' };
+    return { tur:'uyari', mesaj: b.durum === 'URETIMDE' ? 'Üretimde görünüyor, atlanacak. Önce İade yap' : 'Zaten kayıtlı, bilgi güncellenir' };
+  }
+  if(!b) return { tur:'kayitsiz', mesaj:'Kayıtsız: önce Giriş modunda kaydet' };
+  if(tmod === 'TASI'){
+    if(b.durum !== 'SAHADA') return { tur:'uyari', mesaj:'Üretimde, önce İade yap' };
+    const bol = $('cBolge').value.trim();
+    if(bol && String(b.bolge || '') === bol) return { tur:'uyari', mesaj:'Zaten bu bölgede' };
+  }
+  if(tmod === 'CIKIS' && b.durum === 'URETIMDE') return { tur:'uyari', mesaj:'Zaten üretimde' };
+  if(tmod === 'IADE' && b.durum !== 'URETIMDE') return { tur:'uyari', mesaj:'Üretimde görünmüyor' };
+  return { tur:'ok' };
+}
+function bip(iyi){
+  try{
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.value = iyi ? 880 : 300; g.gain.value = 0.15; o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + 0.09);
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate(iyi ? 40 : [60, 40, 60]);
+}
+function bolgeOku(kod){                                  // bidon ön ekine uymayan okuma = bölge kodu
+  if(tmod === 'CIKIS'){ mesaj('tDurum', `Bölge kodu okundu (${kod}), ama çıkışta bölge kullanılmaz.`, 'uyari'); return; }
+  if($('cBolge').value.trim() === kod) return;
+  $('cBolge').value = kod; bip(true); mesaj('tDurum', `Bölge: ${kod}. Şimdi bu bölgedeki bidonları okut.`);
+  liste = liste.map(o => ({ ...o, ...degerlendir(o.id) })); listeCiz();
+}
+function ekle(id, tara){
+  id = idTemizle(id);
+  if(id && tara && !bidonKodu(id)){ bolgeOku(id); return false; }
+  if(!id || liste.some(o => o.id === id)) return false;
+  const d = degerlendir(id);
+  liste.unshift({ id, ...d });
+  bip(d.tur === 'ok'); listeCiz();
+  return true;
+}
+function listeCiz(){
+  const ok = liste.filter(o => o.tur === 'ok').length, uy = liste.filter(o => o.tur === 'uyari').length, ks = liste.filter(o => o.tur === 'kayitsiz').length;
+  if(!liste.length){ $('tOzet').textContent = 'Liste boş'; $('tListe').innerHTML = ''; $('tKaydet').textContent = 'Kaydet'; $('tKaydet').disabled = true; return; }
+  let h = `<b>${liste.length}</b> bidon` + (uy ? ` · uyarı ${uy}` : '') + (ks ? ` · kayıtsız ${ks}` : '') + (tmod !== 'CIKIS' && $('cBolge').value.trim() ? ` · bölge <b>${esc($('cBolge').value.trim())}</b>` : '');
+  if(tmod !== 'GIRIS'){
+    const say = {}; liste.forEach(o => { const b = bul(o.id); if(b){ const u = b.urun || '(ürün yok)'; say[u] = (say[u] || 0) + 1; } });
+    const s = Object.entries(say).sort((a, b) => b[1] - a[1]).map(([u, n]) => `${esc(u)} ${n}`).join(' · ');
+    if(s) h += `<div class="kucuk">${s}</div>`;
+  }
+  $('tOzet').innerHTML = h;
+  $('tListe').innerHTML = liste.map(o => {
+    const b = bul(o.id);
+    const alt = b ? [b.urun, b.tarih, b.kisi].filter(Boolean).join(' · ') : '';
+    return `<div class="oge ${o.tur}"><div><b>${esc(o.id)}</b>${alt ? `<small>${esc(alt)}</small>` : ''}${o.mesaj ? `<small>${esc(o.mesaj)}</small>` : ''}</div>
+      <button class="ikincil" data-id="${esc(o.id)}" aria-label="Listeden çıkar">✕</button></div>`;
+  }).join('');
+  const gonderilebilir = liste.filter(o => o.tur !== 'kayitsiz').length;
+  $('tKaydet').textContent = gonderilebilir ? `${ISLEM_AD[tmod]} kaydet (${gonderilebilir})` : 'Kaydedilecek bidon yok';
+  $('tKaydet').disabled = !gonderilebilir;
+}
+$('tListe').onclick = e => {
+  const b = e.target.closest('button[data-id]'); if(!b) return;
+  liste = liste.filter(o => o.id !== b.dataset.id); listeCiz();
+};
+$('tTemizle').onclick = () => { if(!liste.length || confirm('Liste temizlensin mi?')){ liste = []; mesaj('tDurum', ''); listeCiz(); } };
+$('cBolge').oninput = () => { liste = liste.map(o => ({ ...o, ...degerlendir(o.id) })); listeCiz(); };
+$('elleEkle').onclick = () => {
+  const v = $('elleId').value.trim(); if(!v) return;
+  const l = araBul(v); const id = (l.length === 1) ? String(l[0].id) : v;   // 00042 yazınca BD-00042
+  ekle(id); $('elleId').value = '';
+};
+$('elleId').onkeydown = e => { if(e.key === 'Enter') $('elleEkle').click(); };
+
+async function kameraAc(){
+  if(akim) return;
+  if(!window.isSecureContext){ mesaj('tDurum', 'Sayfa güvenli (https) değil, kamera açılamaz. GitHub Pages adresini Chrome\'da aç; dosya olarak açma. Şimdilik "Fotoğrafla ekle" çalışır.', 'hata'); return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ mesaj('tDurum', 'Bu tarayıcı canlı kamerayı desteklemiyor. "Fotoğrafla ekle"yi kullan.', 'hata'); return; }
+  try{
+    try{ akim = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false }); }
+    catch(e){ if(e.name === 'OverconstrainedError') akim = await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); else throw e; }
+  }catch(e){
+    const n = e.name;
+    mesaj('tDurum', n === 'NotAllowedError' ? 'Kamera izni verilmemiş. Tarayıcı ayarlarından bu siteye kamera izni ver.'
+      : n === 'NotFoundError' ? 'Kamera bulunamadı.' : n === 'NotReadableError' ? 'Kamera başka bir uygulamada açık.' : 'Kamera açılamadı: ' + n, 'hata');
+    akim = null; return;
+  }
+  const v = $('video'); v.srcObject = akim; v.classList.remove('gizle');
+  try{ await v.play(); }catch(e){}
+  const iz = akim.getVideoTracks()[0]; let cap = {};
+  try{ cap = iz.getCapabilities ? iz.getCapabilities() : {}; }catch(e){}
+  $('fener').classList.toggle('gizle', !cap.torch); $('zoom').classList.toggle('gizle', !cap.zoom);
+  $('kamAraclar').classList.toggle('gizle', !(cap.torch || cap.zoom));
+  if(cap.zoom){ $('zoom').min = cap.zoom.min; $('zoom').max = cap.zoom.max; $('zoom').step = cap.zoom.step || 0.1; $('zoom').value = cap.zoom.min; }
+  bd = ('BarcodeDetector' in window) ? new BarcodeDetector({ formats:['qr_code'] }) : null;
+  cv = document.createElement('canvas'); cx = cv.getContext('2d', { willReadFrequently:true });
+  mesaj('tDurum', '');
+  tara();
+}
+let fenerAcik = false;
+function kameraDurdur(){
+  if(akim){ akim.getTracks().forEach(t => t.stop()); akim = null; }
+  $('video').classList.add('gizle'); $('kamAraclar').classList.add('gizle');
+  fenerAcik = false; $('fener').textContent = 'Fener';
+}
+$('fener').onclick = async () => {
+  if(!akim) return;
+  try{ fenerAcik = !fenerAcik; await akim.getVideoTracks()[0].applyConstraints({ advanced:[{ torch:fenerAcik }] }); $('fener').textContent = fenerAcik ? 'Feneri kapat' : 'Fener'; }
+  catch(e){ fenerAcik = false; }
+};
+$('zoom').oninput = () => { try{ akim.getVideoTracks()[0].applyConstraints({ advanced:[{ zoom:+$('zoom').value }] }); }catch(e){} };
+async function tara(){
+  if(!akim) return;
+  const v = $('video');
+  try{
+    if(v.readyState >= 2 && v.videoWidth){
+      let kodlar = [];
+      if(bd){ kodlar = (await bd.detect(v)).map(x => x.rawValue); }
+      else{
+        const o = Math.min(1, 720 / v.videoWidth);
+        cv.width = Math.round(v.videoWidth * o); cv.height = Math.round(v.videoHeight * o);
+        cx.drawImage(v, 0, 0, cv.width, cv.height);
+        const d = cx.getImageData(0, 0, cv.width, cv.height);
+        const r = jsQR(d.data, d.width, d.height, { inversionAttempts:'dontInvert' });
+        if(r) kodlar = [r.data];
+      }
+      kodlar.forEach(k => ekle(k, true));
+    }
+  }catch(e){}
+  if(akim) setTimeout(tara, 120);
+}
+async function qrHepsi(img){
+  const c = kanvas(img, 2000);
+  if('BarcodeDetector' in window){
+    try{ const s = await new BarcodeDetector({ formats:['qr_code'] }).detect(c); if(s.length) return s.map(x => x.rawValue); }catch(e){}
+  }
+  const t = await qrOku(img); return t ? [t] : [];
+}
+$('fotoEkle').onclick = () => $('fotoToplu').click();
+$('fotoToplu').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+  try{
+    const kodlar = await qrHepsi(await gorselYukle(f)); let n = 0;
+    kodlar.forEach(k => { if(ekle(k, true)) n++; });
+    mesaj('tDurum', kodlar.length ? `${n} yeni QR eklendi.` : 'QR bulunamadı. Yakından ve gölgesiz çek.', kodlar.length ? 'bilgi' : 'uyari');
+  }catch(err){ mesaj('tDurum', err.message, 'hata'); }
+};
+$('tGeri').onclick = () => { if(liste.length){ liste.shift(); listeCiz(); } };
+$('kamAc').onclick = kameraAc; $('kamKapat').onclick = kameraDurdur;
+
+let bekleyen = null; // aynı liste tekrar gönderilirse aynı istek numarası (çift kayıt olmasın)
+$('tKaydet').onclick = async () => {
+  if(!liste.length) return;
+  let ortak = {};
+  if(tmod === 'GIRIS'){
+    const urun = trBuyuk($('cUrun').value), tarih = $('cTarih').value.trim();
+    if(!urun){ mesaj('tDurum', 'Ortak ürün adını yaz.', 'hata'); return; }
+    if(tarih && !trToISO(tarih)){ mesaj('tDurum', 'Tarih GG.AA.YYYY olmalı.', 'hata'); return; }
+    ortak = { urun, tarih, kisi:trBuyuk($('cKisi').value), mense:trBuyuk($('cMense').value) };
+  }
+  const bolge = $('cBolge').value.trim();
+  if(tmod === 'TASI' && !bolge){ mesaj('tDurum', 'Önce bölgeyi yaz ya da bölgenin QR\'ını okut.', 'hata'); return; }
+  if(tmod === 'GIRIS') ortak.bolge = bolge; else if(tmod === 'TASI' || tmod === 'IADE') ortak = { bolge };
+  const gidecek = liste.filter(o => o.tur !== 'kayitsiz');
+  const ks = liste.length - gidecek.length;
+  if(!gidecek.length){ mesaj('tDurum', 'Listedeki bidonların hiçbiri kayıtlı değil. Önce Giriş modunda kaydet.', 'hata'); return; }
+  if(ks && !confirm(`${ks} bidon sistemde kayıtlı değil, bunlar kaydedilmeyecek (önce Giriş). Diğer ${gidecek.length} bidon kaydedilsin mi?`)) return;
+  const kay = gidecek.map(o => ({ id:o.id, ...ortak, kaynak:'toplu' }));
+  const imza = tmod + '|' + bolge + '|' + kay.map(k => k.id).join(',');
+  if(!bekleyen || bekleyen.imza !== imza) bekleyen = { imza, id:yeniId() };
+  $('tKaydet').disabled = true;
+  try{
+    const ek = tmod === 'GIRIS' ? '' : $('cNot').value.trim();
+    const s = await islemYap(tmod, kay, tmod === 'CIKIS' ? ek : '', bekleyen.id, tmod === 'IADE' ? ek : '');
+    if(!s.beklemede) bekleyen = null;
+    const atl = new Map((s.atlanan || []).map(a => [String(a.id), a.neden]));
+    liste = liste.filter(o => atl.has(o.id) || o.tur === 'kayitsiz').map(o => atl.has(o.id) ? { ...o, tur:'uyari', mesaj:atl.get(o.id) } : o);
+    let msg = `${s.islenen} bidon için ${ISLEM_AD[tmod].toLocaleLowerCase('tr-TR')} kaydedildi.`;
+    if(s.beklemede) msg += ' İnternet yok: bağlanınca otomatik gönderilecek.';
+    if(atl.size) msg += ` ${atl.size} bidon atlandı (listede, nedeni yazıyor).`;
+    mesaj('tDurum', msg, (atl.size || s.beklemede) ? 'uyari' : 'bilgi');
+  }catch(err){ mesaj('tDurum', err.message, 'hata'); }
+  listeCiz();
+};
+modSec('CIKIS');
+
+/* ---------- STOK ---------- */
+function stok(){
+  const say = {};
+  DB.bidonlar.forEach(b => {
+    const u = b.urun || '(ürün yok)'; say[u] = say[u] || { saha:0, uretim:0 };
+    if(b.durum === 'URETIMDE') say[u].uretim++; else say[u].saha++;
+  });
+  const sa = DB.bidonlar.filter(b => b.durum !== 'URETIMDE').length, ur = DB.bidonlar.length - sa;
+  $('sSaha').textContent = sa; $('sUretim').textContent = ur;
+  const satirlar = Object.entries(say).sort((a, b) => (b[1].saha + b[1].uretim) - (a[1].saha + a[1].uretim));
+  $('stokTablo').innerHTML = '<tr><th>Ürün</th><th>Sahada</th><th>Üretimde</th><th>Toplam</th></tr>' +
+    (satirlar.length ? satirlar.map(([u, s]) => `<tr><td>${esc(u)}</td><td>${s.saha}</td><td>${s.uretim}</td><td>${s.saha + s.uretim}</td></tr>`).join('') +
+      `<tr class="toplam"><td>Toplam</td><td>${sa}</td><td>${ur}</td><td>${sa + ur}</td></tr>`
+      : '<tr><td colspan="4" class="kucuk">Henüz kayıt yok.</td></tr>');
+  bolgeTablo(); gunTablo();
+}
+function bolgeTablo(){
+  const g = {};
+  DB.bidonlar.filter(b => b.durum !== 'URETIMDE').forEach(b => {
+    const z = b.bolge || '(bölgesiz)'; const x = g[z] || (g[z] = { n:0, u:{} }); x.n++; const u = b.urun || '(ürün yok)'; x.u[u] = (x.u[u] || 0) + 1;
+  });
+  const sat = Object.entries(g).sort((a, b) => a[0].localeCompare(b[0], 'tr'));
+  $('bolgeTablo').innerHTML = '<tr><th>Bölge</th><th>Bidon</th><th style="text-align:left">Ürünler</th></tr>' + (sat.length
+    ? sat.map(([z, v]) => `<tr><td>${esc(z)}</td><td><b>${v.n}</b></td><td style="text-align:left">${Object.entries(v.u).sort((a, b) => b[1] - a[1]).map(([u, n]) => esc(u) + ' ' + n).join(' · ')}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="kucuk">Sahada bidon yok.</td></tr>');
+}
+function gunTablo(){
+  if(!$('rGun').value) $('rGun').value = bugunISO();
+  const gun = $('rGun').value, say = {};
+  DB.hareketler.filter(h => h.gun === gun).forEach(h => {
+    const u = h.urun || '(ürün yok)'; say[u] = say[u] || { GIRIS:0, CIKIS:0, IADE:0 }; if(say[u][h.islem] !== undefined) say[u][h.islem]++;
+  });
+  const t = { GIRIS:0, CIKIS:0, IADE:0 };
+  const s = Object.entries(say).sort((a, b) => a[0].localeCompare(b[0], 'tr'));
+  s.forEach(([, v]) => { t.GIRIS += v.GIRIS; t.CIKIS += v.CIKIS; t.IADE += v.IADE; });
+  $('gunTablo').innerHTML = `<tr><th>${isoToTR(gun)}</th><th>Giriş</th><th>Çıkış</th><th>İade</th></tr>` +
+    (s.length ? s.map(([u, v]) => `<tr><td>${esc(u)}</td><td>${v.GIRIS || ''}</td><td>${v.CIKIS || ''}</td><td>${v.IADE || ''}</td></tr>`).join('') +
+      `<tr class="toplam"><td>Toplam</td><td>${t.GIRIS}</td><td>${t.CIKIS}</td><td>${t.IADE}</td></tr>`
+      : '<tr><td colspan="4" class="kucuk">Bu gün hareket yok.</td></tr>');
+}
+$('rGun').onchange = gunTablo;
+$('yenile').onclick = yukle;
+function araBul(q){
+  const t = q.trim().toUpperCase(); if(!t) return [];
+  const tam = DB.bidonlar.filter(b => String(b.id).toUpperCase() === t);
+  if(tam.length) return tam;
+  const son = DB.bidonlar.filter(b => String(b.id).toUpperCase().endsWith(t));      // 00042 -> BD-00042
+  return son.length ? son : DB.bidonlar.filter(b => String(b.id).toUpperCase().includes(t));
+}
+function bidonKart(b){
+  const gec = DB.hareketler.filter(h => String(h.id) === String(b.id)).slice(-8).reverse();
+  return `<div class="satir"><b>${esc(b.id)}</b> · ${esc(b.urun || '-')} · ${esc(b.tarih || '-')} ${b.kisi ? '· ' + esc(b.kisi) : ''}${b.bolge ? ' · bölge ' + esc(b.bolge) : ''}</div>
+    <div class="durum ${b.durum === 'URETIMDE' ? 'uyari' : 'bilgi'}">${b.durum === 'URETIMDE' ? 'Üretimde' : 'Sahada'}</div>` +
+    gec.map(h => `<div class="kucuk">${esc(h.zaman)} · ${esc(ISLEM_AD[h.islem] || h.islem)}${h.operator ? ' · ' + esc(h.operator) : ''}${h.parti ? ' · ' + esc(h.parti) : ''}${h.neden ? ' · neden: ' + esc(h.neden) : ''}${h.bolge && (h.islem === 'TASI' || h.islem === 'GIRIS') ? ' · @' + esc(h.bolge) : ''}</div>`).join('');
+}
+$('ara').oninput = () => {
+  const q = $('ara').value.trim();
+  if(!q){ $('araSonuc').innerHTML = ''; return; }
+  const zl = DB.bidonlar.filter(b => b.durum !== 'URETIMDE' && String(b.bolge || '').toUpperCase() === q.toUpperCase());
+  if(zl.length && !DB.bidonlar.some(b => String(b.id).toUpperCase() === q.toUpperCase())){
+    $('araSonuc').innerHTML = `<div class="kucuk">Bölge ${esc(q)}: ${zl.length} bidon${zl.length > 40 ? ' (ilk 40)' : ''}</div>` + zl.slice(0, 40).map(b => `<div class="satir"><b>${esc(b.id)}</b> · ${esc(b.urun || '-')} · ${esc(b.tarih || '-')}</div>`).join('');
+    return;
+  }
+  const l = araBul(q);
+  if(!l.length) $('araSonuc').innerHTML = '<div class="kucuk">Kayıt yok.</div>';
+  else if(l.length === 1) $('araSonuc').innerHTML = bidonKart(l[0]);
+  else $('araSonuc').innerHTML = `<div class="kucuk">${l.length} eşleşme, ilk 8:</div>` +
+    l.slice(0, 8).map(b => `<div class="satir"><b>${esc(b.id)}</b> · ${esc(b.urun || '-')} · ${b.durum === 'URETIMDE' ? 'Üretimde' : 'Sahada'}</div>`).join('');
+};
+
+/* ---------- Excel indirme ---------- */
+const bidonSatir = b => ({ 'Bidon ID':b.id, 'Ürün':b.urun, 'Etiket Tarihi':b.tarih, 'Kişi':b.kisi, 'Menşe':b.mense, 'Bölge':b.bolge,
+  'Durum': b.durum === 'URETIMDE' ? 'Üretimde' : 'Sahada', 'İlk Kayıt':b.giris, 'Son Hareket':b.son });
+const hareketSatir = h => ({ 'Zaman':h.zaman, 'Gün':h.gun, 'Bidon ID':h.id, 'İşlem':ISLEM_AD[h.islem] || h.islem, 'Ürün':h.urun,
+  'Etiket Tarihi':h.tarih, 'Kişi (hazırlayan)':h.kisi, 'Parti / Hat':h.parti, 'İade Nedeni':h.neden, 'Bölge':h.bolge, 'İşlemi Yapan':h.operator, 'Kaynak':h.kaynak });
+function excelYaz(ad, sayfalar){
+  const wb = XLSX.utils.book_new();
+  sayfalar.forEach(([isim, satirlar]) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(satirlar.length ? satirlar : [{ Bilgi:'Kayıt yok' }]), isim));
+  XLSX.writeFile(wb, ad);
+}
+$('indirSaha').onclick = () => {
+  const l = DB.bidonlar.filter(b => b.durum !== 'URETIMDE');
+  const ozet = {}; l.forEach(b => { const u = b.urun || '(ürün yok)'; ozet[u] = (ozet[u] || 0) + 1; });
+  excelYaz(`sahadaki-bidonlar-${bugunISO()}.xlsx`, [
+    ['Sahadaki bidonlar', l.map(bidonSatir)],
+    ['Özet', Object.entries(ozet).map(([u, n]) => ({ 'Ürün':u, 'Bidon adedi':n }))]
+  ]);
+};
+$('indirHepsi').onclick = () => excelYaz(`bidon-tum-kayit-${bugunISO()}.xlsx`, [
+  ['Bidonlar', DB.bidonlar.map(bidonSatir)],
+  ['Hareketler', DB.hareketler.filter(h => (!$('xBas').value || h.gun >= $('xBas').value) && (!$('xBit').value || h.gun <= $('xBit').value)).map(hareketSatir)]
+]);
+
+/* ---------- QR üret + yazdır ---------- */
+function qrSvg(metin){
+  const q = qrcode(0, 'M'); q.addData(metin); q.make();
+  const n = q.getModuleCount(); let p = '';
+  for(let r = 0; r < n; r++) for(let c = 0; c < n; c++) if(q.isDark(r, c)) p += `M${c} ${r}h1v1h-1z`;
+  return { n, svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ${n + 4} ${n + 4}" shape-rendering="crispEdges"><path d="${p}"/></svg>` };
+}
+function qrModul(metin){
+  const q = qrcode(0, 'M'); q.addData(metin); q.make();
+  return { n:q.getModuleCount(), koyu:(r, c) => q.isDark(r, c) };
+}
+const qrAyar = () => ({
+  onek: $('qOnek').value.trim().toUpperCase(), hane: +$('qHane').value || 5, bas: Math.max(1, +$('qBas').value || 1),
+  adet: Math.min(1000, Math.max(1, +$('qAdet').value || 1)), w: +$('qW').value || 60, h: +$('qH').value || 30,
+  q: +$('qQ').value || 24, dpi: +$('qDpi').value || 203, gap: +$('qGap').value || 0, yazi: $('qYazi').checked,
+  tur: $('qTur').value, adlar: $('qBolgeAd').value.split(/[,\n;]/).map(s => s.trim().toUpperCase()).filter(Boolean)
+});
+const qrId = (o, no) => o.onek + String(no).padStart(o.hane, '0');
+const qrIdler = o => o.tur === 'bolge' ? o.adlar : Array.from({ length:o.adet }, (_, i) => qrId(o, o.bas + i));
+function etiketHtml(id, o){
+  if(!o.yazi) return `<div class="etiket" style="width:${o.w}mm;height:${o.h}mm;justify-content:center"><div class="qr" style="width:${o.q}mm;height:${o.q}mm;flex:none">${qrSvg(id).svg}</div></div>`;
+  const fs = Math.max(2.5, Math.min(o.h * 0.3, (o.w - o.q - 6) / (id.length * 0.62)));
+  return `<div class="etiket" style="width:${o.w}mm;height:${o.h}mm"><div class="qr" style="width:${o.q}mm;height:${o.q}mm;flex:none">${qrSvg(id).svg}</div>
+    <div class="et-yazi"><div class="et-ust">YAKAMOZ</div><div class="et-id" style="font-size:${fs.toFixed(2)}mm">${esc(id)}</div></div></div>`;
+}
+function qrTurGoster(){
+  const b = $('qTur').value === 'bolge';
+  $('qBolgeAlan').classList.toggle('gizle', !b);
+  ['qOnek', 'qBas'].forEach(i => $(i).closest('.sira').classList.toggle('gizle', b)); $('qSon').classList.toggle('gizle', b);
+}
+function qrSonGoster(){
+  const o = qrAyar(), son = DB.sonNo[o.onek];
+  $('qSon').textContent = son ? `Bu önekle en son basılan: ${qrId(o, son)}. Sonraki boş numara: ${son + 1}.` : 'Bu önekle daha önce basım kaydı yok.';
+  if(son && !$('qBas').dataset.dokunuldu) $('qBas').value = son + 1;
+}
+function qrOnizle(){
+  const o = qrAyar(), idler = qrIdler(o);
+  qrTurGoster();
+  if(!idler.length){ $('qOnizleme').innerHTML = ''; $('qOzet').textContent = 'Bölge adı yaz.'; return; }
+  $('qOnizleme').innerHTML = etiketHtml(idler[0], Object.assign({}, o, { yazi: o.tur === 'bolge' ? true : o.yazi }));
+  $('qOzet').textContent = o.tur === 'bolge' ? `${idler.length} bölge etiketi: ${idler.join(', ')}` : `${o.adet} etiket: ${idler[0]} … ${idler[idler.length - 1]}`;
+}
+['qTur','qBolgeAd','qOnek','qHane','qBas','qAdet','qW','qH','qQ','qDpi','qGap','qYazi'].forEach(id => {
+  $(id).oninput = () => { if(id === 'qBas') $('qBas').dataset.dokunuldu = '1'; if(id === 'qOnek') delete $('qBas').dataset.dokunuldu; qrSonGoster(); qrOnizle(); };
+});
+async function basimKaydet(o){
+  if(o.tur === 'bolge') return;                          // bölge etiketleri bidon numarası olarak kaydedilmez
+  const son = o.bas + o.adet - 1;
+  try{ await api({ islem:'qrbasim', onek:o.onek, bas:o.bas, bit:son, adet:o.adet }); DB.sonNo[o.onek] = Math.max(DB.sonNo[o.onek] || 0, son); (DB.araliklar = DB.araliklar || []).push({ onek:o.onek, bas:o.bas, bit:son }); }
+  catch(e){ mesaj('qDurum', 'Basım kaydı yazılamadı: ' + e.message, 'uyari'); }
+}
+function cakisma(o){                                    // sadece gerçekten basılmış aralıklarla kesişirse uyar
+  if(o.tur === 'bolge') return '';
+  const bit = o.bas + o.adet - 1;
+  const a = (DB.araliklar || []).find(x => x.onek === o.onek && x.bas <= bit && o.bas <= x.bit);
+  return a ? `Dikkat: ${qrId(o, Math.max(o.bas, a.bas))} … ${qrId(o, Math.min(bit, a.bit))} daha önce basılmış (${qrId(o, a.bas)} – ${qrId(o, a.bit)}). Yine de basılsın mı?` : '';
+}
+const telefonMu = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+async function pdfIndir(o, idler, kayit){
+  try{
+    mesaj('qDurum', 'PDF hazırlanıyor…');
+    if(!window.jspdf) await scriptYukle('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    const { jsPDF } = window.jspdf, yaz = o.tur === 'bolge' ? true : o.yazi, yon = o.w >= o.h ? 'l' : 'p', pt = mm => mm * 2.8346;
+    const doc = new jsPDF({ unit:'mm', format:[o.w, o.h], orientation:yon });
+    idler.forEach((id, i) => {
+      if(i) doc.addPage([o.w, o.h], yon);
+      const m = qrModul(id), box = o.q, mod = box / (m.n + 4);                 // QR kutusu 2 modül boşlukla birlikte
+      const qx = yaz ? 1.5 : (o.w - box) / 2, qy = (o.h - box) / 2;
+      doc.setFillColor(0, 0, 0);
+      for(let r = 0; r < m.n; r++){                                           // yan yana koyu modülleri tek dikdörtgen yap
+        let c = 0;
+        while(c < m.n){
+          if(!m.koyu(r, c)){ c++; continue; }
+          const s = c; while(c < m.n && m.koyu(r, c)) c++;
+          doc.rect(qx + (2 + s) * mod, qy + (2 + r) * mod, (c - s) * mod + 0.01, mod + 0.01, 'F');
+        }
+      }
+      if(yaz){
+        const tx = 1.5 + box + 1.5, bos = o.w - tx - 1.5;
+        let fs = Math.max(2.5, Math.min(o.h * 0.3, (o.w - o.q - 6) / (id.length * 0.62)));
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(pt(fs));
+        while(doc.getTextWidth(id) > bos && fs > 2){ fs -= 0.2; doc.setFontSize(pt(fs)); }
+        const ust = (o.h - (2.4 + 0.8 + fs)) / 2;
+        doc.setFontSize(pt(2.4)); doc.text('YAKAMOZ', tx, ust + 2.2);
+        doc.setFontSize(pt(fs)); doc.text(id, tx, ust + 3.2 + fs * 0.8);
+      }
+    });
+    doc.save(`etiketler-${o.w}x${o.h}mm.pdf`);
+    mesaj('qDurum', `PDF indi: ${idler.length} etiket, ${o.w}×${o.h} mm. Dosyayı bilgisayara gönder, TSC yazıcıyla bas: boyut "Gerçek boyut / %100", kağıt = etiket ölçüsü.`);
+    if(kayit) await basimKaydet(o);
+  }catch(e){ mesaj('qDurum', 'PDF hazırlanamadı: ' + e.message, 'hata'); }
+}
+function qrHazirla(){                                    // ortak kontrol: çakışma, boş liste
+  const o = qrAyar(), c = cakisma(o); if(c && !confirm(c)) return null;
+  const idler = qrIdler(o); if(!idler.length){ mesaj('qDurum', 'Bölge adı yaz.', 'hata'); return null; }
+  return { o, idler };
+}
+$('qPdf').onclick = () => { const k = qrHazirla(); if(k) pdfIndir(k.o, k.idler, true); };
+$('qYazdir').onclick = () => {
+  const k = qrHazirla(); if(!k) return;
+  if(telefonMu()){                                       // telefonda yazıcı sürücüsü yok: PDF ver
+    mesaj('qDurum', 'Telefondan TSC yazıcıya doğrudan yazdırılamaz. PDF hazırlanıyor: bilgisayardan bas.', 'uyari');
+    pdfIndir(k.o, k.idler, true); return;
+  }
+  const op = k.o.tur === 'bolge' ? Object.assign({}, k.o, { yazi:true }) : k.o;
+  $('baski').innerHTML = k.idler.map(id => etiketHtml(id, op)).join('');
+  $('sayfaStil').textContent = `@page{size:${k.o.w}mm ${k.o.h}mm;margin:0}`;
+  window.print();                                        // tıklamanın içinde, hiçbir bekleme olmadan
+  mesaj('qDurum', 'Yazdırma penceresi açılmadıysa "PDF indir"i kullan. Pencerede TSC yazıcısını seç, kağıt boyutu etiketle aynı, ölçek %100.', 'uyari');
+  basimKaydet(k.o);                                      // kayıt yazdırmadan sonra, arkada
+};
+$('qTspl').onclick = async () => {
+  const o0 = qrAyar(), c = cakisma(o0); if(c && !confirm(c)) return;
+  const idler = qrIdler(o0); if(!idler.length){ mesaj('qDurum', 'Bölge adı yaz.', 'hata'); return; }
+  const o = o0.tur === 'bolge' ? Object.assign({}, o0, { yazi:true }) : o0;
+  const dpmm = o.dpi / 25.4, mm = x => Math.round(x * dpmm);
+  const probe = Math.max(...idler.map(id => qrSvg(id).n));   // en büyük modül sayısı
+  const cell = Math.max(2, Math.floor(mm(o.q) / probe));
+  const qrDots = cell * probe, margin = mm(1.5);
+  const hD = mm(o.h), y = Math.max(0, Math.round((hD - qrDots) / 2));
+  const idLen = Math.max(...idler.map(id => id.length));
+  const avail = mm(o.w) - margin * 2 - qrDots - mm(2);
+  const mult = Math.max(1, Math.min(3, Math.floor(avail / (idLen * 16))));
+  const qx = o.yazi ? margin : Math.max(0, Math.round((mm(o.w) - qrDots) / 2));      // yazı kapalıysa QR ortada
+  const tx = margin + qrDots + mm(2);
+  const blok = 20 + 6 + 24 * mult, ty = Math.max(0, Math.round((hD - blok) / 2));
+  let t = `SIZE ${o.w} mm,${o.h} mm\r\nGAP ${o.gap} mm,0 mm\r\nDIRECTION 1\r\nREFERENCE 0,0\r\n`;
+  for(const id of idler){
+    t += `CLS\r\nQRCODE ${qx},${y},M,${cell},A,0,"${id}"\r\n` + (o.yazi ? `TEXT ${tx},${ty},"2",0,1,1,"YAKAMOZ"\r\nTEXT ${tx},${ty + 26},"3",0,${mult},${mult},"${id}"\r\n` : '') + `PRINT 1,1\r\n`;
+  }
+  const blob = new Blob([t], { type:'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = o.tur === 'bolge' ? 'tsc-bolge-etiketleri.txt' : `tsc-${idler[0]}-${idler[idler.length - 1]}.txt`; a.click();
+  await basimKaydet(o);
+  mesaj('qDurum', 'Dosya indi. TSC Diagnostic Tool > "Send File" ile yazıcıya gönder.');
+};
+
+/* ---------- başlangıç ---------- */
+(function(){
+  const ua = navigator.userAgent; let m = '';
+  if(!window.isSecureContext) m = 'Sayfa güvenli (https) değil: canlı kamera çalışmaz. GitHub Pages adresini Chrome\'da aç, dosya olarak açma.';
+  else if(/; wv\)|FBAN|FBAV|Instagram|WhatsApp/.test(ua)) m = 'Uygulama içi tarayıcıdasın. Kamera için bu adresi Chrome\'da aç.';
+  if(m){ $('tarayiciUyari').textContent = m; $('tarayiciUyari').classList.remove('gizle'); }
+})();
+if('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});   // çevrimdışı açılış (sw.js yoksa sessizce geçer)
+kuyrukGoster(); kuyrukGonder(); yukle(); qrOnizle();
+if(AYAR.okuma === 'ucretsiz' && navigator.onLine) setTimeout(() => { tessHazir().catch(() => {}); }, 2500);   // okuyucuyu arka planda hazırla
+</script>
+</body>
+</html>
