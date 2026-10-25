@@ -297,12 +297,48 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   .stock-summary small{font-size:9px}
   .stock-panel{padding:14px}
 }
+
+/* ---- v3.1: stok yerleşimi ve bölge paneli ---- */
+.stock-layout{display:flex;flex-direction:column}
+.stock-col{display:contents}
+.stock-layout .kart{margin-bottom:12px}
+.stk-urun{order:1}.stk-bolge{order:2}.stk-gun{order:3}.stk-ara{order:4}
+@media(min-width:900px){
+  .stock-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,1fr);gap:0 12px;align-items:start}
+  .stock-col{display:flex;flex-direction:column;min-width:0}
+  .stock-col .kart{order:0}
+}
+.region-total{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;margin:-2px 0 12px;padding:10px 12px;border-radius:12px;background:var(--tuz-acik);font-size:12px;color:var(--soluk)}
+.region-total b{font-size:20px;line-height:1;color:var(--tuz);letter-spacing:-.4px}
+.region-item{cursor:pointer;border-radius:10px;padding:8px 6px 11px;margin:0 -6px;transition:background .15s}
+.region-item:hover{background:var(--zemin)}
+.region-item:focus-visible{outline:3px solid var(--bidon);outline-offset:-2px}
+.region-item.acik{background:var(--zemin)}
+.region-top .region-name::before{content:"›";display:inline-block;margin-right:7px;color:var(--soluk);transition:transform .15s}
+.region-item.acik .region-name::before{transform:rotate(90deg)}
+.region-count small{font-weight:600;color:var(--soluk);margin-left:5px}
+.region-detail{margin-top:11px;padding-top:11px;border-top:1px dashed var(--cizgi);cursor:default}
+.region-sentence{font-size:13px;line-height:1.45;margin:0 0 6px}
+.region-sentence b{color:var(--tuz)}
+.region-sub{font-size:11px;color:var(--soluk);margin:0 0 10px}
+.region-prod{display:flex;flex-direction:column;gap:7px;margin-bottom:11px}
+.region-prod-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:12px}
+.region-prod-row b{font-weight:800}
+.region-prod-track{grid-column:1/3;height:5px;border-radius:6px;background:var(--cizgi);overflow:hidden}
+.region-prod-track span{display:block;height:100%;background:var(--bidon);border-radius:6px}
+.region-list{max-height:250px;overflow:auto;border:1px solid var(--cizgi);border-radius:10px;background:var(--kart);font-size:12px}
+.region-list div{display:flex;gap:8px;padding:6px 9px;border-bottom:1px solid var(--cizgi)}
+.region-list div:last-child{border:0}
+.region-list b{flex:none;min-width:74px}
+.region-list span{color:var(--soluk);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.region-more{font-size:11px;color:var(--soluk);margin:7px 2px 0}
+.region-detail .region-xls{min-height:44px;font-size:14px;margin-top:10px}
 </style>
 </head>
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.0</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.1</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -447,30 +483,33 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       <div class="stock-summary"><span>SAHADA</span><strong id="sSaha">0</strong><small>kullanımda</small></div>
       <div class="stock-summary production"><span>ÜRETİMDE</span><strong id="sUretim">0</strong><small>tesiste</small></div>
     </div>
-    <div class="stock-analytics-grid">
-      <div class="kart stock-panel">
+    <div class="stock-layout">
+      <div class="stock-col">
+      <div class="kart stock-panel stk-urun">
         <div class="stock-panel-head"><div><div class="stock-panel-title">Ürün bazında dağılım</div><div class="stock-panel-note">Toplam miktar ve bidonların bulunduğu durum</div></div><span class="stock-count-pill" id="urunSayisi">0 ürün</span></div>
         <div class="chart-legend"><span><i class="legend-dot"></i>Sahada</span><span><i class="legend-dot production"></i>Üretimde</span></div>
         <div id="stokUrunGrafik" class="product-chart" aria-live="polite"></div>
       </div>
-      <div class="kart stock-panel">
-        <div class="stock-panel-head"><div><div class="stock-panel-title">Bölge dağılımı</div><div class="stock-panel-note">Sahadaki bidonların konumlara göre dağılımı</div></div></div>
-        <div id="bolgeGrafik" class="region-chart" aria-live="polite"></div>
-      </div>
-    </div>
-    <div class="stock-secondary-grid">
-    <div class="kart stock-panel">
+      <div class="kart stock-panel stk-gun">
       <div class="stock-panel-head"><div><div class="stock-panel-title">Günlük hareket</div><div class="stock-panel-note">Seçilen tarihteki giriş, çıkış ve iadeler</div></div></div>
       <label for="rGun" style="margin-top:0">Tarih</label>
       <input id="rGun" type="date">
       <div class="movement-summary" id="gunOzet"></div>
       <div class="kaydir"><table id="gunTablo"></table></div>
     </div>
-    <div class="kart stock-panel">
+      </div>
+      <div class="stock-col">
+      <div class="kart stock-panel stk-bolge">
+        <div class="stock-panel-head"><div><div class="stock-panel-title">Bölge dağılımı</div><div class="stock-panel-note">Hangi bölgede kaç bidon var. Bir bölgeye dokun, içindekileri gör.</div></div><span class="stock-count-pill" id="bolgeSayisi">0 bölge</span></div>
+        <div class="region-total" id="bolgeToplam"></div>
+        <div id="bolgeGrafik" class="region-chart" aria-live="polite"></div>
+      </div>
+      <div class="kart stock-panel stk-ara">
       <div class="stock-tools-title">Bidon veya bölge ara</div>
       <input id="ara" placeholder="Bidon ID veya bölge" autocapitalize="characters" autocomplete="off">
       <div id="araSonuc" style="margin-top:8px"></div>
     </div>
+      </div>
     </div>
     <details class="kart stock-panel stock-export">
       <summary class="export-toggle">Excel raporlarını aç</summary>
@@ -1395,19 +1434,49 @@ function stok(){
   }).join('') : '<div class="chart-empty">Henüz stok kaydı bulunmuyor.</div>';
   bolgeTablo(); gunTablo();
 }
+const acikBolgeler = new Set();                       // yenilemede açık kalan bölgeler
+const BOLGESIZ = '(bölgesiz)';
+const bolgeAnahtar = b => b.bolge || BOLGESIZ;
 function bolgeTablo(){
+  const sahada = DB.bidonlar.filter(b => b.durum !== 'URETIMDE');
   const g = {};
-  DB.bidonlar.filter(b => b.durum !== 'URETIMDE').forEach(b => {
-    const z = b.bolge || '(bölgesiz)'; const x = g[z] || (g[z] = { n:0, u:{} }); x.n++; const u = b.urun || '(ürün yok)'; x.u[u] = (x.u[u] || 0) + 1;
-  });
+  sahada.forEach(b => { const z = bolgeAnahtar(b); const x = g[z] || (g[z] = { n:0, u:{} }); x.n++; const u = b.urun || '(ürün yok)'; x.u[u] = (x.u[u] || 0) + 1; });
+  const uret = {}; DB.bidonlar.filter(b => b.durum === 'URETIMDE').forEach(b => { const z = bolgeAnahtar(b); uret[z] = (uret[z] || 0) + 1; });
   const sat = Object.entries(g).sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0], 'tr'));
-  const maxBolge = Math.max(1, ...sat.map(([, v]) => v.n));
+  const toplam = sahada.length, enCok = Math.max(1, ...sat.map(([, v]) => v.n)), tr = n => n.toLocaleString('tr-TR');
+  $('bolgeSayisi').textContent = sat.length + ' bölge';
+  $('bolgeToplam').innerHTML = toplam ? `Sahada toplam <b>${tr(toplam)}</b> bidon · <b>${sat.length}</b> bölgede` : 'Sahada bidon yok.';
   $('bolgeGrafik').innerHTML = sat.length ? sat.map(([z, v]) => {
     const urunler = Object.entries(v.u).sort((a, b) => b[1] - a[1]);
-    const urunOzeti = urunler.slice(0, 3).map(([u, n]) => `${esc(u)} ${n}`).join(' · ') + (urunler.length > 3 ? ` · +${urunler.length - 3} ürün` : '');
-    return `<div class="region-item"><div class="region-top"><span class="region-name">${esc(z)}</span><span class="region-count">${v.n.toLocaleString('tr-TR')} bidon</span></div><div class="region-track" role="img" aria-label="${esc(z)}: ${v.n} bidon"><span style="width:${v.n / maxBolge * 100}%"></span></div><div class="region-products">${urunOzeti}</div></div>`;
-  }).join('') : '<div class="chart-empty">Sahada henüz bidon bulunmuyor.</div>';
+    const ozet = urunler.slice(0, 3).map(([u, n]) => `${esc(u)} ${tr(n)}`).join(' · ') + (urunler.length > 3 ? ` · +${urunler.length - 3} ürün` : '');
+    const acik = acikBolgeler.has(z), yuzde = Math.round(v.n * 100 / toplam);
+    let detay = '';
+    if(acik){
+      const liste = sahada.filter(b => bolgeAnahtar(b) === z).sort((a, b) => String(a.id).localeCompare(String(b.id), 'tr', { numeric:true }));
+      const ur = uret[z] || 0;
+      detay = `<div class="region-detail" data-detay="${esc(z)}"><p class="region-sentence"><b>${esc(z)}</b> bölgesinde şu an <b>${tr(v.n)}</b> bidon var <span class="kucuk">(sahadakilerin %${yuzde})</span></p>`
+        + (ur ? `<p class="region-sub">Son bölgesi <b>${esc(z)}</b> olan toplam ${tr(v.n + ur)} bidon var: ${tr(ur)} tanesi üretime alınmış.</p>` : '')
+        + `<div class="region-prod">${urunler.map(([u, n]) => `<div class="region-prod-row"><span>${esc(u)}</span><b>${tr(n)}</b><div class="region-prod-track"><span style="width:${Math.max(3, Math.round(n * 100 / v.n))}%"></span></div></div>`).join('')}</div>`
+        + `<div class="region-list">${liste.slice(0, 200).map(b => `<div><b>${esc(b.id)}</b><span>${esc([b.urun, b.tarih, b.kisi].filter(Boolean).join(' · ') || '-')}</span></div>`).join('')}</div>`
+        + (liste.length > 200 ? `<div class="region-more">İlk 200 bidon gösteriliyor. Tamamı için Excel'i indir.</div>` : '')
+        + `<button class="ikincil region-xls" data-xls="${esc(z)}">Bu bölgenin listesini indir (Excel)</button></div>`;
+    }
+    return `<div class="region-item${acik ? ' acik' : ''}" role="button" tabindex="0" aria-expanded="${acik}" data-bolge="${esc(z)}"><div class="region-top"><span class="region-name">${esc(z)}</span><span class="region-count">${tr(v.n)} bidon<small>%${yuzde}</small></span></div><div class="region-track"><span style="width:${Math.max(3, Math.round(v.n * 100 / enCok))}%"></span></div><div class="region-products">${ozet}</div>${detay}</div>`;
+  }).join('') : '<div class="kucuk">Henüz sahada bidon yok.</div>';
 }
+function bolgeAcKapat(z){ if(acikBolgeler.has(z)) acikBolgeler.delete(z); else acikBolgeler.add(z); bolgeTablo(); }
+function bolgeExcel(z){
+  const l = DB.bidonlar.filter(b => b.durum !== 'URETIMDE' && bolgeAnahtar(b) === z);
+  excelYaz(`bolge-${z.replace(/[^\w.-]+/g, '_')}-${bugunISO()}.xlsx`, [[('Bölge ' + z).replace(/[:\\\/?*\[\]]/g, '-').slice(0, 31), l.map(bidonSatir)]]);
+}
+$('bolgeGrafik').addEventListener('click', e => {
+  const x = e.target.closest('[data-xls]'); if(x){ bolgeExcel(x.dataset.xls); return; }
+  if(e.target.closest('.region-detail')) return;                     // detay içinde tıklama kapatmasın
+  const r = e.target.closest('[data-bolge]'); if(r) bolgeAcKapat(r.dataset.bolge);
+});
+$('bolgeGrafik').addEventListener('keydown', e => {
+  if((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-bolge]')){ e.preventDefault(); bolgeAcKapat(e.target.dataset.bolge); }
+});
 function gunTablo(){
   if(!$('rGun').value) $('rGun').value = bugunISO();
   const gun = $('rGun').value, say = {};
