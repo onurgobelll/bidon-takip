@@ -4,48 +4,49 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bidon Takip</title>
-<meta name="theme-color" content="#1F4D3A" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#111915" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#155B42" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101A15" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style id="sayfaStil"></style>
 <style>
 :root{
-  --zemin:#F3F1EA; --kart:#FFFFFF; --yazi:#16231D; --soluk:#5C6B63; --cizgi:#D9D5C8;
-  --tuz:#1F4D3A; --tuz-acik:#DCEBE2; --bidon:#1D63C9; --uyari:#B4570A; --uyari-acik:#FBEBD6; --hata:#B3261E; --hata-acik:#F9DEDC;
+  --zemin:#F4F7F4; --kart:#FFFFFF; --yazi:#17251E; --soluk:#728078; --cizgi:#E2E9E3;
+  --tuz:#155B42; --tuz-acik:#E7F2EB; --bidon:#3268C6; --uyari:#A85C12; --uyari-acik:#FFF1DD; --hata:#B3261E; --hata-acik:#F9DEDC;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --zemin:#111915; --kart:#1B2620; --yazi:#EDF1EC; --soluk:#9AAAA1; --cizgi:#2E3C34;
-    --tuz:#6FBF93; --tuz-acik:#1E3529; --bidon:#6AA2F2; --uyari:#F0A04B; --uyari-acik:#3A2A14; --hata:#F28B82; --hata-acik:#3C1F1D;
+    --zemin:#101814; --kart:#18241D; --yazi:#F0F5F1; --soluk:#A4B2A8; --cizgi:#2B3930;
+    --tuz:#78C79D; --tuz-acik:#20382B; --bidon:#82A9F1; --uyari:#F0A04B; --uyari-acik:#3A2A14; --hata:#F28B82; --hata-acik:#3C1F1D;
   }
 }
 *{box-sizing:border-box}
 html{height:100%}
-body{margin:0;min-height:100%;background:var(--zemin);color:var(--yazi);font:500 17px/1.4 Barlow,system-ui,sans-serif;
+body{margin:0;min-height:100%;background:var(--zemin);color:var(--yazi);font:500 15px/1.5 Inter,system-ui,sans-serif;
   padding:env(safe-area-inset-top,0) 0 calc(84px + env(safe-area-inset-bottom,0))}
-main{max-width:600px;margin:0 auto;padding:14px}
-h1{font-size:22px;margin:4px 0 10px;font-weight:700}
-.ust{display:flex;justify-content:space-between;align-items:center}
-.ust button{width:auto;min-height:40px;padding:0 12px;font-size:15px}
-.kart{background:var(--kart);border:1px solid var(--cizgi);border-radius:10px;padding:14px;margin-bottom:12px}
-label{display:block;font-size:14px;color:var(--soluk);margin:10px 0 4px}
+main{max-width:620px;margin:0 auto;padding:17px 18px 28px}
+h1{font-size:18px;margin:0;font-weight:700;letter-spacing:-.25px}
+.ust{display:flex;justify-content:space-between;align-items:center;padding:0 1px 17px;border-bottom:1px solid var(--cizgi)}
+.ust button{width:auto;min-height:40px;padding:0 13px;font-size:13px;border-radius:11px}
+.kart{background:var(--kart);border:1px solid var(--cizgi);border-radius:17px;padding:16px;margin-bottom:14px;box-shadow:0 7px 24px #173a250a}
+label{display:block;font-size:13px;font-weight:600;color:var(--soluk);margin:12px 0 5px}
 input[type=range]{padding:0}
-input,select,textarea{width:100%;min-height:50px;font:inherit;font-size:18px;color:var(--yazi);background:var(--zemin);
-  border:1px solid var(--cizgi);border-radius:8px;padding:0 12px}
+input,select,textarea{width:100%;min-height:48px;font:inherit;font-size:15px;color:var(--yazi);background:var(--kart);
+  border:1px solid var(--cizgi);border-radius:11px;padding:0 12px}
 input:focus,select:focus,button:focus-visible{outline:3px solid var(--bidon);outline-offset:1px}
-button{width:100%;min-height:54px;border:0;border-radius:8px;font:700 18px Barlow,system-ui,sans-serif;cursor:pointer;
-  background:var(--tuz);color:#fff}
+button{width:100%;min-height:52px;border:0;border-radius:12px;font:700 15px Inter,system-ui,sans-serif;cursor:pointer;
+  background:var(--tuz);color:#fff;transition:transform .12s ease,filter .12s ease}
+button:active{transform:scale(.985);filter:brightness(.96)}
 @media (prefers-color-scheme: dark){button{color:#0C1510}}
-button.ikincil{background:transparent;color:var(--yazi);border:1.5px solid var(--cizgi)}
+button.ikincil{background:var(--kart);color:var(--yazi);border:1px solid var(--cizgi)}
 button.mavi{background:var(--bidon)}
 button.mavi{color:#fff}
 @media (prefers-color-scheme: dark){button.mavi{color:#0C1510}}
@@ -56,18 +57,51 @@ button:disabled{opacity:.5}
 .sira3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .sira4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sira4m{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.sira4m button{font-size:15px;padding:0 4px}
+.sira4m button{font-size:13px;padding:0 4px}
 .sekme{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--kart);
-  border-top:1px solid var(--cizgi);padding-bottom:env(safe-area-inset-bottom,0)}
-.sekme button{background:transparent;color:var(--soluk);border-radius:0;min-height:62px;font-size:16px}
-.sekme button.aktif{color:var(--tuz);box-shadow:inset 0 3px 0 var(--tuz)}
+  border-top:1px solid var(--cizgi);padding:5px 0 env(safe-area-inset-bottom,0);box-shadow:0 -8px 24px #173a250c}
+.sekme button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:transparent;color:var(--soluk);border-radius:13px;min-height:58px;font-size:11px;font-weight:600;margin:0 5px}
+.sekme button svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sekme button.aktif{color:var(--tuz);background:var(--tuz-acik);box-shadow:none}
 .durum{padding:10px 12px;border-radius:8px;margin:10px 0;font-size:16px}
 .durum.bilgi{background:var(--tuz-acik)}
 .durum.uyari{background:var(--uyari-acik);color:var(--uyari)}
 .durum.hata{background:var(--hata-acik);color:var(--hata)}
-.deneme{background:var(--uyari-acik);color:var(--uyari);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:15px}
+.deneme{background:var(--uyari-acik);color:var(--uyari);border:1px solid color-mix(in srgb,var(--uyari) 20%,transparent);border-radius:12px;padding:10px 13px;margin:12px 0;font-size:13px}
 .sayac{font-size:15px;color:var(--soluk);margin:6px 2px 12px}
 .sayac b{color:var(--yazi);font-size:18px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:38px;height:38px;border-radius:12px;box-shadow:0 3px 9px #173a2520}
+.brand-copy{display:flex;flex-direction:column;line-height:1.15;gap:4px}
+.brand-kicker{font-size:9px;letter-spacing:1.35px;font-weight:800;color:var(--soluk)}
+.app-version{font-size:10px;font-weight:700;color:var(--soluk);background:var(--zemin);border:1px solid var(--cizgi);padding:3px 6px;border-radius:20px;vertical-align:2px;margin-left:3px}
+.dashboard-head{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:17px 0 13px;padding:21px 19px;border-radius:18px;color:#fff;background:linear-gradient(120deg,#103E31 0%,#176346 63%,#287958 100%);box-shadow:0 10px 25px #174e3826}
+.dashboard-head:after{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff16;border-radius:50%;right:-70px;top:-90px;box-shadow:0 0 0 21px #ffffff08,0 0 0 42px #ffffff05;pointer-events:none}
+.dashboard-head>div,.dashboard-head>span{position:relative;z-index:1}
+.eyebrow{font-size:9px;font-weight:700;letter-spacing:1.6px;color:#A8D8BA;text-transform:uppercase}
+.dashboard-title{font-size:24px;line-height:1.15;font-weight:700;letter-spacing:-.65px;margin-top:7px}
+.dashboard-date{font-size:12px;color:#D3E7DA;margin-top:7px;text-transform:capitalize}
+.live-dot{font-size:10px;letter-spacing:.6px;font-weight:700;border:1px solid #ffffff40;background:#ffffff16;border-radius:30px;padding:6px 9px;white-space:nowrap}
+.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:23px}
+.metric{position:relative;background:var(--kart);border:1px solid var(--cizgi);border-radius:15px;padding:12px 10px;min-height:86px;box-shadow:0 5px 16px #173a2507}
+.metric-label{font-size:10px;line-height:1.3;color:var(--soluk);font-weight:600;min-height:26px}
+.metric-value{font-size:24px;line-height:1.15;font-weight:700;letter-spacing:-.7px;margin-top:4px}
+.metric-mark{display:none}
+.metric.production{background:linear-gradient(160deg,var(--kart),color-mix(in srgb,var(--bidon) 7%,var(--kart)))}
+.metric.production .metric-label:before{background:var(--bidon)}
+.metric-label:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--tuz);vertical-align:1px;margin-right:5px}
+.block-title{font-size:14px;font-weight:700;margin:0 2px 8px;letter-spacing:-.1px}
+.entry-card{background:var(--kart);border:1px solid var(--cizgi);color:var(--yazi);padding:13px;box-shadow:0 8px 22px #173a2510}
+.entry-card .kucuk{color:var(--soluk)}
+.entry-card button#cek{display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(110deg,#155B42,#1D7654);color:#fff;min-height:57px;font-size:15px;box-shadow:0 7px 15px #155b4228}
+.entry-card button#cek svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.entry-card button.ikincil{background:var(--zemin);color:var(--yazi);border-color:var(--cizgi);min-height:47px;font-size:13px}
+.quick-actions button{display:flex;align-items:center;justify-content:center;gap:7px}
+.quick-actions button svg{width:16px;height:16px;stroke:var(--tuz);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.entry-card .entry-sep{display:none}
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.home-tip{font-size:11px;color:var(--soluk);margin:10px 3px 1px}
+.section-label{font-size:10px;letter-spacing:1px;font-weight:700;color:var(--soluk);text-transform:uppercase;margin:0 2px 8px}
 .gizle{display:none!important}
 table{width:100%;border-collapse:collapse;font-size:16px}
 th,td{padding:8px 6px;border-bottom:1px solid var(--cizgi);text-align:right}
@@ -89,6 +123,71 @@ video{width:100%;max-height:260px;object-fit:cover;border-radius:10px;background
 .ozet{font-size:16px;margin:8px 0}
 .ozet b{font-size:20px}
 .baski-onizleme{border:1px dashed var(--cizgi);padding:10px;overflow:auto;background:#fff;border-radius:8px}
+.ozet{line-height:1.5}
+.oge{padding:9px 2px;border-bottom:1px solid var(--cizgi)}
+.oge button{border-radius:10px}
+.durum{border:1px solid var(--cizgi);border-radius:12px;font-size:13px}
+table{font-size:13px}
+th,td{padding:10px 8px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.35px}
+tr.toplam td{border-top:1px solid var(--cizgi)}
+@media(max-width:390px){main{padding-left:14px;padding-right:14px}.metric-grid{gap:7px}.metric{padding:11px 8px;min-height:81px}.metric-label{font-size:9px}.metric-value{font-size:22px}.dashboard-title{font-size:22px}}
+@media(min-width:640px){.metric-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.metric{padding:12px 10px}.metric-label{font-size:10px}}
+.stock-head{margin:19px 2px 14px}
+.stock-kicker{font-size:10px;letter-spacing:1.35px;font-weight:800;color:var(--tuz)}
+.stock-title{font-size:25px;line-height:1.2;letter-spacing:-.7px;margin:5px 0 4px}
+.stock-subtitle{font-size:12px;color:var(--soluk)}
+.stock-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:13px}
+.stock-summary{min-height:105px;padding:13px 12px;border:1px solid var(--cizgi);border-radius:15px;background:var(--kart);box-shadow:0 5px 16px #173a2508;display:flex;flex-direction:column;justify-content:space-between}
+.stock-summary span{font-size:9px;line-height:1.25;letter-spacing:.6px;font-weight:700;color:var(--soluk)}
+.stock-summary strong{font-size:27px;line-height:1;font-weight:800;letter-spacing:-.8px}
+.stock-summary small{font-size:10px;color:var(--soluk)}
+.stock-summary.total{background:linear-gradient(145deg,#124632,#1E6A4D);color:#fff;border-color:transparent}
+.stock-summary.total span,.stock-summary.total small{color:#D1E6D9}
+.stock-summary.production strong{color:var(--bidon)}
+.stock-panel{padding:16px}
+.stock-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.stock-panel-title{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.stock-panel-note{font-size:11px;color:var(--soluk);margin-top:3px}
+.stock-count-pill{font-size:10px;font-weight:700;color:var(--tuz);background:var(--tuz-acik);padding:5px 8px;border-radius:20px;white-space:nowrap}
+.chart-legend{display:flex;gap:13px;flex-wrap:wrap;margin:0 0 13px;font-size:10px;color:var(--soluk)}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px}
+.legend-dot{width:7px;height:7px;border-radius:50%;background:var(--tuz)}
+.legend-dot.production{background:var(--bidon)}
+.product-chart,.region-chart{display:flex;flex-direction:column;gap:14px}
+.product-row{padding-bottom:12px;border-bottom:1px solid var(--cizgi)}
+.product-row:last-child{padding-bottom:0;border-bottom:0}
+.product-top,.region-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.product-name{font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.product-meta{font-size:10px;color:var(--soluk);margin-top:3px}
+.product-total{font-size:16px;font-weight:800;text-align:right;white-space:nowrap}
+.product-total small{font-size:9px;font-weight:600;color:var(--soluk);margin-left:3px}
+.product-track,.region-track{height:7px;background:var(--zemin);border-radius:10px;overflow:hidden;margin-top:9px}
+.product-total-bar{display:flex;height:100%;min-width:3px;border-radius:10px;overflow:hidden}
+.bar-field{height:100%;background:var(--tuz);border-radius:10px 0 0 10px}
+.bar-production{height:100%;background:var(--bidon);border-radius:0 10px 10px 0}
+.region-item{padding-bottom:11px;border-bottom:1px solid var(--cizgi)}
+.region-item:last-child{padding-bottom:0;border:0}
+.region-name{font-size:12px;font-weight:700}
+.region-count{font-size:12px;font-weight:800;color:var(--tuz)}
+.region-track{height:6px;margin-top:7px}
+.region-track span{display:block;height:100%;min-width:3px;background:linear-gradient(90deg,#155B42,#55A77A);border-radius:9px}
+.region-products{font-size:10px;color:var(--soluk);margin-top:4px}
+.chart-empty{padding:17px 12px;text-align:center;background:var(--zemin);border-radius:12px;color:var(--soluk);font-size:12px}
+.movement-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:11px 0 13px}
+.movement-chip{padding:8px 9px;border-radius:11px;background:var(--zemin)}
+.movement-chip span{display:block;color:var(--soluk);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.45px}
+.movement-chip strong{display:block;font-size:18px;line-height:1.2;margin-top:3px}
+.movement-chip.in strong{color:var(--tuz)}
+.movement-chip.out strong{color:var(--bidon)}
+.movement-chip.return strong{color:#B36B20}
+.stock-tools-title{font-size:13px;font-weight:700;margin:0 0 7px}
+.export-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:0 12px;border:1px solid var(--cizgi);border-radius:11px;background:var(--zemin);color:var(--yazi);font-size:13px}
+.export-toggle:after{content:"＋";font-size:18px;color:var(--tuz)}
+.stock-export[open] .export-toggle:after{content:"−"}
+.export-toggle::-webkit-details-marker{display:none}
+.export-toggle{list-style:none;cursor:pointer}
+.export-body{padding-top:12px}
 
 /* QR etiket (ekran + baskı) */
 #baski{display:none}
@@ -107,10 +206,105 @@ video{width:100%;max-height:260px;object-fit:cover;border-radius:10px;background
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
+<style>
+/* Product UI: responsive operations workspace */
+:root{--zemin:#F3F6F4;--kart:#FFFFFF;--yazi:#17251F;--soluk:#748078;--cizgi:#E2E8E3;--tuz:#155B42;--tuz-acik:#E8F2EC;--bidon:#3268C6}
+@media(prefers-color-scheme:dark){:root{--zemin:#101814;--kart:#19241E;--yazi:#F1F5F2;--soluk:#9EADA4;--cizgi:#2B3931;--tuz:#78C79D;--tuz-acik:#20382B;--bidon:#82A9F1}}
+body{background:var(--zemin);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.5;color:var(--yazi);padding-bottom:calc(88px + env(safe-area-inset-bottom,0))}
+main{max-width:760px;padding:18px 18px 28px}
+.ust{padding:2px 1px 15px;border-bottom:1px solid var(--cizgi)}
+.brand-logo{width:40px;height:40px;border-radius:12px}
+.brand-kicker{font-size:9px;letter-spacing:1.4px}
+.app-version{font-size:9px}
+.kart{border-radius:16px;padding:16px;box-shadow:0 4px 18px #193c2708}
+input,select,textarea{background:var(--kart);border-radius:10px;font-size:14px;min-height:48px}
+button{font-family:Inter,system-ui,sans-serif;font-size:14px;border-radius:11px;min-height:48px}
+button.ikincil{border-color:var(--cizgi)}
+button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid color-mix(in srgb,var(--bidon) 35%,transparent);outline-offset:2px}
+.dashboard-head{min-height:154px;padding:22px;border-radius:19px;margin:17px 0 12px}
+.dashboard-title{font-size:26px;letter-spacing:-.75px}
+.metric-grid{gap:9px;margin-bottom:21px}
+.metric{border-radius:14px;box-shadow:0 3px 14px #193c2706}
+.entry-card{padding:14px;border-radius:16px}
+.entry-card button#cek{border-radius:12px}
+.entry-card button.ikincil{border-radius:11px}
+.deneme{border-radius:11px}
+.durum{border-radius:11px}
+.stock-head{margin:21px 2px 15px}
+.stock-title{font-size:27px;letter-spacing:-.9px}
+.stock-summary-grid{gap:9px}
+.stock-summary{border-radius:14px;min-height:100px;padding:13px}
+.stock-summary.total{box-shadow:0 8px 20px #155b421d}
+.stock-analytics-grid,.stock-secondary-grid{display:grid;grid-template-columns:1fr;gap:0;align-items:start}
+.stock-analytics-grid>.kart,.stock-secondary-grid>.kart{margin-bottom:12px}
+.stock-panel{border-radius:15px}
+.product-chart,.region-chart{gap:12px}
+.product-row{padding-bottom:11px}
+.product-name{font-size:12px}
+.product-meta,.region-products{font-size:10px}
+.product-track{height:8px}
+.region-track{height:7px}
+.stock-export{max-width:520px}
+.export-toggle{font-family:Inter,system-ui,sans-serif;font-weight:600}
+.export-toggle:hover,.sekme button:hover{filter:brightness(.98)}
+.sira4m{gap:7px}
+.sira4m button{font-size:12px;border-radius:10px}
+.liste{max-height:420px}
+.oge{font-size:13px;padding:9px 2px}
+.oge small{font-size:11px}
+@media(min-width:640px){main{padding-left:28px;padding-right:28px}.metric-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.metric{padding:13px 12px}.metric-label{font-size:10px}.stock-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:900px){
+  body{padding:0;min-height:100vh}
+  main{max-width:1480px;margin-left:244px;padding:27px clamp(30px,4vw,62px) 42px}
+  .sekme{left:0;right:auto;top:0;bottom:0;width:220px;display:flex;flex-direction:column;gap:7px;padding:155px 13px 24px;background:#122A20;border:0;border-radius:0;box-shadow:8px 0 30px #102b1d12}
+  .sekme:before{content:"YAKAMOZ\A Operasyon Merkezi";white-space:pre;position:absolute;top:35px;left:26px;color:#fff;font-size:15px;font-weight:700;line-height:1.7;letter-spacing:.1px}
+  .sekme:after{content:"SAHA YÖNETİMİ";position:absolute;top:119px;left:28px;color:#8FA99A;font-size:9px;font-weight:700;letter-spacing:1.3px}
+  .sekme button{display:grid;grid-template-columns:22px 1fr;justify-content:start;justify-items:start;gap:12px;width:100%;margin:0;padding:0 14px;min-height:47px;border-radius:10px;color:#ADC1B5;font-size:13px}
+  .sekme button svg{width:18px;height:18px}
+  .sekme button.aktif{color:#F4FAF6;background:#244638;box-shadow:inset 3px 0 0 #81CAA0}
+  .ust{padding-bottom:17px}
+  #sGiris{max-width:1120px}
+  #sToplu,#sQR{max-width:920px}
+  .dashboard-head{min-height:190px;padding:28px 30px;margin-top:23px;border-radius:22px}
+  .dashboard-title{font-size:32px}
+  .eyebrow{font-size:10px}
+  .dashboard-date{font-size:13px}
+  .metric-grid{gap:12px;margin-bottom:26px}
+  .metric{min-height:100px;padding:15px 16px;border-radius:15px}
+  .metric-label{font-size:11px}
+  .metric-value{font-size:28px}
+  .section-label{font-size:10px;margin-bottom:9px}
+  .entry-card{max-width:780px;padding:17px}
+  .entry-card button#cek{min-height:60px}
+  .quick-actions button{min-height:48px}
+  .stock-head{margin-top:24px}
+  .stock-title{font-size:30px}
+  .stock-summary{min-height:108px;padding:16px}
+  .stock-summary span{font-size:10px}
+  .stock-summary strong{font-size:30px}
+  .stock-panel{padding:18px}
+  .stock-analytics-grid{grid-template-columns:minmax(0,1.25fr) minmax(280px,1fr);gap:12px}
+  .stock-secondary-grid{grid-template-columns:minmax(0,1.25fr) minmax(280px,1fr);gap:12px}
+}
+@media(max-width:420px){
+  main{padding-left:14px;padding-right:14px}
+  .dashboard-head{min-height:138px;padding:18px}
+  .dashboard-title{font-size:23px}
+  .live-dot{font-size:8px;padding:5px 7px}
+  .stock-summary{min-height:91px;padding:10px 9px}
+  .stock-summary span{font-size:8px;letter-spacing:.3px}
+  .stock-summary strong{font-size:23px}
+  .stock-summary small{font-size:9px}
+  .stock-panel{padding:14px}
+}
+</style>
 </head>
 <body>
 <main>
-  <div class="ust"><h1>Bidon Takip <span class="kucuk">v2.7</span></h1><button class="ikincil" id="ayarBtn">Ayarlar</button></div>
+  <div class="ust">
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.0</span></h1></div></div>
+    <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
+  </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
   <div class="deneme gizle" id="kuyrukBanner"></div>
   <div class="deneme gizle" id="denemeBanner">DENEME MODU: veriler sadece bu telefonda/tarayıcıda durur, Google Sheet'e gitmez.</div>
@@ -141,17 +335,21 @@ video{width:100%;max-height:260px;object-fit:cover;border-radius:10px;background
 
   <!-- GİRİŞ (foto) -->
   <section id="sGiris">
-    <div class="sayac" id="bugunSayac">Bugün giriş: <b>–</b></div>
-    <div class="kart">
+    <div class="dashboard-head"><div><div class="eyebrow">SAHA OPERASYONLARI</div><div class="dashboard-title">Operasyon özeti</div><div class="dashboard-date" id="dashboardDate">Güncel durum</div></div><span class="live-dot">GENEL BAKIŞ</span></div>
+    <div class="metric-grid" aria-label="Güncel özet">
+      <div class="metric"><div class="metric-label"><span class="metric-mark"></span>Toplam bidon</div><div class="metric-value" id="statTotal">–</div></div>
+      <div class="metric"><div class="metric-label"><span class="metric-mark"></span>Sahada</div><div class="metric-value" id="statField">–</div></div>
+      <div class="metric production"><div class="metric-label"><span class="metric-mark"></span>Üretimde</div><div class="metric-value" id="statProduction">–</div></div>
+      <div class="metric"><div class="metric-label"><span class="metric-mark"></span>Bugünkü hareket</div><div class="metric-value" id="statToday">–</div></div>
+    </div>
+    <div class="section-label">HIZLI İŞLEM</div>
+    <div class="kart entry-card">
       <input type="file" id="foto" accept="image/*" capture="environment" class="gizle">
       <input type="file" id="fotoQR" accept="image/*" capture="environment" class="gizle">
-      <button id="cek">Fotoğraf çek (QR + etiket)</button>
-      <div style="height:10px"></div>
-      <button class="ikincil" id="elle">Elle gir</button>
-      <div style="height:10px"></div>
-      <button class="ikincil" id="galeri">Galeriden seç</button>
+      <button id="cek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>QR ve etiketi tara</button>
+      <div class="quick-actions"><button class="ikincil" id="elle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4.2-.8L19 8.4 15.6 5 4.8 15.8 4 20Z"/></svg>Elle giriş</button><button class="ikincil" id="galeri"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/></svg>Galeriden seç</button></div>
       <input type="file" id="fotoGaleri" accept="image/*" class="gizle">
-      <div class="kucuk" style="margin-top:8px">Çok bidon gelince "Toplu" sekmesini kullan.</div>
+      <div class="home-tip">Birden fazla bidon için <b>Toplu</b> ekranını kullan.</div>
       <div id="durum"></div>
     </div>
 
@@ -243,38 +441,50 @@ video{width:100%;max-height:260px;object-fit:cover;border-radius:10px;background
 
   <!-- STOK -->
   <section id="sStok" class="gizle">
-    <div class="ikili" style="margin-bottom:12px">
-      <div class="kart"><div class="buyuk" id="sSaha">0</div><div class="kucuk">sahada</div></div>
-      <div class="kart"><div class="buyuk" id="sUretim">0</div><div class="kucuk">üretimde</div></div>
+    <div class="stock-head"><div class="stock-kicker">STOK YÖNETİMİ</div><h2 class="stock-title">Stok durumu</h2><div class="stock-subtitle">Ürün, konum ve hareketlerin özeti</div></div>
+    <div class="stock-summary-grid" aria-label="Stok özeti">
+      <div class="stock-summary total"><span>TOPLAM STOK</span><strong id="sToplam">0</strong><small>kayıtlı bidon</small></div>
+      <div class="stock-summary"><span>SAHADA</span><strong id="sSaha">0</strong><small>kullanımda</small></div>
+      <div class="stock-summary production"><span>ÜRETİMDE</span><strong id="sUretim">0</strong><small>tesiste</small></div>
     </div>
-    <div class="kart">
-      <b>Ürün bazında stok</b>
-      <div class="kaydir"><table id="stokTablo"></table></div>
+    <div class="stock-analytics-grid">
+      <div class="kart stock-panel">
+        <div class="stock-panel-head"><div><div class="stock-panel-title">Ürün bazında dağılım</div><div class="stock-panel-note">Toplam miktar ve bidonların bulunduğu durum</div></div><span class="stock-count-pill" id="urunSayisi">0 ürün</span></div>
+        <div class="chart-legend"><span><i class="legend-dot"></i>Sahada</span><span><i class="legend-dot production"></i>Üretimde</span></div>
+        <div id="stokUrunGrafik" class="product-chart" aria-live="polite"></div>
+      </div>
+      <div class="kart stock-panel">
+        <div class="stock-panel-head"><div><div class="stock-panel-title">Bölge dağılımı</div><div class="stock-panel-note">Sahadaki bidonların konumlara göre dağılımı</div></div></div>
+        <div id="bolgeGrafik" class="region-chart" aria-live="polite"></div>
+      </div>
     </div>
-    <div class="kart">
-      <b>Bölge bazında (sahada)</b>
-      <div class="kaydir"><table id="bolgeTablo"></table></div>
-    </div>
-    <div class="kart">
-      <label for="rGun" style="margin-top:0">Günlük hareket</label>
+    <div class="stock-secondary-grid">
+    <div class="kart stock-panel">
+      <div class="stock-panel-head"><div><div class="stock-panel-title">Günlük hareket</div><div class="stock-panel-note">Seçilen tarihteki giriş, çıkış ve iadeler</div></div></div>
+      <label for="rGun" style="margin-top:0">Tarih</label>
       <input id="rGun" type="date">
+      <div class="movement-summary" id="gunOzet"></div>
       <div class="kaydir"><table id="gunTablo"></table></div>
     </div>
-    <div class="kart">
-      <label for="ara" style="margin-top:0">Bidon ara</label>
+    <div class="kart stock-panel">
+      <div class="stock-tools-title">Bidon veya bölge ara</div>
       <input id="ara" placeholder="Bidon ID veya bölge" autocapitalize="characters" autocomplete="off">
       <div id="araSonuc" style="margin-top:8px"></div>
     </div>
-    <div class="kart">
-      <div class="sira">
-        <div><label for="xBas" style="margin-top:0">Hareketler: başlangıç</label><input id="xBas" type="date"></div>
-        <div><label for="xBit" style="margin-top:0">bitiş</label><input id="xBit" type="date"></div>
-      </div>
-      <div class="kucuk" style="margin:6px 0 12px">Tarih aralığı sadece Hareketler sayfasına uygulanır; Bidonlar sayfası her zaman tamamdır. Tarihler boşsa tüm hareketler iner. "Sahadaki bidonlar" dosyası sadece aktif (sahadaki) bidonları içerir.</div>
-      <button id="indirSaha">Sahadaki tüm bidonları indir (Excel)</button>
-      <div style="height:10px"></div>
-      <button class="ikincil" id="indirHepsi">Tüm kayıt + hareketler (Excel)</button>
     </div>
+    <details class="kart stock-panel stock-export">
+      <summary class="export-toggle">Excel raporlarını aç</summary>
+      <div class="export-body">
+        <div class="sira">
+          <div><label for="xBas" style="margin-top:0">Hareket başlangıcı</label><input id="xBas" type="date"></div>
+          <div><label for="xBit" style="margin-top:0">Hareket bitişi</label><input id="xBit" type="date"></div>
+        </div>
+        <div class="kucuk" style="margin:6px 0 12px">Tarih aralığı hareketler sayfasına uygulanır. Bidonlar sayfası tüm kayıtları içerir.</div>
+        <button id="indirSaha">Sahadaki bidonları indir</button>
+        <div style="height:8px"></div>
+        <button class="ikincil" id="indirHepsi">Tüm kayıt ve hareketleri indir</button>
+      </div>
+    </details>
     <button class="ikincil" id="yenile">Yenile</button>
   </section>
 
@@ -330,10 +540,10 @@ video{width:100%;max-height:260px;object-fit:cover;border-radius:10px;background
 <datalist id="bolgeListe"></datalist>
 
 <nav class="sekme">
-  <button id="tGiris" class="aktif">Giriş</button>
-  <button id="tToplu">Toplu</button>
-  <button id="tStok">Stok</button>
-  <button id="tQR">QR</button>
+  <button id="tGiris" class="aktif"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M9 20v-6h6v6"/></svg><span>Giriş</span></button>
+  <button id="tToplu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1"/><circle cx="16" cy="12" r="1"/><circle cx="10" cy="18" r="1"/></svg><span>Toplu</span></button>
+  <button id="tStok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5m0 14h16"/><path d="m7 15 4-4 3 2 5-6"/></svg><span>Stok</span></button>
+  <button id="tQR"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h6v2h-6z"/></svg><span>QR Etiket</span></button>
 </nav>
 
 <script>
@@ -751,8 +961,13 @@ async function yukle(){
 function yenileUI(){
   $('urunListe').innerHTML = urunListesi().map(u => `<option>${esc(u)}</option>`).join('');
   $('bolgeListe').innerHTML = bolgeListesi().map(u => `<option>${esc(u)}</option>`).join('');
-  const n = DB.hareketler.filter(h => h.islem === 'GIRIS' && h.gun === bugunISO()).length;
-  $('bugunSayac').innerHTML = `Bugün giriş: <b>${n}</b> bidon`;
+  const saha = DB.bidonlar.filter(b => b.durum !== 'URETIMDE').length;
+  const uretim = DB.bidonlar.length - saha;
+  $('statTotal').textContent = DB.bidonlar.length.toLocaleString('tr-TR');
+  $('statField').textContent = saha.toLocaleString('tr-TR');
+  $('statProduction').textContent = uretim.toLocaleString('tr-TR');
+  $('statToday').textContent = DB.hareketler.filter(h => h.gun === bugunISO()).length.toLocaleString('tr-TR');
+  $('dashboardDate').textContent = new Intl.DateTimeFormat('tr-TR', { weekday:'long', day:'numeric', month:'long' }).format(new Date());
   $('denemeBanner').classList.toggle('gizle', !demo());
   qrSonGoster(); kuyrukGoster();
   if(!$('sStok').classList.contains('gizle')) stok();
@@ -1170,11 +1385,14 @@ function stok(){
   });
   const sa = DB.bidonlar.filter(b => b.durum !== 'URETIMDE').length, ur = DB.bidonlar.length - sa;
   $('sSaha').textContent = sa; $('sUretim').textContent = ur;
+  $('sToplam').textContent = DB.bidonlar.length.toLocaleString('tr-TR');
   const satirlar = Object.entries(say).sort((a, b) => (b[1].saha + b[1].uretim) - (a[1].saha + a[1].uretim));
-  $('stokTablo').innerHTML = '<tr><th>Ürün</th><th>Sahada</th><th>Üretimde</th><th>Toplam</th></tr>' +
-    (satirlar.length ? satirlar.map(([u, s]) => `<tr><td>${esc(u)}</td><td>${s.saha}</td><td>${s.uretim}</td><td>${s.saha + s.uretim}</td></tr>`).join('') +
-      `<tr class="toplam"><td>Toplam</td><td>${sa}</td><td>${ur}</td><td>${sa + ur}</td></tr>`
-      : '<tr><td colspan="4" class="kucuk">Henüz kayıt yok.</td></tr>');
+  const maxUrun = Math.max(1, ...satirlar.map(([, s]) => s.saha + s.uretim));
+  $('urunSayisi').textContent = `${satirlar.length} ürün`;
+  $('stokUrunGrafik').innerHTML = satirlar.length ? satirlar.map(([u, s]) => {
+    const toplam = s.saha + s.uretim, genislik = toplam / maxUrun * 100, sahaYuzde = toplam ? s.saha / toplam * 100 : 0;
+    return `<div class="product-row"><div class="product-top"><div><div class="product-name">${esc(u)}</div><div class="product-meta">${s.saha.toLocaleString('tr-TR')} sahada <span aria-hidden="true">·</span> ${s.uretim.toLocaleString('tr-TR')} üretimde</div></div><div class="product-total">${toplam.toLocaleString('tr-TR')}<small>bidon</small></div></div><div class="product-track" role="img" aria-label="${esc(u)}: ${s.saha} sahada, ${s.uretim} üretimde"><div class="product-total-bar" style="width:${genislik}%"><span class="bar-field" style="width:${sahaYuzde}%"></span><span class="bar-production" style="width:${100 - sahaYuzde}%"></span></div></div></div>`;
+  }).join('') : '<div class="chart-empty">Henüz stok kaydı bulunmuyor.</div>';
   bolgeTablo(); gunTablo();
 }
 function bolgeTablo(){
@@ -1182,10 +1400,13 @@ function bolgeTablo(){
   DB.bidonlar.filter(b => b.durum !== 'URETIMDE').forEach(b => {
     const z = b.bolge || '(bölgesiz)'; const x = g[z] || (g[z] = { n:0, u:{} }); x.n++; const u = b.urun || '(ürün yok)'; x.u[u] = (x.u[u] || 0) + 1;
   });
-  const sat = Object.entries(g).sort((a, b) => a[0].localeCompare(b[0], 'tr'));
-  $('bolgeTablo').innerHTML = '<tr><th>Bölge</th><th>Bidon</th><th style="text-align:left">Ürünler</th></tr>' + (sat.length
-    ? sat.map(([z, v]) => `<tr><td>${esc(z)}</td><td><b>${v.n}</b></td><td style="text-align:left">${Object.entries(v.u).sort((a, b) => b[1] - a[1]).map(([u, n]) => esc(u) + ' ' + n).join(' · ')}</td></tr>`).join('')
-    : '<tr><td colspan="3" class="kucuk">Sahada bidon yok.</td></tr>');
+  const sat = Object.entries(g).sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0], 'tr'));
+  const maxBolge = Math.max(1, ...sat.map(([, v]) => v.n));
+  $('bolgeGrafik').innerHTML = sat.length ? sat.map(([z, v]) => {
+    const urunler = Object.entries(v.u).sort((a, b) => b[1] - a[1]);
+    const urunOzeti = urunler.slice(0, 3).map(([u, n]) => `${esc(u)} ${n}`).join(' · ') + (urunler.length > 3 ? ` · +${urunler.length - 3} ürün` : '');
+    return `<div class="region-item"><div class="region-top"><span class="region-name">${esc(z)}</span><span class="region-count">${v.n.toLocaleString('tr-TR')} bidon</span></div><div class="region-track" role="img" aria-label="${esc(z)}: ${v.n} bidon"><span style="width:${v.n / maxBolge * 100}%"></span></div><div class="region-products">${urunOzeti}</div></div>`;
+  }).join('') : '<div class="chart-empty">Sahada henüz bidon bulunmuyor.</div>';
 }
 function gunTablo(){
   if(!$('rGun').value) $('rGun').value = bugunISO();
@@ -1196,6 +1417,7 @@ function gunTablo(){
   const t = { GIRIS:0, CIKIS:0, IADE:0 };
   const s = Object.entries(say).sort((a, b) => a[0].localeCompare(b[0], 'tr'));
   s.forEach(([, v]) => { t.GIRIS += v.GIRIS; t.CIKIS += v.CIKIS; t.IADE += v.IADE; });
+  $('gunOzet').innerHTML = `<div class="movement-chip in"><span>Giriş</span><strong>${t.GIRIS.toLocaleString('tr-TR')}</strong></div><div class="movement-chip out"><span>Çıkış</span><strong>${t.CIKIS.toLocaleString('tr-TR')}</strong></div><div class="movement-chip return"><span>İade</span><strong>${t.IADE.toLocaleString('tr-TR')}</strong></div>`;
   $('gunTablo').innerHTML = `<tr><th>${isoToTR(gun)}</th><th>Giriş</th><th>Çıkış</th><th>İade</th></tr>` +
     (s.length ? s.map(([u, v]) => `<tr><td>${esc(u)}</td><td>${v.GIRIS || ''}</td><td>${v.CIKIS || ''}</td><td>${v.IADE || ''}</td></tr>`).join('') +
       `<tr class="toplam"><td>Toplam</td><td>${t.GIRIS}</td><td>${t.CIKIS}</td><td>${t.IADE}</td></tr>`
