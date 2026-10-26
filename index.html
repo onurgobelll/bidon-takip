@@ -298,7 +298,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   .stock-panel{padding:14px}
 }
 
-/* ---- v3.1: stok yerleşimi ve bölge paneli ---- */
+/* ---- v3.2: stok yerleşimi ve bölge paneli ---- */
 .stock-layout{display:flex;flex-direction:column}
 .stock-col{display:contents}
 .stock-layout .kart{margin-bottom:12px}
@@ -333,12 +333,52 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 .region-list span{color:var(--soluk);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .region-more{font-size:11px;color:var(--soluk);margin:7px 2px 0}
 .region-detail .region-xls{min-height:44px;font-size:14px;margin-top:10px}
+
+/* ---- v3.2: toplu tarama geri bildirimi ---- */
+.cam-wrap{position:relative;border-radius:14px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 0 transparent}
+.cam-wrap video{display:block;width:100%;max-height:42vh;object-fit:cover;border-radius:0}
+.cam-wrap.flash-ok{outline:4px solid #22A06B;outline-offset:-4px}
+.cam-wrap.flash-warn{outline:4px solid #E39A2D;outline-offset:-4px}
+.cam-wrap.flash-err{outline:4px solid #D6453D;outline-offset:-4px}
+.cam-wrap.flash-info{outline:4px solid #8FA0B3;outline-offset:-4px}
+.cam-chips{position:absolute;left:8px;top:8px;display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 16px)}
+.cam-chips .chip{font:800 15px/1 Inter,system-ui,sans-serif;padding:7px 10px;border-radius:20px;background:#0009;color:#fff;backdrop-filter:blur(3px)}
+.cam-chips .chip.ok{background:#177A4DE6}.cam-chips .chip.warn{background:#C47A12E6}.cam-chips .chip.err{background:#C93B33E6}.cam-chips .chip.info{background:#3F5870E6}
+.cam-toast{position:absolute;left:8px;right:8px;bottom:8px;padding:11px 14px;border-radius:12px;color:#fff;font-weight:800;font-size:18px;line-height:1.25;box-shadow:0 6px 20px #0006}
+.cam-toast small{display:block;font-weight:600;font-size:13px;opacity:.95;margin-top:2px}
+.cam-toast.ok{background:#177A4D}.cam-toast.warn{background:#B86F0E}.cam-toast.err{background:#C0352E}.cam-toast.info{background:#41576D}
+.cam-son{margin-top:9px;border:1px solid var(--cizgi);border-radius:12px;overflow:hidden;background:var(--kart)}
+.cam-son .cs-bas{font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--soluk);padding:7px 10px 4px}
+.cam-son .cs{display:flex;gap:8px;align-items:baseline;padding:6px 10px;border-top:1px solid var(--cizgi);font-size:14px}
+.cam-son .cs b{flex:none}
+.cam-son .cs span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--soluk);font-size:12px}
+.cam-son .cs i{font-style:normal;flex:none;font-weight:800}
+.cam-son .cs.ok i{color:#177A4D}.cam-son .cs.uyari i{color:#B86F0E}.cam-son .cs.kayitsiz i{color:#C0352E}
+.cb-satir{display:flex;gap:10px;align-items:center;font-size:15px;font-weight:600;color:var(--yazi);margin:2px 0 4px}
+.cb-satir input{width:22px;min-height:22px;flex:none}
+.oge small.et-bekle{color:var(--soluk)}.oge small.et-ok{color:#177A4D;font-weight:700}.oge small.et-kontrol{color:#B86F0E;font-weight:700}.oge small.et-yok{color:#B86F0E}
+.oge .oge-bt{display:flex;gap:6px;flex:none}
+.oge .oge-bt button{width:44px}
+.et-edit{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;width:100%}
+.et-edit input{min-height:42px;font-size:15px}
+.et-edit button{grid-column:1/3;min-height:42px;font-size:15px}
+.oge.duzenle{flex-wrap:wrap}
+@media (prefers-color-scheme: dark){.oge small.et-ok{color:#6FD3A0}.oge small.et-kontrol,.oge small.et-yok{color:#F0A04B}}
+
+.ortak-kart{padding:0}
+.ortak-sum{list-style:none;cursor:pointer;padding:14px 16px;font-weight:800;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ortak-sum::-webkit-details-marker{display:none}
+.ortak-sum::after{content:"+";font-size:20px;color:var(--soluk);margin-left:auto}
+.ortak-kart[open] .ortak-sum::after{content:"−"}
+.ortak-kart[open] .ortak-sum{border-bottom:1px solid var(--cizgi)}
+.ortak-kart>div{padding:0 16px 14px}
+#modKart{padding-bottom:12px}
 </style>
 </head>
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.1</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.2</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -415,7 +455,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 
   <!-- TOPLU -->
   <section id="sToplu" class="gizle">
-    <div class="kart">
+    <div class="kart" id="modKart">
       <div class="sira4m">
         <button id="mGiris" class="ikincil">Giriş</button>
         <button id="mCikis" class="mavi">Çıkış</button>
@@ -423,29 +463,15 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
         <button id="mTasi" class="ikincil">Yerleştir</button>
       </div>
       <div class="kucuk" id="mYardim" style="margin-top:8px"></div>
-
-      <div id="bolgeAlan" class="gizle">
-        <label for="cBolge" id="cBolgeLbl">Bölge</label>
-        <input id="cBolge" list="bolgeListe" autocapitalize="characters" autocomplete="off" placeholder="örn. M1 (bölge QR'ını da okutabilirsin)">
-      </div>
-      <div id="ortak" class="gizle">
-        <label for="cUrun">Ortak ürün</label>
-        <input id="cUrun" list="urunListe" autocapitalize="characters" autocomplete="off">
-        <label for="cTarih">Etiket tarihi (GG.AA.YYYY)</label>
-        <input id="cTarih" inputmode="numeric" placeholder="13.08.2026" autocomplete="off">
-        <div class="sira">
-          <div><label for="cKisi">Kişi</label><input id="cKisi" autocapitalize="characters" autocomplete="off"></div>
-          <div><label for="cMense">Menşe</label><input id="cMense" autocapitalize="characters" autocomplete="off"></div>
-        </div>
-      </div>
-      <div id="notAlan">
-        <label for="cNot" id="cNotLbl">Parti / hat (isteğe bağlı)</label>
-        <input id="cNot" autocomplete="off">
-      </div>
     </div>
 
-    <div class="kart">
-      <video id="video" playsinline muted class="gizle"></video>
+    <div class="kart cam-card">
+      <div class="cam-wrap gizle" id="camWrap">
+        <video id="video" playsinline muted></video>
+        <div class="cam-chips" id="camChips" aria-live="polite"></div>
+        <div class="cam-toast gizle" id="camToast" role="status" aria-live="assertive"></div>
+      </div>
+      <div class="cam-son gizle" id="camSon" aria-live="polite"></div>
       <div class="sira" style="margin-top:8px">
         <button id="kamAc">Kamerayı aç</button>
         <button id="kamKapat" class="ikincil">Durdur</button>
@@ -463,6 +489,30 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       </div>
       <div id="tDurum"></div>
     </div>
+
+    <details class="kart ortak-kart" id="ortakKart" open>
+      <summary class="ortak-sum">Ortak bilgiler <span class="kucuk" id="ortakOzet">tüm okunanlara uygulanır</span></summary>
+      <div id="bolgeAlan" class="gizle">
+        <label for="cBolge" id="cBolgeLbl">Bölge</label>
+        <input id="cBolge" list="bolgeListe" autocapitalize="characters" autocomplete="off" placeholder="örn. M1 (bölge QR'ını da okutabilirsin)">
+      </div>
+      <div id="ortak" class="gizle">
+        <label class="cb-satir"><input type="checkbox" id="etiketOtomatik"> Etiketi de otomatik oku (QR ile birlikte, arka planda)</label>
+        <div class="kucuk" id="etiketOtoNot" style="margin:2px 0 4px">Kamerayı bidonun QR'ına ve etiketine birlikte tut. QR anında eklenir, etiket yazısı arkada okunur; sen sıradaki bidona geçebilirsin. Okunamayanlar için aşağıdaki ortak bilgi kullanılır.</div>
+        <label for="cUrun">Ortak ürün (etiket okunamazsa)</label>
+        <input id="cUrun" list="urunListe" autocapitalize="characters" autocomplete="off">
+        <label for="cTarih">Etiket tarihi (GG.AA.YYYY)</label>
+        <input id="cTarih" inputmode="numeric" placeholder="13.08.2026" autocomplete="off">
+        <div class="sira">
+          <div><label for="cKisi">Kişi</label><input id="cKisi" autocapitalize="characters" autocomplete="off"></div>
+          <div><label for="cMense">Menşe</label><input id="cMense" autocapitalize="characters" autocomplete="off"></div>
+        </div>
+      </div>
+      <div id="notAlan">
+        <label for="cNot" id="cNotLbl">Parti / hat (isteğe bağlı)</label>
+        <input id="cNot" autocomplete="off">
+      </div>
+    </details>
 
     <div class="kart">
       <div class="ozet" id="tOzet">Liste boş</div>
@@ -1217,8 +1267,13 @@ const MOD_YARDIM = {
   TASI:  'Bidonları bir bölgeye koy / bölgeler arası taşı. Önce bölgeyi yaz ya da bölgenin QR\'ını okut, sonra bidonların QR\'larını okut, Kaydet.',
   IADE:  'Üretimden geri dönen bidonlar. QR\'ları okut, en sonda Kaydet.'
 };
+function etiketOtoUygula(){
+  const k = localStorage.getItem('bt_etiketoto');
+  $('etiketOtomatik').checked = k === null ? AYAR.okuma === 'ucretsiz' : k === '1';
+  $('etiketOtoNot').textContent = AYAR.okuma === 'ai' ? 'Yapay zekâ seçili: okunan her etiket ücretlidir. Kamerayı bidonun QR ve etiketine birlikte tut.' : 'Kamerayı bidonun QR\'ına ve etiketine birlikte tut. QR anında eklenir, etiket yazısı arkada okunur; sen sıradaki bidona geçebilirsin. Okunamayanlar için aşağıdaki ortak bilgi kullanılır.';
+}
 function modSec(m){
-  tmod = m; liste = [];
+  tmod = m; liste = []; etiketKuyrugu.length = 0;
   ['GIRIS','CIKIS','IADE','TASI'].forEach(k => { $('m' + k[0] + k.slice(1).toLowerCase()).className = k === m ? 'mavi' : 'ikincil'; });
   $('mYardim').textContent = MOD_YARDIM[m];
   $('ortak').classList.toggle('gizle', m !== 'GIRIS');
@@ -1226,8 +1281,10 @@ function modSec(m){
   $('bolgeAlan').classList.toggle('gizle', m === 'CIKIS');
   $('cBolgeLbl').textContent = m === 'TASI' ? 'Bölge (zorunlu)' : 'Bölge (isteğe bağlı)';
   $('cNotLbl').textContent = m === 'IADE' ? 'İade nedeni (kalite, yanlış çıkış, numune… isteğe bağlı)' : 'Parti / hat (isteğe bağlı)';
+  if(m === 'GIRIS') etiketOtoUygula();
   mesaj('tDurum', ''); listeCiz();
 }
+$('etiketOtomatik').onchange = () => { localStorage.setItem('bt_etiketoto', $('etiketOtomatik').checked ? '1' : '0'); if($('etiketOtomatik').checked && akim) tessHazir().catch(() => {}); };
 $('mGiris').onclick = () => modSec('GIRIS'); $('mCikis').onclick = () => modSec('CIKIS'); $('mIade').onclick = () => modSec('IADE'); $('mTasi').onclick = () => modSec('TASI');
 
 function degerlendir(id){
@@ -1255,23 +1312,105 @@ function bip(iyi){
   }catch(e){}
   if(navigator.vibrate) navigator.vibrate(iyi ? 40 : [60, 40, 60]);
 }
+/* ---- kamera üstü geri bildirim ---- */
+let camTimer = null, camFlashTimer = null; const sonDup = {};
+function camBildir(tur, baslik, alt){
+  const t = $('camToast'), w = $('camWrap');
+  t.className = 'cam-toast ' + tur; t.innerHTML = esc(baslik) + (alt ? `<small>${esc(alt)}</small>` : '');
+  w.classList.remove('flash-ok', 'flash-warn', 'flash-err', 'flash-info'); void w.offsetWidth; w.classList.add('flash-' + tur);
+  clearTimeout(camTimer); camTimer = setTimeout(() => t.classList.add('gizle'), tur === 'ok' ? 1700 : 2800);
+  clearTimeout(camFlashTimer); camFlashTimer = setTimeout(() => w.classList.remove('flash-' + tur), 500);
+}
+const ISLEM_EKLENDI = { GIRIS:'eklendi', CIKIS:'çıkışa eklendi', IADE:'iadeye eklendi', TASI:'yerleştirmeye eklendi' };
+function camChipler(){
+  const ok = liste.filter(o => o.tur === 'ok').length, uy = liste.filter(o => o.tur === 'uyari').length, ks = liste.filter(o => o.tur === 'kayitsiz').length;
+  const bek = liste.filter(o => o.etiket && (o.etiket.durum === 'bekliyor' || o.etiket.durum === 'okunuyor')).length;
+  $('camChips').innerHTML = `<span class="chip ok">✓ ${ok}</span>` + (uy ? `<span class="chip warn">⚠ ${uy}</span>` : '') + (ks ? `<span class="chip err">✕ ${ks}</span>` : '') + (bek ? `<span class="chip info">etiket ${bek}…</span>` : '');
+}
+function camSonCiz(){
+  const el = $('camSon');
+  if(!liste.length){ el.classList.add('gizle'); el.innerHTML = ''; return; }
+  el.classList.remove('gizle');
+  el.innerHTML = '<div class="cs-bas">SON OKUNANLAR</div>' + liste.slice(0, 4).map(o => {
+    const b = bul(o.id), ic = o.tur === 'ok' ? '✓' : o.tur === 'uyari' ? '⚠' : '✕';
+    const bilgi = o.tur === 'ok' ? [ISLEM_EKLENDI[tmod], (o.etiket && o.etiket.urun) || (b && b.urun)].filter(Boolean).join(' · ') : (o.mesaj || '');
+    return `<div class="cs ${o.tur}"><i>${ic}</i><b>${esc(o.id)}</b><span>${esc(bilgi)}</span></div>`;
+  }).join('');
+}
 function bolgeOku(kod){                                  // bidon ön ekine uymayan okuma = bölge kodu
-  if(tmod === 'CIKIS'){ mesaj('tDurum', `Bölge kodu okundu (${kod}), ama çıkışta bölge kullanılmaz.`, 'uyari'); return; }
+  if(tmod === 'CIKIS'){ mesaj('tDurum', `Bölge kodu okundu (${kod}), ama çıkışta bölge kullanılmaz.`, 'uyari'); camBildir('info', 'Bölge kodu: ' + kod, 'Çıkışta bölge kullanılmaz'); return; }
   if($('cBolge').value.trim() === kod) return;
   $('cBolge').value = kod; bip(true); mesaj('tDurum', `Bölge: ${kod}. Şimdi bu bölgedeki bidonları okut.`);
+  camBildir('ok', 'Bölge: ' + kod, 'Şimdi bu bölgedeki bidonları okut');
   liste = liste.map(o => ({ ...o, ...degerlendir(o.id) })); listeCiz();
 }
-function ekle(id, tara){
+function ekle(id, tara, kamera){
   id = idTemizle(id);
   if(id && tara && !bidonKodu(id)){ bolgeOku(id); return false; }
-  if(!id || liste.some(o => o.id === id)) return false;
-  const d = degerlendir(id);
-  liste.unshift({ id, ...d });
-  bip(d.tur === 'ok'); listeCiz();
+  if(!id) return false;
+  const simdi = Date.now(), ara = simdi - (sonDup[id] || 0); sonDup[id] = simdi;
+  if(liste.some(o => o.id === id)){                      // bidon kamerada kaldıkça uyarma; gözden çıkıp tekrar gelirse "zaten okundu" de
+    if(tara && ara > 4000) camBildir('info', '↺ ' + id, 'Zaten okundu, listede');
+    return false;
+  }
+  const d = degerlendir(id), o = { id, ...d };
+  liste.unshift(o);
+  if(tmod === 'GIRIS' && kamera && akim && etiketOtoAcik()) etiketSiraEkle(o);   // QR bulununca o anki kareyi etiket için sıraya al
+  bip(d.tur === 'ok');
+  if(d.tur === 'ok') camBildir('ok', '✓ ' + id + ' ' + ISLEM_EKLENDI[tmod], (bul(id) && bul(id).urun) || '');
+  else if(d.tur === 'uyari') camBildir('warn', '⚠ ' + id, d.mesaj);
+  else camBildir('err', '✕ ' + id, d.mesaj);
+  listeCiz();
   return true;
 }
+/* ---- giriş: etiketi arka planda otomatik oku ---- */
+const etiketKuyrugu = []; let etiketCalisiyor = false, listeKirli = false;
+const etiketOtoAcik = () => $('etiketOtomatik').checked;
+function videoKaresi(){                                 // QR'ın okunduğu karenin kopyası (kamera bir sonraki bidona geçse bile doğru etiket)
+  if(!tamCv || !tamCv.width) return null;
+  const c = document.createElement('canvas'); c.width = tamCv.width; c.height = tamCv.height; c.getContext('2d').drawImage(tamCv, 0, 0);
+  return c;
+}
+function etiketSiraEkle(o){
+  const kare = videoKaresi();
+  if(!kare){ o.etiket = { durum:'yok' }; return; }
+  if(etiketKuyrugu.length >= 12){ o.etiket = { durum:'yok', mesaj:'sıra dolu' }; return; }
+  o.etiket = { durum:'bekliyor' }; etiketKuyrugu.push({ id:o.id, kare });
+  etiketIsle();
+}
+async function etiketIsle(){
+  if(etiketCalisiyor) return; etiketCalisiyor = true;
+  try{
+    while(etiketKuyrugu.length){
+      const it = etiketKuyrugu.shift(), o = liste.find(x => x.id === it.id);
+      if(!o) continue;
+      o.etiket = { durum:'okunuyor' }; listeCizGuvenli();
+      try{
+        const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.85) : '';
+        const r = (await etiketOku(it.kare, jpg, { maxOcr:8, maxAday:4, iptal:() => !liste.includes(o) })).veri;
+        o.etiket = (r && r.urun && r.etiket !== 'yok')
+          ? { durum:'tamam', urun:trBuyuk(r.urun), tarih:r.tarih || '', kisi:trBuyuk(r.kisi), mense:trBuyuk(r.mense), guven:r.guven }
+          : { durum:'yok' };
+      }catch(e){ o.etiket = { durum:'yok', mesaj:e.message }; }
+      it.kare = null; listeCizGuvenli();
+    }
+  } finally { etiketCalisiyor = false; }
+}
+function listeCizGuvenli(){                              // düzenleme açıkken yazı kaybolmasın
+  if(liste.some(o => o.duzenle)){ listeKirli = true; camChipler(); return; }
+  listeCiz();
+}
+function etiketSatiri(o){
+  const e = o.etiket; if(!e || tmod !== 'GIRIS') return '';
+  if(e.durum === 'bekliyor') return '<small class="et-bekle">Etiket sırada…</small>';
+  if(e.durum === 'okunuyor') return '<small class="et-bekle">Etiket okunuyor…</small>';
+  if(e.durum === 'tamam'){ const t = [e.urun, e.tarih, e.kisi, e.mense].filter(Boolean).join(' · '); const iyi = e.guven === 'yuksek'; return `<small class="${iyi ? 'et-ok' : 'et-kontrol'}">${esc(t)}${iyi ? '' : ' (kontrol et)'}</small>`; }
+  return '<small class="et-yok">Etiket okunamadı, ortak bilgi kullanılır (✎ ile düzenle)</small>';
+}
 function listeCiz(){
+  listeKirli = false;
   const ok = liste.filter(o => o.tur === 'ok').length, uy = liste.filter(o => o.tur === 'uyari').length, ks = liste.filter(o => o.tur === 'kayitsiz').length;
+  camChipler(); camSonCiz();
   if(!liste.length){ $('tOzet').textContent = 'Liste boş'; $('tListe').innerHTML = ''; $('tKaydet').textContent = 'Kaydet'; $('tKaydet').disabled = true; return; }
   let h = `<b>${liste.length}</b> bidon` + (uy ? ` · uyarı ${uy}` : '') + (ks ? ` · kayıtsız ${ks}` : '') + (tmod !== 'CIKIS' && $('cBolge').value.trim() ? ` · bölge <b>${esc($('cBolge').value.trim())}</b>` : '');
   if(tmod !== 'GIRIS'){
@@ -1283,17 +1422,34 @@ function listeCiz(){
   $('tListe').innerHTML = liste.map(o => {
     const b = bul(o.id);
     const alt = b ? [b.urun, b.tarih, b.kisi].filter(Boolean).join(' · ') : '';
-    return `<div class="oge ${o.tur}"><div><b>${esc(o.id)}</b>${alt ? `<small>${esc(alt)}</small>` : ''}${o.mesaj ? `<small>${esc(o.mesaj)}</small>` : ''}</div>
-      <button class="ikincil" data-id="${esc(o.id)}" aria-label="Listeden çıkar">✕</button></div>`;
+    const duz = tmod === 'GIRIS' ? `<button class="ikincil" data-edit="${esc(o.id)}" aria-label="Etiket bilgisini düzenle">✎</button>` : '';
+    const e = o.etiket || {};
+    const form = (o.duzenle && tmod === 'GIRIS') ? `<div class="et-edit" data-edit-for="${esc(o.id)}">
+        <input data-f="urun" list="urunListe" placeholder="Ürün" value="${esc(e.urun || '')}" autocapitalize="characters">
+        <input data-f="tarih" placeholder="GG.AA.YYYY" inputmode="numeric" value="${esc(e.tarih || '')}">
+        <input data-f="kisi" placeholder="Kişi" value="${esc(e.kisi || '')}" autocapitalize="characters">
+        <input data-f="mense" placeholder="Menşe" value="${esc(e.mense || '')}" autocapitalize="characters">
+        <button data-edit-ok="${esc(o.id)}">Tamam</button></div>` : '';
+    return `<div class="oge ${o.tur}${o.duzenle ? ' duzenle' : ''}"><div><b>${esc(o.id)}</b>${alt ? `<small>${esc(alt)}</small>` : ''}${etiketSatiri(o)}${o.mesaj ? `<small>${esc(o.mesaj)}</small>` : ''}</div>
+      <div class="oge-bt">${duz}<button class="ikincil" data-id="${esc(o.id)}" aria-label="Listeden çıkar">✕</button></div>${form}</div>`;
   }).join('');
   const gonderilebilir = liste.filter(o => o.tur !== 'kayitsiz').length;
-  $('tKaydet').textContent = gonderilebilir ? `${ISLEM_AD[tmod]} kaydet (${gonderilebilir})` : 'Kaydedilecek bidon yok';
+  const bek = liste.filter(o => o.etiket && (o.etiket.durum === 'bekliyor' || o.etiket.durum === 'okunuyor')).length;
+  $('tKaydet').textContent = gonderilebilir ? `${ISLEM_AD[tmod]} kaydet (${gonderilebilir})${bek ? ` · etiket ${bek}…` : ''}` : 'Kaydedilecek bidon yok';
   $('tKaydet').disabled = !gonderilebilir;
 }
 $('tListe').onclick = e => {
+  const ed = e.target.closest('button[data-edit]'); if(ed){ const o = liste.find(x => x.id === ed.dataset.edit); if(o){ o.duzenle = !o.duzenle; if(o.duzenle && !o.etiket) o.etiket = { durum:'tamam', guven:'yuksek' }; listeCiz(); } return; }
+  const ok = e.target.closest('button[data-edit-ok]'); if(ok){ const o = liste.find(x => x.id === ok.dataset.editOk); if(o){ o.duzenle = false; const t = (o.etiket && o.etiket.tarih || '').trim(); if(t && !trToISO(t)){ mesaj('tDurum', 'Tarih GG.AA.YYYY olmalı (örn. 13.08.2026).', 'hata'); o.etiket.tarih = ''; } else mesaj('tDurum', ''); listeCiz(); } return; }
   const b = e.target.closest('button[data-id]'); if(!b) return;
   liste = liste.filter(o => o.id !== b.dataset.id); listeCiz();
 };
+$('tListe').addEventListener('input', e => {
+  const f = e.target.dataset.f; if(!f) return;
+  const box = e.target.closest('[data-edit-for]'), o = liste.find(x => x.id === box.dataset.editFor); if(!o) return;
+  o.etiket = Object.assign({ durum:'tamam', guven:'yuksek' }, o.etiket, { durum:'tamam', guven:'yuksek' });
+  o.etiket[f] = f === 'tarih' ? e.target.value.trim() : trBuyuk(e.target.value);
+});
 $('tTemizle').onclick = () => { if(!liste.length || confirm('Liste temizlensin mi?')){ liste = []; mesaj('tDurum', ''); listeCiz(); } };
 $('cBolge').oninput = () => { liste = liste.map(o => ({ ...o, ...degerlendir(o.id) })); listeCiz(); };
 $('elleEkle').onclick = () => {
@@ -1308,7 +1464,7 @@ async function kameraAc(){
   if(!window.isSecureContext){ mesaj('tDurum', 'Sayfa güvenli (https) değil, kamera açılamaz. GitHub Pages adresini Chrome\'da aç; dosya olarak açma. Şimdilik "Fotoğrafla ekle" çalışır.', 'hata'); return; }
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ mesaj('tDurum', 'Bu tarayıcı canlı kamerayı desteklemiyor. "Fotoğrafla ekle"yi kullan.', 'hata'); return; }
   try{
-    try{ akim = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false }); }
+    try{ akim = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 }, height:{ ideal:1080 } }, audio:false }); }
     catch(e){ if(e.name === 'OverconstrainedError') akim = await navigator.mediaDevices.getUserMedia({ video:true, audio:false }); else throw e; }
   }catch(e){
     const n = e.name;
@@ -1316,7 +1472,8 @@ async function kameraAc(){
       : n === 'NotFoundError' ? 'Kamera bulunamadı.' : n === 'NotReadableError' ? 'Kamera başka bir uygulamada açık.' : 'Kamera açılamadı: ' + n, 'hata');
     akim = null; return;
   }
-  const v = $('video'); v.srcObject = akim; v.classList.remove('gizle');
+  const v = $('video'); v.srcObject = akim; $('camWrap').classList.remove('gizle'); camChipler(); $('kamAc').textContent = 'Kamera açık ✓'; $('kamAc').disabled = true;
+  if(tmod === 'GIRIS' && etiketOtoAcik()) tessHazir().catch(() => {});      // etiket okuyucuyu önceden hazırla
   try{ await v.play(); }catch(e){}
   const iz = akim.getVideoTracks()[0]; let cap = {};
   try{ cap = iz.getCapabilities ? iz.getCapabilities() : {}; }catch(e){}
@@ -1331,7 +1488,7 @@ async function kameraAc(){
 let fenerAcik = false;
 function kameraDurdur(){
   if(akim){ akim.getTracks().forEach(t => t.stop()); akim = null; }
-  $('video').classList.add('gizle'); $('kamAraclar').classList.add('gizle');
+  $('camWrap').classList.add('gizle'); $('camToast').classList.add('gizle'); $('kamAraclar').classList.add('gizle'); $('kamAc').textContent = 'Kamerayı aç'; $('kamAc').disabled = false;
   fenerAcik = false; $('fener').textContent = 'Fener';
 }
 $('fener').onclick = async () => {
@@ -1340,22 +1497,45 @@ $('fener').onclick = async () => {
   catch(e){ fenerAcik = false; }
 };
 $('zoom').oninput = () => { try{ akim.getVideoTracks()[0].applyConstraints({ advanced:[{ zoom:+$('zoom').value }] }); }catch(e){} };
+let taraSay = 0, tamCv = null;
+function tamKareCiz(v){                                  // her turda videodan TEK sabit kare al: QR de etiket de bu kareden okunur
+  tamCv = tamCv || document.createElement('canvas');
+  const o = Math.min(1, 2000 / Math.max(v.videoWidth, v.videoHeight));
+  tamCv.width = Math.round(v.videoWidth * o); tamCv.height = Math.round(v.videoHeight * o);
+  tamCv.getContext('2d').drawImage(v, 0, 0, tamCv.width, tamCv.height);
+  return tamCv;
+}
+function jsqrKare(v, maks){                              // yedek okuyucu: kare başına en fazla 2 QR (ilk bulunanı silip yeniden tara)
+  const o = Math.min(1, maks / v.width);
+  cv.width = Math.round(v.width * o); cv.height = Math.round(v.height * o);
+  cx.drawImage(v, 0, 0, cv.width, cv.height);
+  const sonuc = [];
+  for(let n = 0; n < 2; n++){
+    const d = cx.getImageData(0, 0, cv.width, cv.height);
+    const r = jsQR(d.data, d.width, d.height, { inversionAttempts:'dontInvert' });
+    if(!r) break;
+    sonuc.push(r.data);
+    const l = r.location, xs = [l.topLeftCorner.x, l.topRightCorner.x, l.bottomLeftCorner.x, l.bottomRightCorner.x], ys = [l.topLeftCorner.y, l.topRightCorner.y, l.bottomLeftCorner.y, l.bottomRightCorner.y];
+    const x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0, hh = Math.max(...ys) - y0, pad = Math.max(w, hh) * 0.25;
+    cx.fillStyle = '#808080'; cx.fillRect(x0 - pad, y0 - pad, w + 2 * pad, hh + 2 * pad);
+  }
+  return sonuc;
+}
 async function tara(){
   if(!akim) return;
   const v = $('video');
   try{
     if(v.readyState >= 2 && v.videoWidth){
+      const kare = tamKareCiz(v);
       let kodlar = [];
-      if(bd){ kodlar = (await bd.detect(v)).map(x => x.rawValue); }
+      if(bd){ kodlar = (await bd.detect(kare)).map(x => x.rawValue); }
       else{
-        const o = Math.min(1, 720 / v.videoWidth);
-        cv.width = Math.round(v.videoWidth * o); cv.height = Math.round(v.videoHeight * o);
-        cx.drawImage(v, 0, 0, cv.width, cv.height);
-        const d = cx.getImageData(0, 0, cv.width, cv.height);
-        const r = jsQR(d.data, d.width, d.height, { inversionAttempts:'dontInvert' });
-        if(r) kodlar = [r.data];
+        kodlar = jsqrKare(kare, 960);
+        if(!kodlar.length && (++taraSay % 2 === 0)) kodlar = jsqrKare(kare, 1280);   // bulunamazsa ara sıra tam çözünürlükle dene
       }
-      kodlar.forEach(k => ekle(k, true));
+      const idler = [...new Set(kodlar.map(idTemizle).filter(Boolean))];
+      const bidonlar = idler.filter(bidonKodu);
+      (bidonlar.length ? bidonlar : idler).forEach(k => ekle(k, true, true));         // aynı karede bidon QR'ı varsa bölge kodu yok sayılır (bidondaki eski bölge etiketi)
     }
   }catch(e){}
   if(akim) setTimeout(tara, 120);
@@ -1380,14 +1560,22 @@ $('tGeri').onclick = () => { if(liste.length){ liste.shift(); listeCiz(); } };
 $('kamAc').onclick = kameraAc; $('kamKapat').onclick = kameraDurdur;
 
 let bekleyen = null; // aynı liste tekrar gönderilirse aynı istek numarası (çift kayıt olmasın)
+const girisKaydi = (o, ortak) => {                      // bidonun kendi etiket bilgisi önce, yoksa ortak bilgi
+  const e = (o.etiket && o.etiket.durum === 'tamam') ? o.etiket : {};
+  const tarih = e.tarih && trToISO(e.tarih) ? e.tarih : '';
+  return { id:o.id, urun:e.urun || ortak.urun, tarih:tarih || ortak.tarih, kisi:e.kisi || ortak.kisi, mense:e.mense || ortak.mense, bolge:ortak.bolge, kaynak:e.durum === 'tamam' ? 'toplu-etiket' : 'toplu' };
+};
 $('tKaydet').onclick = async () => {
   if(!liste.length) return;
   let ortak = {};
   if(tmod === 'GIRIS'){
     const urun = trBuyuk($('cUrun').value), tarih = $('cTarih').value.trim();
-    if(!urun){ mesaj('tDurum', 'Ortak ürün adını yaz.', 'hata'); return; }
     if(tarih && !trToISO(tarih)){ mesaj('tDurum', 'Tarih GG.AA.YYYY olmalı.', 'hata'); return; }
     ortak = { urun, tarih, kisi:trBuyuk($('cKisi').value), mense:trBuyuk($('cMense').value) };
+    const eksik = liste.filter(o => o.tur !== 'kayitsiz' && !girisKaydi(o, ortak).urun);
+    if(eksik.length){ mesaj('tDurum', `${eksik.length} bidonun ürün bilgisi yok (etiket okunamadı). Satırdaki ✎ ile yaz ya da yukarıya "Ortak ürün"ü yaz.`, 'hata'); return; }
+    const bek = liste.filter(o => o.tur !== 'kayitsiz' && o.etiket && (o.etiket.durum === 'bekliyor' || o.etiket.durum === 'okunuyor')).length;
+    if(bek && !confirm(`${bek} bidonun etiketi hâlâ okunuyor. Beklemeden, okunamayanlar ortak bilgiyle kaydedilsin mi?\n(Tamam = şimdi kaydet, İptal = bekle)`)) return;
   }
   const bolge = $('cBolge').value.trim();
   if(tmod === 'TASI' && !bolge){ mesaj('tDurum', 'Önce bölgeyi yaz ya da bölgenin QR\'ını okut.', 'hata'); return; }
@@ -1396,8 +1584,8 @@ $('tKaydet').onclick = async () => {
   const ks = liste.length - gidecek.length;
   if(!gidecek.length){ mesaj('tDurum', 'Listedeki bidonların hiçbiri kayıtlı değil. Önce Giriş modunda kaydet.', 'hata'); return; }
   if(ks && !confirm(`${ks} bidon sistemde kayıtlı değil, bunlar kaydedilmeyecek (önce Giriş). Diğer ${gidecek.length} bidon kaydedilsin mi?`)) return;
-  const kay = gidecek.map(o => ({ id:o.id, ...ortak, kaynak:'toplu' }));
-  const imza = tmod + '|' + bolge + '|' + kay.map(k => k.id).join(',');
+  const kay = gidecek.map(o => tmod === 'GIRIS' ? girisKaydi(o, ortak) : { id:o.id, ...ortak, kaynak:'toplu' });
+  const imza = tmod + '|' + bolge + '|' + JSON.stringify(kay);
   if(!bekleyen || bekleyen.imza !== imza) bekleyen = { imza, id:yeniId() };
   $('tKaydet').disabled = true;
   try{
@@ -1410,6 +1598,7 @@ $('tKaydet').onclick = async () => {
     if(s.beklemede) msg += ' İnternet yok: bağlanınca otomatik gönderilecek.';
     if(atl.size) msg += ` ${atl.size} bidon atlandı (listede, nedeni yazıyor).`;
     mesaj('tDurum', msg, (atl.size || s.beklemede) ? 'uyari' : 'bilgi');
+    if($('camWrap') && !$('camWrap').classList.contains('gizle')) camBildir(atl.size ? 'warn' : 'ok', '✓ Kaydedildi: ' + s.islenen + ' bidon', atl.size ? atl.size + ' atlandı' : 'Kamera açık, devam edebilirsin');
   }catch(err){ mesaj('tDurum', err.message, 'hata'); }
   listeCiz();
 };
