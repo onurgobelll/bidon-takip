@@ -1,5 +1,5 @@
 /**
- * YAKAMOZ BİDON TAKİP - Google Apps Script arka yüz (v2.6)
+ * YAKAMOZ BİDON TAKİP - Google Apps Script arka yüz (v2.8)
  *
  * Script özellikleri (Proje Ayarları > Script özellikleri):
  *   SIFRE          -> sahada kullanılan ortak şifre
@@ -90,19 +90,47 @@ function doGet() {
   return json_({ ok: false, hata: 'Bu adres sadece uygulama içindir. Uygulamayı GitHub Pages adresinden aç.' });
 }
 
-function liste_() {
-  const bidonlar = oku2_(bidonSayfa_(), 9).map(r => ({
-    id: r[0], urun: r[1], tarih: r[2], kisi: r[3], mense: r[4], durum: r[5], giris: r[6], son: r[7], bolge: r[8]
-  }));
-  const hareketler = oku2_(hareketSayfa_(), 13).map(r => ({
-    zaman: r[0], gun: r[1], id: r[2], islem: r[3], urun: r[4], tarih: r[5], kisi: r[6], parti: r[7], neden: r[8], operator: r[9], kaynak: r[10], bolge: r[12]
-  }));
-  const sonNo = {}, araliklar = [];
-  oku2_(qrSayfa_(), 5).forEach(r => {
-    sonNo[r[1]] = Math.max(sonNo[r[1]] || 0, Number(r[3]) || 0);
-    araliklar.push({ onek: r[1], bas: Number(r[2]) || 0, bit: Number(r[3]) || 0 });
+// Üretime verilen bidon ertesi güne kalmaz: iade edilmediyse gün sonunda KULLANILDI olur (stoktan düşer).
+// SonHareket (çıkış zamanı) aynen kalır; böylece hangi gün kullanıldığı bilinir. HAREKET'e "KULLANILDI" satırı yazılır.
+function gunSonuKapat_(veri, bugun) {
+  const yeni = [];
+  veri.forEach(r => {
+    if (r[5] === 'URETIMDE' && String(r[7]).slice(0, 10) < bugun) {
+      const gun = String(r[7]).slice(0, 10);
+      r[5] = 'KULLANILDI';
+      yeni.push([gun + ' 23:59:59', gun, r[0], 'KULLANILDI', r[1], r[2], r[3], '', 'Gün sonu: iade edilmedi, kullanıldı sayıldı', 'SİSTEM', 'otomatik', '', r[8] || '']);
+    }
   });
-  return { ok: true, bidonlar: bidonlar, hareketler: hareketler, sonNo: sonNo, araliklar: araliklar, urunler: urunler_() };
+  return yeni;
+}
+
+function liste_() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = bidonSayfa_();
+    const veri = oku2_(sh, 9);
+    const kapanan = gunSonuKapat_(veri, fmt_(new Date(), 'yyyy-MM-dd'));
+    if (kapanan.length) {                                  // dünden kalan üretimdekileri kalıcı olarak kapat
+      sh.getRange(2, 1, veri.length, 9).setValues(veri);
+      const hs = hareketSayfa_();
+      hs.getRange(hs.getLastRow() + 1, 1, kapanan.length, 13).setValues(kapanan);
+    }
+    const bidonlar = veri.map(r => ({
+      id: r[0], urun: r[1], tarih: r[2], kisi: r[3], mense: r[4], durum: r[5], giris: r[6], son: r[7], bolge: r[8]
+    }));
+    const hareketler = oku2_(hareketSayfa_(), 13).map(r => ({
+      zaman: r[0], gun: r[1], id: r[2], islem: r[3], urun: r[4], tarih: r[5], kisi: r[6], parti: r[7], neden: r[8], operator: r[9], kaynak: r[10], bolge: r[12]
+    }));
+    const sonNo = {}, araliklar = [];
+    oku2_(qrSayfa_(), 5).forEach(r => {
+      sonNo[r[1]] = Math.max(sonNo[r[1]] || 0, Number(r[3]) || 0);
+      araliklar.push({ onek: r[1], bas: Number(r[2]) || 0, bit: Number(r[3]) || 0 });
+    });
+    return { ok: true, bidonlar: bidonlar, hareketler: hareketler, sonNo: sonNo, araliklar: araliklar, urunler: urunler_() };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function doPost(e) {
@@ -151,7 +179,8 @@ function oku_(d) {
 // Kurallar (sunucuda zorunlu):
 //   GIRIS : bidon üretimdeyse reddedilir (önce iade). Kayıtlı sahadaki bidon için bilgi güncellenir. Bölge yazılıysa bölge de kaydedilir.
 //   TASI  : sadece kayıtlı ve SAHADA olan bidon, bölge zorunlu; zaten o bölgedeyse atlanır.
-//   CIKIS : sadece SAHADA olan bidon.   IADE : sadece URETIMDE olan bidon.   Kayıtsız bidonda CIKIS/IADE yok.
+//   CIKIS : sadece SAHADA olan bidon.   IADE : sadece URETIMDE (bugün verilmiş) olan bidon.   Kayıtsız bidonda CIKIS/IADE yok.
+//   GÜN SONU: üretimde kalan bidon ertesi gün KULLANILDI olur; Çıkış/İade/Yerleştirme yapılamaz, Giriş yapılırsa yeniden SAHADA olur.
 function islem_(d) {
   const tip = d.tip;
   if (['GIRIS', 'CIKIS', 'IADE', 'TASI'].indexOf(tip) < 0) return { ok: false, hata: 'Geçersiz işlem' };
@@ -179,12 +208,13 @@ function islem_(d) {
       }
     }
     const veri = oku2_(sh, 9);
+    const kapanan = gunSonuKapat_(veri, fmt_(new Date(), 'yyyy-MM-dd'));
     const idx = {};
     veri.forEach((r, i) => { idx[String(r[0])] = i; });
 
     const simdi = new Date();
     const z = fmt_(simdi, 'yyyy-MM-dd HH:mm:ss'), g = fmt_(simdi, 'yyyy-MM-dd');
-    const hareket = [], gorulen = {}, atlanan = [];
+    const hareket = kapanan.slice(), gorulen = {}, atlanan = [];
     let yeni = 0;
 
     liste.forEach(k => {
@@ -197,10 +227,10 @@ function islem_(d) {
       if (tip === 'GIRIS') {
         if (var_ && veri[i][5] === 'URETIMDE') { atlanan.push({ id: id, neden: 'Üretimde, önce iade yap' }); return; }
       } else if (!var_) { atlanan.push({ id: id, neden: 'Kayıtsız bidon, önce giriş yap' }); return; }
-      else if (tip === 'CIKIS' && veri[i][5] !== 'SAHADA') { atlanan.push({ id: id, neden: 'Zaten üretimde' }); return; }
-      else if (tip === 'IADE' && veri[i][5] !== 'URETIMDE') { atlanan.push({ id: id, neden: 'Üretimde değil' }); return; }
+      else if (tip === 'CIKIS' && veri[i][5] !== 'SAHADA') { atlanan.push({ id: id, neden: veri[i][5] === 'KULLANILDI' ? 'Kullanıldı, önce giriş yap' : 'Zaten üretimde' }); return; }
+      else if (tip === 'IADE' && veri[i][5] !== 'URETIMDE') { atlanan.push({ id: id, neden: veri[i][5] === 'KULLANILDI' ? 'Geçen güne kaldı, kullanıldı sayıldı. İade için önce giriş yap' : 'Üretimde değil' }); return; }
       else if (tip === 'TASI' && !bolge) { atlanan.push({ id: id, neden: 'Bölge boş' }); return; }
-      else if (tip === 'TASI' && veri[i][5] !== 'SAHADA') { atlanan.push({ id: id, neden: 'Üretimde, önce iade yap' }); return; }
+      else if (tip === 'TASI' && veri[i][5] !== 'SAHADA') { atlanan.push({ id: id, neden: veri[i][5] === 'KULLANILDI' ? 'Kullanıldı, önce giriş yap' : 'Üretimde, önce iade yap' }); return; }
       else if (tip === 'TASI' && String(veri[i][8]) === bolge) { atlanan.push({ id: id, neden: 'Zaten bu bölgede' }); return; }
 
       if (!var_) {
@@ -222,7 +252,7 @@ function islem_(d) {
 
     if (veri.length) sh.getRange(2, 1, veri.length, 9).setValues(veri);
     if (hareket.length) hs.getRange(hs.getLastRow() + 1, 1, hareket.length, 13).setValues(hareket);
-    const sonuc = { ok: true, islenen: hareket.length, yeni: yeni, atlanan: atlanan };
+    const sonuc = { ok: true, islenen: hareket.length - kapanan.length, yeni: yeni, atlanan: atlanan };
     if (anahtar) cache.put(anahtar, JSON.stringify(sonuc), 21600);
     return sonuc;
   } finally {

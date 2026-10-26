@@ -298,7 +298,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   .stock-panel{padding:14px}
 }
 
-/* ---- v3.2: stok yerleşimi ve bölge paneli ---- */
+/* ---- v3.3: stok yerleşimi ve bölge paneli ---- */
 .stock-layout{display:flex;flex-direction:column}
 .stock-col{display:contents}
 .stock-layout .kart{margin-bottom:12px}
@@ -334,7 +334,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 .region-more{font-size:11px;color:var(--soluk);margin:7px 2px 0}
 .region-detail .region-xls{min-height:44px;font-size:14px;margin-top:10px}
 
-/* ---- v3.2: toplu tarama geri bildirimi ---- */
+/* ---- v3.3: toplu tarama geri bildirimi ---- */
 .cam-wrap{position:relative;border-radius:14px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 0 transparent}
 .cam-wrap video{display:block;width:100%;max-height:42vh;object-fit:cover;border-radius:0}
 .cam-wrap.flash-ok{outline:4px solid #22A06B;outline-offset:-4px}
@@ -373,12 +373,40 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 .ortak-kart[open] .ortak-sum{border-bottom:1px solid var(--cizgi)}
 .ortak-kart>div{padding:0 16px 14px}
 #modKart{padding-bottom:12px}
+
+/* ---- v3.3: özet kartı ayrıntısı ---- */
+.stock-summary[data-ozet]{cursor:pointer;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent}
+.stock-summary[data-ozet]:active{transform:scale(.98)}
+.stock-summary.secili{outline:3px solid var(--bidon);outline-offset:2px}
+.stock-summary:focus-visible,.stock-used:focus-visible{outline:3px solid var(--bidon);outline-offset:2px}
+.stock-used{display:flex;align-items:center;gap:6px;margin:0 2px 13px;padding:10px 13px;border:1px dashed var(--cizgi);border-radius:12px;font-size:12px;color:var(--soluk);cursor:pointer}
+.stock-used b{font-size:15px;color:var(--yazi)}
+.stock-used.secili{border-style:solid;outline:3px solid var(--bidon);outline-offset:1px}
+.stock-detail{padding:16px;margin-bottom:12px}
+.od-bas{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.od-baslik{font-size:15px;font-weight:800;letter-spacing:-.2px}
+.od-kapat{width:auto!important;min-height:36px!important;padding:0 12px!important;font-size:13px!important}
+.od-cumle{font-size:13px;line-height:1.45;margin:2px 0 4px}
+.od-cumle b{color:var(--tuz)}
+.od-not{font-size:11px;color:var(--soluk);margin:0 0 10px}
+.od-alt{font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--soluk);margin:12px 0 6px}
+.od-tablo{width:100%;border-collapse:collapse;font-size:13px}
+.od-tablo th,.od-tablo td{padding:6px 4px;border-bottom:1px solid var(--cizgi);text-align:right}
+.od-tablo th:first-child,.od-tablo td:first-child{text-align:left}
+.od-tablo th{font-size:11px;color:var(--soluk);font-weight:700}
+.od-tablo tr.top td{font-weight:800;border-top:2px solid var(--yazi)}
+.od-liste{max-height:260px;overflow:auto;border:1px solid var(--cizgi);border-radius:10px;background:var(--kart);font-size:12px;margin-top:6px}
+.od-liste div{display:flex;gap:8px;padding:6px 9px;border-bottom:1px solid var(--cizgi)}
+.od-liste div:last-child{border:0}
+.od-liste b{flex:none;min-width:74px}
+.od-liste span{color:var(--soluk);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stock-detail .region-xls{min-height:44px;font-size:14px;margin-top:10px}
 </style>
 </head>
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.2</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.3</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -413,7 +441,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   <section id="sGiris">
     <div class="dashboard-head"><div><div class="eyebrow">SAHA OPERASYONLARI</div><div class="dashboard-title">Operasyon özeti</div><div class="dashboard-date" id="dashboardDate">Güncel durum</div></div><span class="live-dot">GENEL BAKIŞ</span></div>
     <div class="metric-grid" aria-label="Güncel özet">
-      <div class="metric"><div class="metric-label"><span class="metric-mark"></span>Toplam bidon</div><div class="metric-value" id="statTotal">–</div></div>
+      <div class="metric"><div class="metric-label"><span class="metric-mark"></span>Tesiste toplam</div><div class="metric-value" id="statTotal">–</div></div>
       <div class="metric"><div class="metric-label"><span class="metric-mark"></span>Sahada</div><div class="metric-value" id="statField">–</div></div>
       <div class="metric production"><div class="metric-label"><span class="metric-mark"></span>Üretimde</div><div class="metric-value" id="statProduction">–</div></div>
       <div class="metric"><div class="metric-label"><span class="metric-mark"></span>Bugünkü hareket</div><div class="metric-value" id="statToday">–</div></div>
@@ -529,10 +557,12 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   <section id="sStok" class="gizle">
     <div class="stock-head"><div class="stock-kicker">STOK YÖNETİMİ</div><h2 class="stock-title">Stok durumu</h2><div class="stock-subtitle">Ürün, konum ve hareketlerin özeti</div></div>
     <div class="stock-summary-grid" aria-label="Stok özeti">
-      <div class="stock-summary total"><span>TOPLAM STOK</span><strong id="sToplam">0</strong><small>kayıtlı bidon</small></div>
-      <div class="stock-summary"><span>SAHADA</span><strong id="sSaha">0</strong><small>kullanımda</small></div>
-      <div class="stock-summary production"><span>ÜRETİMDE</span><strong id="sUretim">0</strong><small>tesiste</small></div>
+      <div class="stock-summary total" role="button" tabindex="0" data-ozet="toplam" aria-label="Toplam stok ayrıntısı"><span>TOPLAM STOK</span><strong id="sToplam">0</strong><small>tesisteki bidon ›</small></div>
+      <div class="stock-summary" role="button" tabindex="0" data-ozet="saha" aria-label="Sahadaki bidonlar ayrıntısı"><span>SAHADA</span><strong id="sSaha">0</strong><small>bekliyor ›</small></div>
+      <div class="stock-summary production" role="button" tabindex="0" data-ozet="uretim" aria-label="Üretimdeki bidonlar ayrıntısı"><span>ÜRETİMDE</span><strong id="sUretim">0</strong><small>bugün verilen ›</small></div>
     </div>
+    <div class="stock-used" role="button" tabindex="0" data-ozet="kullanilan" id="kullanilanSatir">Kullanılan (stoktan düşen): <b>0</b> bidon ›</div>
+    <div class="kart stock-detail gizle" id="ozetDetay" aria-live="polite"></div>
     <div class="stock-layout">
       <div class="stock-col">
       <div class="kart stock-panel stk-urun">
@@ -873,6 +903,11 @@ function trToISO(t){ const m = /^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/.exec((t
 function isoToTR(i){ const [y,m,d] = i.split('-'); return `${d}.${m}.${y}`; }
 function mesaj(id, msg, tur = 'bilgi'){ $(id).innerHTML = msg ? `<div class="durum ${tur}">${esc(msg)}</div>` : ''; }
 const bul = id => DB.bidonlar.find(b => String(b.id) === String(id));
+// Üretime verilen bidon ertesi güne kalmaz: iade edilmediyse "kullanıldı" sayılır ve stoktan düşer.
+function etkinDurum(b){ return (b.durum === 'URETIMDE' && String(b.son || '').slice(0, 10) < bugunISO()) ? 'KULLANILDI' : (b.durum || 'SAHADA'); }
+const sahadaMi = b => etkinDurum(b) === 'SAHADA', uretimdeMi = b => etkinDurum(b) === 'URETIMDE', kullanildiMi = b => etkinDurum(b) === 'KULLANILDI';
+const DURUM_AD = { SAHADA:'Sahada', URETIMDE:'Üretimde', KULLANILDI:'Kullanıldı' };
+const durumAd = b => DURUM_AD[etkinDurum(b)];
 function idTemizle(ham){
   if(!ham) return '';
   const m = /[?&#](?:id|bidon)=([^&#]+)/i.exec(ham);
@@ -881,7 +916,7 @@ function idTemizle(ham){
 function urunListesi(){
   return [...new Set([...(DB.urunler && DB.urunler.length ? DB.urunler : URUN_VARSAYILAN), ...DB.bidonlar.map(b => b.urun).filter(Boolean)])].sort((a,b) => a.localeCompare(b, 'tr'));
 }
-const ISLEM_AD = { GIRIS:'Giriş', CIKIS:'Çıkış', IADE:'İade', TASI:'Yerleştirme' };
+const ISLEM_AD = { GIRIS:'Giriş', CIKIS:'Çıkış', IADE:'İade', TASI:'Yerleştirme', KULLANILDI:'Kullanıldı' };
 const BOLGE_VARSAYILAN = ['M1', 'Y2', 'Z5', 'Y5'];       // Excel bölge şemasındaki bölgeler, öneri olarak
 function bolgeListesi(){ return [...new Set([...BOLGE_VARSAYILAN, ...DB.bidonlar.map(b => b.bolge).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'tr')); }
 function bidonOnekleri(){                                // bidon QR'larının ön ekleri (BD- gibi); bunlara uymayan kod = bölge kodu
@@ -899,6 +934,7 @@ const yeniId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() 
 // Sunucudaki kuralların aynısı: Giriş (üretimdeyse olmaz), Çıkış (sadece sahadaki), İade (sadece üretimdeki), kayıtsız bidon olmaz.
 function uygula(db, tip, liste, parti, operator, neden){   // k.bolge: bidon başına bölge
   const z = simdiStr(), g = z.slice(0, 10);
+  db.bidonlar.forEach(b => { if(etkinDurum(b) === 'KULLANILDI') b.durum = 'KULLANILDI'; });   // dünden kalan üretimdekiler kullanıldı
   const m = new Map(db.bidonlar.map(b => [String(b.id), b]));
   const gorulen = new Set(), atlanan = []; let yeni = 0, islenen = 0;
   liste.forEach(k => {
@@ -908,10 +944,10 @@ function uygula(db, tip, liste, parti, operator, neden){   // k.bolge: bidon ba�
     let b = m.get(id);
     if(tip === 'GIRIS'){ if(b && b.durum === 'URETIMDE'){ atlanan.push({ id, neden:'Üretimde, önce iade yap' }); return; } }
     else if(!b){ atlanan.push({ id, neden:'Kayıtsız bidon, önce giriş yap' }); return; }
-    else if(tip === 'CIKIS' && b.durum !== 'SAHADA'){ atlanan.push({ id, neden:'Zaten üretimde' }); return; }
-    else if(tip === 'IADE' && b.durum !== 'URETIMDE'){ atlanan.push({ id, neden:'Üretimde değil' }); return; }
+    else if(tip === 'CIKIS' && b.durum !== 'SAHADA'){ atlanan.push({ id, neden: b.durum === 'KULLANILDI' ? 'Kullanıldı, önce giriş yap' : 'Zaten üretimde' }); return; }
+    else if(tip === 'IADE' && b.durum !== 'URETIMDE'){ atlanan.push({ id, neden: b.durum === 'KULLANILDI' ? 'Geçen güne kaldı, kullanıldı sayıldı. İade için önce giriş yap' : 'Üretimde değil' }); return; }
     else if(tip === 'TASI' && !String(k.bolge || '').trim()){ atlanan.push({ id, neden:'Bölge boş' }); return; }
-    else if(tip === 'TASI' && b.durum !== 'SAHADA'){ atlanan.push({ id, neden:'Üretimde, önce iade yap' }); return; }
+    else if(tip === 'TASI' && b.durum !== 'SAHADA'){ atlanan.push({ id, neden: b.durum === 'KULLANILDI' ? 'Kullanıldı, önce giriş yap' : 'Üretimde, önce iade yap' }); return; }
     else if(tip === 'TASI' && String(b.bolge || '') === String(k.bolge).trim()){ atlanan.push({ id, neden:'Zaten bu bölgede' }); return; }
     if(!b){
       b = { id, urun:k.urun||'', tarih:k.tarih||'', kisi:k.kisi||'', mense:k.mense||'', bolge:'', durum:'', giris:z, son:z };
@@ -1050,9 +1086,10 @@ async function yukle(){
 function yenileUI(){
   $('urunListe').innerHTML = urunListesi().map(u => `<option>${esc(u)}</option>`).join('');
   $('bolgeListe').innerHTML = bolgeListesi().map(u => `<option>${esc(u)}</option>`).join('');
-  const saha = DB.bidonlar.filter(b => b.durum !== 'URETIMDE').length;
-  const uretim = DB.bidonlar.length - saha;
-  $('statTotal').textContent = DB.bidonlar.length.toLocaleString('tr-TR');
+  DB.bidonlar.forEach(b => { if(etkinDurum(b) === 'KULLANILDI') b.durum = 'KULLANILDI'; });
+  const saha = DB.bidonlar.filter(sahadaMi).length;
+  const uretim = DB.bidonlar.filter(uretimdeMi).length;
+  $('statTotal').textContent = (saha + uretim).toLocaleString('tr-TR');
   $('statField').textContent = saha.toLocaleString('tr-TR');
   $('statProduction').textContent = uretim.toLocaleString('tr-TR');
   $('statToday').textContent = DB.hareketler.filter(h => h.gun === bugunISO()).length.toLocaleString('tr-TR');
@@ -1184,7 +1221,7 @@ async function fotoIsle(dosya){
     const notlar = () => {
       if(!id) return ['QR bulunamadı. Aşağıdan tekrar çek ya da elle yaz.'];
       const b = bul(id);
-      return b ? [b.durum === 'URETIMDE' ? 'Bu bidon üretimde görünüyor. Önce İade yapılmalı.' : 'Bu bidon zaten kayıtlı, bilgileri güncellenecek.'] : [];
+      return b ? [etkinDurum(b) === 'URETIMDE' ? 'Bu bidon üretimde görünüyor. Önce İade yapılmalı.' : etkinDurum(b) === 'KULLANILDI' ? 'Bu bidon kullanılmış görünüyor. Giriş yapılırsa yeniden sahaya alınır.' : 'Bu bidon zaten kayıtlı, bilgileri güncellenecek.'] : [];
     };
     const alan = x => ({ id, urun:trBuyuk(x.urun), tarih:x.tarih || '', kisi:trBuyuk(x.kisi), mense:trBuyuk(x.mense) });
     let formAcik = false;
@@ -1291,16 +1328,17 @@ function degerlendir(id){
   const b = bul(id);
   if(tmod === 'GIRIS'){
     if(!b) return { tur:'ok' };
-    return { tur:'uyari', mesaj: b.durum === 'URETIMDE' ? 'Üretimde görünüyor, atlanacak. Önce İade yap' : 'Zaten kayıtlı, bilgi güncellenir' };
+    if(kullanildiMi(b)) return { tur:'ok', mesaj:'Kullanılmış bidon, yeniden sahaya alınır' };
+    return { tur:'uyari', mesaj: etkinDurum(b) === 'URETIMDE' ? 'Üretimde görünüyor, atlanacak. Önce İade yap' : 'Zaten kayıtlı, bilgi güncellenir' };
   }
   if(!b) return { tur:'kayitsiz', mesaj:'Kayıtsız: önce Giriş modunda kaydet' };
   if(tmod === 'TASI'){
-    if(b.durum !== 'SAHADA') return { tur:'uyari', mesaj:'Üretimde, önce İade yap' };
+    if(!sahadaMi(b)) return { tur:'uyari', mesaj: kullanildiMi(b) ? 'Kullanıldı, önce Giriş yap' : 'Üretimde, önce İade yap' };
     const bol = $('cBolge').value.trim();
     if(bol && String(b.bolge || '') === bol) return { tur:'uyari', mesaj:'Zaten bu bölgede' };
   }
-  if(tmod === 'CIKIS' && b.durum === 'URETIMDE') return { tur:'uyari', mesaj:'Zaten üretimde' };
-  if(tmod === 'IADE' && b.durum !== 'URETIMDE') return { tur:'uyari', mesaj:'Üretimde görünmüyor' };
+  if(tmod === 'CIKIS' && !sahadaMi(b)) return { tur:'uyari', mesaj: kullanildiMi(b) ? 'Kullanıldı, önce Giriş yap' : 'Zaten üretimde' };
+  if(tmod === 'IADE' && !uretimdeMi(b)) return { tur:'uyari', mesaj: kullanildiMi(b) ? 'Geçen güne kaldı, kullanıldı sayıldı. Önce Giriş yap' : 'Üretimde görünmüyor' };
   return { tur:'ok' };
 }
 function bip(iyi){
@@ -1608,12 +1646,14 @@ modSec('CIKIS');
 function stok(){
   const say = {};
   DB.bidonlar.forEach(b => {
+    if(kullanildiMi(b)) return;                          // kullanılanlar stok değil
     const u = b.urun || '(ürün yok)'; say[u] = say[u] || { saha:0, uretim:0 };
-    if(b.durum === 'URETIMDE') say[u].uretim++; else say[u].saha++;
+    if(uretimdeMi(b)) say[u].uretim++; else say[u].saha++;
   });
-  const sa = DB.bidonlar.filter(b => b.durum !== 'URETIMDE').length, ur = DB.bidonlar.length - sa;
-  $('sSaha').textContent = sa; $('sUretim').textContent = ur;
-  $('sToplam').textContent = DB.bidonlar.length.toLocaleString('tr-TR');
+  const sa = DB.bidonlar.filter(sahadaMi).length, ur = DB.bidonlar.filter(uretimdeMi).length, ku = DB.bidonlar.filter(kullanildiMi).length;
+  $('sSaha').textContent = sa.toLocaleString('tr-TR'); $('sUretim').textContent = ur.toLocaleString('tr-TR');
+  $('sToplam').textContent = (sa + ur).toLocaleString('tr-TR');
+  $('kullanilanSatir').innerHTML = `Kullanılan (stoktan düşen): <b>${ku.toLocaleString('tr-TR')}</b> bidon ›`;
   const satirlar = Object.entries(say).sort((a, b) => (b[1].saha + b[1].uretim) - (a[1].saha + a[1].uretim));
   const maxUrun = Math.max(1, ...satirlar.map(([, s]) => s.saha + s.uretim));
   $('urunSayisi').textContent = `${satirlar.length} ürün`;
@@ -1621,16 +1661,68 @@ function stok(){
     const toplam = s.saha + s.uretim, genislik = toplam / maxUrun * 100, sahaYuzde = toplam ? s.saha / toplam * 100 : 0;
     return `<div class="product-row"><div class="product-top"><div><div class="product-name">${esc(u)}</div><div class="product-meta">${s.saha.toLocaleString('tr-TR')} sahada <span aria-hidden="true">·</span> ${s.uretim.toLocaleString('tr-TR')} üretimde</div></div><div class="product-total">${toplam.toLocaleString('tr-TR')}<small>bidon</small></div></div><div class="product-track" role="img" aria-label="${esc(u)}: ${s.saha} sahada, ${s.uretim} üretimde"><div class="product-total-bar" style="width:${genislik}%"><span class="bar-field" style="width:${sahaYuzde}%"></span><span class="bar-production" style="width:${100 - sahaYuzde}%"></span></div></div></div>`;
   }).join('') : '<div class="chart-empty">Henüz stok kaydı bulunmuyor.</div>';
-  bolgeTablo(); gunTablo();
+  ozetDetayCiz(); bolgeTablo(); gunTablo();
 }
+/* ---- özet kartlarına dokununca ayrıntı ---- */
+let acikOzet = null;
+const OZET_BASLIK = { toplam:'Tesisteki toplam stok', saha:'Sahadaki bidonlar', uretim:'Üretimde (bugün verilen)', kullanilan:'Kullanılan bidonlar (stoktan düşen)' };
+function ozetListe(k){
+  const sahada = DB.bidonlar.filter(sahadaMi), uretim = DB.bidonlar.filter(uretimdeMi), kullanilan = DB.bidonlar.filter(kullanildiMi);
+  return { toplam:sahada.concat(uretim), saha:sahada, uretim:uretim, kullanilan:kullanilan }[k];
+}
+function ozetDetayCiz(){
+  const el = $('ozetDetay');
+  document.querySelectorAll('[data-ozet]').forEach(x => x.classList.toggle('secili', x.dataset.ozet === acikOzet));
+  if(!acikOzet){ el.classList.add('gizle'); el.innerHTML = ''; return; }
+  const k = acikOzet, l = ozetListe(k), tr = n => n.toLocaleString('tr-TR'), toplam = l.length;
+  const grupla = (arr, f) => { const g = {}; arr.forEach(b => { const x = f(b) || '(yok)'; g[x] = (g[x] || 0) + 1; }); return Object.entries(g).sort((a, b) => b[1] - a[1]); };
+  const barlar = girdi => girdi.map(([ad, n]) => `<div class="region-prod-row"><span>${esc(ad)}</span><b>${tr(n)}</b><div class="region-prod-track"><span style="width:${Math.max(3, Math.round(n * 100 / Math.max(1, toplam)))}%"></span></div></div>`).join('');
+  const bugun = bugunISO(), cikisParti = {};
+  DB.hareketler.filter(h => h.islem === 'CIKIS' && h.gun === bugun).forEach(h => { cikisParti[String(h.id)] = h.parti || ''; });   // bugünkü çıkışın parti / hat bilgisi
+  let ic = '';
+  if(k === 'uretim'){
+    const par = grupla(l, b => cikisParti[String(b.id)]).filter(([ad]) => ad !== '(yok)');
+    ic = `<p class="od-cumle">Bugün üretime verilen <b>${tr(toplam)}</b> bidon var.</p><p class="od-not">İade edilmeyenler yarın otomatik "kullanıldı" sayılır ve stoktan düşer. Aynı gün geri gelenler için Toplu → İade kullan.</p>
+      <div class="od-alt">ÜRÜNE GÖRE</div>${barlar(grupla(l, b => b.urun))}${par.length ? `<div class="od-alt">PARTİ / HAT'A GÖRE</div>${barlar(par)}` : ''}
+      <div class="od-alt">BİDONLAR (${tr(toplam)})</div><div class="od-liste">${l.slice().sort((a, b) => String(b.son).localeCompare(String(a.son))).slice(0, 200).map(b => `<div><b>${esc(b.id)}</b><span>${esc([b.urun, String(b.son || '').slice(11, 16), cikisParti[String(b.id)], b.kisi].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>`;
+  } else if(k === 'saha'){
+    ic = `<p class="od-cumle">Sahada şu an <b>${tr(toplam)}</b> bidon var.</p><div class="od-alt">ÜRÜNE GÖRE</div>${barlar(grupla(l, b => b.urun))}
+      <div class="od-alt">BÖLGEYE GÖRE</div>${barlar(grupla(l, b => b.bolge || BOLGESIZ).slice(0, 8))}${l.length ? `<div class="od-alt">BİDONLAR (${tr(toplam)}${toplam > 200 ? ', ilk 200' : ''})</div><div class="od-liste">${l.slice().sort((a, b) => String(a.id).localeCompare(String(b.id), 'tr', { numeric:true })).slice(0, 200).map(b => `<div><b>${esc(b.id)}</b><span>${esc([b.urun, b.tarih, b.bolge].filter(Boolean).join(' · '))}</span></div>`).join('')}</div>` : ''}`;
+  } else if(k === 'toplam'){
+    const say = {}; l.forEach(b => { const u = b.urun || '(ürün yok)'; const x = say[u] || (say[u] = { s:0, u:0 }); if(uretimdeMi(b)) x.u++; else x.s++; });
+    const sat = Object.entries(say).sort((a, b) => (b[1].s + b[1].u) - (a[1].s + a[1].u)), ts = sat.reduce((t, [, v]) => t + v.s, 0), tu = sat.reduce((t, [, v]) => t + v.u, 0);
+    ic = `<p class="od-cumle">Tesiste toplam <b>${tr(toplam)}</b> bidon var: <b>${tr(ts)}</b> sahada, <b>${tr(tu)}</b> bugün üretimde.</p><p class="od-not">Dünden önce üretime verilip iade edilmeyenler kullanıldı sayıldığı için burada yok.</p>
+      <table class="od-tablo"><tr><th>Ürün</th><th>Sahada</th><th>Üretimde</th><th>Toplam</th></tr>${sat.map(([u, v]) => `<tr><td>${esc(u)}</td><td>${tr(v.s)}</td><td>${tr(v.u)}</td><td><b>${tr(v.s + v.u)}</b></td></tr>`).join('')}<tr class="top"><td>Toplam</td><td>${tr(ts)}</td><td>${tr(tu)}</td><td>${tr(ts + tu)}</td></tr></table>`;
+  } else {
+    const gun = grupla(l, b => String(b.son || '').slice(0, 10)).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 14);
+    ic = `<p class="od-cumle">Şimdiye kadar <b>${tr(toplam)}</b> bidon kullanıldı ve stoktan düştü.</p><p class="od-not">Üretime verilip aynı gün iade edilmeyen bidonlar ertesi gün otomatik "kullanıldı" olur. Aynı bidon yeniden dolunca Giriş yapılır, stoğa geri girer.</p>
+      <div class="od-alt">GÜNE GÖRE (son 14 gün)</div><table class="od-tablo"><tr><th>Gün</th><th>Kullanılan</th></tr>${gun.map(([g, n]) => `<tr><td>${esc(g.length === 10 ? isoToTR(g) : g)}</td><td><b>${tr(n)}</b></td></tr>`).join('') || '<tr><td colspan="2" class="kucuk">Henüz kullanılan yok.</td></tr>'}</table>
+      <div class="od-alt">ÜRÜNE GÖRE</div>${barlar(grupla(l, b => b.urun))}`;
+  }
+  el.classList.remove('gizle');
+  el.innerHTML = `<div class="od-bas"><div class="od-baslik">${esc(OZET_BASLIK[k])}</div><button class="ikincil od-kapat" data-ozet-kapat="1">Kapat ✕</button></div>${ic}${toplam ? `<button class="ikincil region-xls" data-ozet-xls="${k}">Bu listeyi indir (Excel)</button>` : ''}`;
+}
+document.addEventListener('click', e => {
+  if(!$('sStok') || $('sStok').classList.contains('gizle')) return;
+  if(e.target.closest('[data-ozet-xls]')){ const k = e.target.closest('[data-ozet-xls]').dataset.ozetXls; excelYaz(`${k}-${bugunISO()}.xlsx`, [[OZET_BASLIK[k].slice(0, 31), ozetListe(k).map(bidonSatir)]]); return; }
+  if(e.target.closest('[data-ozet-kapat]')){ acikOzet = null; ozetDetayCiz(); return; }
+  const c = e.target.closest('[data-ozet]'); if(!c) return;
+  acikOzet = acikOzet === c.dataset.ozet ? null : c.dataset.ozet; ozetDetayCiz();
+  if(acikOzet) $('ozetDetay').scrollIntoView({ behavior:'smooth', block:'nearest' });
+});
+document.addEventListener('keydown', e => {
+  if((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[data-ozet]')){ e.preventDefault(); e.target.click(); }
+});
 const acikBolgeler = new Set();                       // yenilemede açık kalan bölgeler
 const BOLGESIZ = '(bölgesiz)';
 const bolgeAnahtar = b => b.bolge || BOLGESIZ;
 function bolgeTablo(){
-  const sahada = DB.bidonlar.filter(b => b.durum !== 'URETIMDE');
+  const sahada = DB.bidonlar.filter(sahadaMi);
   const g = {};
   sahada.forEach(b => { const z = bolgeAnahtar(b); const x = g[z] || (g[z] = { n:0, u:{} }); x.n++; const u = b.urun || '(ürün yok)'; x.u[u] = (x.u[u] || 0) + 1; });
-  const uret = {}; DB.bidonlar.filter(b => b.durum === 'URETIMDE').forEach(b => { const z = bolgeAnahtar(b); uret[z] = (uret[z] || 0) + 1; });
+  const uret = {}, kull = {};
+  DB.bidonlar.filter(uretimdeMi).forEach(b => { const z = bolgeAnahtar(b); uret[z] = (uret[z] || 0) + 1; });
+  DB.bidonlar.filter(kullanildiMi).forEach(b => { const z = bolgeAnahtar(b); kull[z] = (kull[z] || 0) + 1; });
   const sat = Object.entries(g).sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0], 'tr'));
   const toplam = sahada.length, enCok = Math.max(1, ...sat.map(([, v]) => v.n)), tr = n => n.toLocaleString('tr-TR');
   $('bolgeSayisi').textContent = sat.length + ' bölge';
@@ -1642,9 +1734,9 @@ function bolgeTablo(){
     let detay = '';
     if(acik){
       const liste = sahada.filter(b => bolgeAnahtar(b) === z).sort((a, b) => String(a.id).localeCompare(String(b.id), 'tr', { numeric:true }));
-      const ur = uret[z] || 0;
+      const ur = uret[z] || 0, ku = kull[z] || 0;
       detay = `<div class="region-detail" data-detay="${esc(z)}"><p class="region-sentence"><b>${esc(z)}</b> bölgesinde şu an <b>${tr(v.n)}</b> bidon var <span class="kucuk">(sahadakilerin %${yuzde})</span></p>`
-        + (ur ? `<p class="region-sub">Son bölgesi <b>${esc(z)}</b> olan toplam ${tr(v.n + ur)} bidon var: ${tr(ur)} tanesi üretime alınmış.</p>` : '')
+        + ((ur || ku) ? `<p class="region-sub">Son bölgesi <b>${esc(z)}</b> olan diğer bidonlar: ${tr(ur)} bugün üretimde, ${tr(ku)} kullanıldı.</p>` : '')
         + `<div class="region-prod">${urunler.map(([u, n]) => `<div class="region-prod-row"><span>${esc(u)}</span><b>${tr(n)}</b><div class="region-prod-track"><span style="width:${Math.max(3, Math.round(n * 100 / v.n))}%"></span></div></div>`).join('')}</div>`
         + `<div class="region-list">${liste.slice(0, 200).map(b => `<div><b>${esc(b.id)}</b><span>${esc([b.urun, b.tarih, b.kisi].filter(Boolean).join(' · ') || '-')}</span></div>`).join('')}</div>`
         + (liste.length > 200 ? `<div class="region-more">İlk 200 bidon gösteriliyor. Tamamı için Excel'i indir.</div>` : '')
@@ -1655,7 +1747,7 @@ function bolgeTablo(){
 }
 function bolgeAcKapat(z){ if(acikBolgeler.has(z)) acikBolgeler.delete(z); else acikBolgeler.add(z); bolgeTablo(); }
 function bolgeExcel(z){
-  const l = DB.bidonlar.filter(b => b.durum !== 'URETIMDE' && bolgeAnahtar(b) === z);
+  const l = DB.bidonlar.filter(b => sahadaMi(b) && bolgeAnahtar(b) === z);
   excelYaz(`bolge-${z.replace(/[^\w.-]+/g, '_')}-${bugunISO()}.xlsx`, [[('Bölge ' + z).replace(/[:\\\/?*\[\]]/g, '-').slice(0, 31), l.map(bidonSatir)]]);
 }
 $('bolgeGrafik').addEventListener('click', e => {
@@ -1693,13 +1785,13 @@ function araBul(q){
 function bidonKart(b){
   const gec = DB.hareketler.filter(h => String(h.id) === String(b.id)).slice(-8).reverse();
   return `<div class="satir"><b>${esc(b.id)}</b> · ${esc(b.urun || '-')} · ${esc(b.tarih || '-')} ${b.kisi ? '· ' + esc(b.kisi) : ''}${b.bolge ? ' · bölge ' + esc(b.bolge) : ''}</div>
-    <div class="durum ${b.durum === 'URETIMDE' ? 'uyari' : 'bilgi'}">${b.durum === 'URETIMDE' ? 'Üretimde' : 'Sahada'}</div>` +
+    <div class="durum ${sahadaMi(b) ? 'bilgi' : 'uyari'}">${durumAd(b)}${kullanildiMi(b) ? ' (son üretim: ' + esc(String(b.son || '').slice(0, 10)) + ')' : ''}</div>` +
     gec.map(h => `<div class="kucuk">${esc(h.zaman)} · ${esc(ISLEM_AD[h.islem] || h.islem)}${h.operator ? ' · ' + esc(h.operator) : ''}${h.parti ? ' · ' + esc(h.parti) : ''}${h.neden ? ' · neden: ' + esc(h.neden) : ''}${h.bolge && (h.islem === 'TASI' || h.islem === 'GIRIS') ? ' · @' + esc(h.bolge) : ''}</div>`).join('');
 }
 $('ara').oninput = () => {
   const q = $('ara').value.trim();
   if(!q){ $('araSonuc').innerHTML = ''; return; }
-  const zl = DB.bidonlar.filter(b => b.durum !== 'URETIMDE' && String(b.bolge || '').toUpperCase() === q.toUpperCase());
+  const zl = DB.bidonlar.filter(b => sahadaMi(b) && String(b.bolge || '').toUpperCase() === q.toUpperCase());
   if(zl.length && !DB.bidonlar.some(b => String(b.id).toUpperCase() === q.toUpperCase())){
     $('araSonuc').innerHTML = `<div class="kucuk">Bölge ${esc(q)}: ${zl.length} bidon${zl.length > 40 ? ' (ilk 40)' : ''}</div>` + zl.slice(0, 40).map(b => `<div class="satir"><b>${esc(b.id)}</b> · ${esc(b.urun || '-')} · ${esc(b.tarih || '-')}</div>`).join('');
     return;
@@ -1708,12 +1800,12 @@ $('ara').oninput = () => {
   if(!l.length) $('araSonuc').innerHTML = '<div class="kucuk">Kayıt yok.</div>';
   else if(l.length === 1) $('araSonuc').innerHTML = bidonKart(l[0]);
   else $('araSonuc').innerHTML = `<div class="kucuk">${l.length} eşleşme, ilk 8:</div>` +
-    l.slice(0, 8).map(b => `<div class="satir"><b>${esc(b.id)}</b> · ${esc(b.urun || '-')} · ${b.durum === 'URETIMDE' ? 'Üretimde' : 'Sahada'}</div>`).join('');
+    l.slice(0, 8).map(b => `<div class="satir"><b>${esc(b.id)}</b> · ${esc(b.urun || '-')} · ${durumAd(b)}</div>`).join('');
 };
 
 /* ---------- Excel indirme ---------- */
 const bidonSatir = b => ({ 'Bidon ID':b.id, 'Ürün':b.urun, 'Etiket Tarihi':b.tarih, 'Kişi':b.kisi, 'Menşe':b.mense, 'Bölge':b.bolge,
-  'Durum': b.durum === 'URETIMDE' ? 'Üretimde' : 'Sahada', 'İlk Kayıt':b.giris, 'Son Hareket':b.son });
+  'Durum': durumAd(b), 'İlk Kayıt':b.giris, 'Son Hareket':b.son });
 const hareketSatir = h => ({ 'Zaman':h.zaman, 'Gün':h.gun, 'Bidon ID':h.id, 'İşlem':ISLEM_AD[h.islem] || h.islem, 'Ürün':h.urun,
   'Etiket Tarihi':h.tarih, 'Kişi (hazırlayan)':h.kisi, 'Parti / Hat':h.parti, 'İade Nedeni':h.neden, 'Bölge':h.bolge, 'İşlemi Yapan':h.operator, 'Kaynak':h.kaynak });
 function excelYaz(ad, sayfalar){
@@ -1722,7 +1814,7 @@ function excelYaz(ad, sayfalar){
   XLSX.writeFile(wb, ad);
 }
 $('indirSaha').onclick = () => {
-  const l = DB.bidonlar.filter(b => b.durum !== 'URETIMDE');
+  const l = DB.bidonlar.filter(sahadaMi);
   const ozet = {}; l.forEach(b => { const u = b.urun || '(ürün yok)'; ozet[u] = (ozet[u] || 0) + 1; });
   excelYaz(`sahadaki-bidonlar-${bugunISO()}.xlsx`, [
     ['Sahadaki bidonlar', l.map(bidonSatir)],
