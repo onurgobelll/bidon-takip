@@ -298,7 +298,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   .stock-panel{padding:14px}
 }
 
-/* ---- v3.3: stok yerleşimi ve bölge paneli ---- */
+/* ---- v3.5: stok yerleşimi ve bölge paneli ---- */
 .stock-layout{display:flex;flex-direction:column}
 .stock-col{display:contents}
 .stock-layout .kart{margin-bottom:12px}
@@ -334,7 +334,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 .region-more{font-size:11px;color:var(--soluk);margin:7px 2px 0}
 .region-detail .region-xls{min-height:44px;font-size:14px;margin-top:10px}
 
-/* ---- v3.3: toplu tarama geri bildirimi ---- */
+/* ---- v3.5: toplu tarama geri bildirimi ---- */
 .cam-wrap{position:relative;border-radius:14px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 0 transparent}
 .cam-wrap video{display:block;width:100%;max-height:42vh;object-fit:cover;border-radius:0}
 .cam-wrap.flash-ok{outline:4px solid #22A06B;outline-offset:-4px}
@@ -374,7 +374,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 .ortak-kart>div{padding:0 16px 14px}
 #modKart{padding-bottom:12px}
 
-/* ---- v3.3: özet kartı ayrıntısı ---- */
+/* ---- v3.5: özet kartı ayrıntısı ---- */
 .stock-summary[data-ozet]{cursor:pointer;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent}
 .stock-summary[data-ozet]:active{transform:scale(.98)}
 .stock-summary.secili{outline:3px solid var(--bidon);outline-offset:2px}
@@ -401,12 +401,24 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 .od-liste b{flex:none;min-width:74px}
 .od-liste span{color:var(--soluk);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stock-detail .region-xls{min-height:44px;font-size:14px;margin-top:10px}
+
+.oto-not{font-size:12px;color:var(--soluk);line-height:1.4;margin:6px 2px 12px}
+#otoGiris{min-height:60px}
+
+.entry-card button#otoGiris svg,.entry-card button#cek.ikincil svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.entry-card button#cek.ikincil{margin-top:2px}
+
+.entry-card button#otoGiris{display:flex;align-items:center;justify-content:center;gap:9px;min-height:60px}
+.entry-card button#cek.ikincil{background:var(--kart);background-image:none;color:var(--yazi);border:1.5px solid var(--cizgi);box-shadow:none}
+
+.ocr-durum{font-size:12px;margin:2px 0 4px;min-height:0}
+.ocr-durum.hazir{color:#177A4D;font-weight:700}.ocr-durum.yukleniyor{color:#B86F0E;font-weight:700}.ocr-durum.hata{color:#C0352E;font-weight:700}
 </style>
 </head>
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.3</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.5</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -426,6 +438,8 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       <option value="ucretsiz">Ücretsiz: telefonda okur (varsayılan)</option>
       <option value="ai">Yapay zekâ: daha doğru ama ücretli</option>
     </select>
+    <button class="ikincil" id="ocrTest" style="margin-top:10px">Etiket okuyucuyu dene</button>
+    <div id="ocrTestSonuc" class="kucuk" style="margin-top:6px"></div>
     <div id="denemeAyar">
       <label for="demoKey">Deneme için API anahtarı (isteğe bağlı, etiketi AI'a okutmak için)</label>
       <input id="demoKey" type="password" autocomplete="off" placeholder="sk-ant-...">
@@ -450,10 +464,12 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
     <div class="kart entry-card">
       <input type="file" id="foto" accept="image/*" capture="environment" class="gizle">
       <input type="file" id="fotoQR" accept="image/*" capture="environment" class="gizle">
-      <button id="cek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>QR ve etiketi tara</button>
+      <button id="otoGiris"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 12h8"/></svg>Otomatik tara (foto çekmeden)</button>
+      <div class="oto-not">Kamera açık kalır. Bidonu QR ve etiketiyle birlikte göster: QR anında eklenir, etiketi kendisi okur. Her bidon için fotoğraf çekmen gerekmez.</div>
+      <button class="ikincil" id="cek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>Tek bidon: fotoğraf çek</button>
       <div class="quick-actions"><button class="ikincil" id="elle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l4.2-.8L19 8.4 15.6 5 4.8 15.8 4 20Z"/></svg>Elle giriş</button><button class="ikincil" id="galeri"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/></svg>Galeriden seç</button></div>
       <input type="file" id="fotoGaleri" accept="image/*" class="gizle">
-      <div class="home-tip">Birden fazla bidon için <b>Toplu</b> ekranını kullan.</div>
+      <div class="home-tip"><b>Otomatik tara</b>, Toplu → Giriş'in kısayoludur. Çıkış, iade ve yerleştirme için <b>Toplu</b> ekranını kullan.</div>
       <div id="durum"></div>
     </div>
 
@@ -526,6 +542,8 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       </div>
       <div id="ortak" class="gizle">
         <label class="cb-satir"><input type="checkbox" id="etiketOtomatik"> Etiketi de otomatik oku (QR ile birlikte, arka planda)</label>
+        <div class="ocr-durum" id="ocrDurum"></div>
+        <button class="ikincil gizle" id="ocrYeniden" style="margin:6px 0 8px;min-height:44px">Etiket okuyucuyu yeniden dene</button>
         <div class="kucuk" id="etiketOtoNot" style="margin:2px 0 4px">Kamerayı bidonun QR'ına ve etiketine birlikte tut. QR anında eklenir, etiket yazısı arkada okunur; sen sıradaki bidona geçebilirsin. Okunamayanlar için aşağıdaki ortak bilgi kullanılır.</div>
         <label for="cUrun">Ortak ürün (etiket okunamazsa)</label>
         <input id="cUrun" list="urunListe" autocapitalize="characters" autocomplete="off">
@@ -1105,15 +1123,31 @@ function scriptYukle(src){
   return new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok;
     e.onerror = () => no(new Error('Etiket okuyucu indirilemedi. İlk kullanımda internet gerekir.')); document.head.appendChild(e); });
 }
+const OCR_ZAMAN = window.__ocrZaman || { script:40000, worker:90000, okuma:60000 };
+const OCR = { durum:'bekliyor', hata:'' };               // bekliyor | yukleniyor | hazir | hata
+function zamanAsimi(p, ms, metin){
+  let t; return Promise.race([p, new Promise((_, no) => { t = setTimeout(() => no(new Error(metin)), ms); })]).finally(() => clearTimeout(t));
+}
+function ocrDurumGuncelle(){
+  const el = $('ocrDurum');
+  if(el){
+    el.className = 'ocr-durum ' + OCR.durum;
+    el.textContent = OCR.durum === 'hazir' ? 'Etiket okuyucu hazır ✓' : OCR.durum === 'yukleniyor' ? 'Etiket okuyucu yükleniyor (ilk seferde yaklaşık 5 MB, bekle)…' : OCR.durum === 'hata' ? 'Etiket okuyucu yüklenemedi: ' + OCR.hata : '';
+  }
+  const yb = $('ocrYeniden'); if(yb) yb.classList.toggle('gizle', OCR.durum !== 'hata');
+  camChipler();
+}
 async function tessHazir(){
   if(tessWorker) return tessWorker;
   if(!tessYukleniyor) tessYukleniyor = (async () => {
-    if(!window.Tesseract) await scriptYukle('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js');
+    OCR.durum = 'yukleniyor'; OCR.hata = ''; ocrDurumGuncelle();
+    if(!window.Tesseract) await zamanAsimi(scriptYukle('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'), OCR_ZAMAN.script, 'indirme çok yavaş ya da internet yok');
     mesaj('durum', 'Etiket okuyucu hazırlanıyor (ilk seferde yaklaşık 5 MB iner, sonra telefonda kalır)…');
-    tessWorker = await Tesseract.createWorker('tur', 1, { langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_best_int' });
+    tessWorker = await zamanAsimi(Tesseract.createWorker('tur', 1, { langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_best_int' }), OCR_ZAMAN.worker, 'hazırlanamadı (zaman aşımı), interneti kontrol et');
     if(($('durum').textContent || '').includes('hazırlanıyor')) mesaj('durum', '');
+    OCR.durum = 'hazir'; ocrDurumGuncelle();
     return tessWorker;
-  })().catch(e => { tessYukleniyor = null; throw e; });
+  })().catch(e => { tessYukleniyor = null; tessWorker = null; OCR.durum = 'hata'; OCR.hata = e.message; OCR.sonHata = Date.now(); ocrDurumGuncelle(); throw e; });
   return tessYukleniyor;
 }
 async function tessOcr(cv, psm){
@@ -1210,6 +1244,7 @@ function formKapat(){ okuToken++; $('form').classList.add('gizle'); mesaj('durum
 ['fUrun','fTarih','fKisi','fMense'].forEach(i => $(i).addEventListener('input', () => { $(i).dataset.dokunuldu = '1'; }));
 
 $('cek').onclick = () => $('foto').click();
+$('otoGiris').onclick = () => { sekme('Toplu'); modSec('GIRIS'); window.scrollTo(0, 0); kameraAc(); };   // Toplu → Giriş + kamera, tek dokunuş
 $('galeri').onclick = () => $('fotoGaleri').click();
 async function fotoIsle(dosya){
   const token = ++okuToken; sonKaynak = 'foto'; $('cek').disabled = true; mesaj('durum', 'Okunuyor…');
@@ -1363,7 +1398,10 @@ const ISLEM_EKLENDI = { GIRIS:'eklendi', CIKIS:'çıkışa eklendi', IADE:'iadey
 function camChipler(){
   const ok = liste.filter(o => o.tur === 'ok').length, uy = liste.filter(o => o.tur === 'uyari').length, ks = liste.filter(o => o.tur === 'kayitsiz').length;
   const bek = liste.filter(o => o.etiket && (o.etiket.durum === 'bekliyor' || o.etiket.durum === 'okunuyor')).length;
-  $('camChips').innerHTML = `<span class="chip ok">✓ ${ok}</span>` + (uy ? `<span class="chip warn">⚠ ${uy}</span>` : '') + (ks ? `<span class="chip err">✕ ${ks}</span>` : '') + (bek ? `<span class="chip info">etiket ${bek}…</span>` : '');
+  const oto = tmod === 'GIRIS' && $('etiketOtomatik') && $('etiketOtomatik').checked;
+  $('camChips').innerHTML = `<span class="chip ok">✓ ${ok}</span>` + (uy ? `<span class="chip warn">⚠ ${uy}</span>` : '') + (ks ? `<span class="chip err">✕ ${ks}</span>` : '')
+    + (bek ? `<span class="chip info">etiket ${bek}…</span>` : '')
+    + (oto && OCR.durum === 'yukleniyor' ? '<span class="chip info">okuyucu yükleniyor…</span>' : '') + (oto && OCR.durum === 'hata' ? '<span class="chip warn">okuyucu yok</span>' : '');
 }
 function camSonCiz(){
   const el = $('camSon');
@@ -1387,8 +1425,13 @@ function ekle(id, tara, kamera){
   if(id && tara && !bidonKodu(id)){ bolgeOku(id); return false; }
   if(!id) return false;
   const simdi = Date.now(), ara = simdi - (sonDup[id] || 0); sonDup[id] = simdi;
-  if(liste.some(o => o.id === id)){                      // bidon kamerada kaldıkça uyarma; gözden çıkıp tekrar gelirse "zaten okundu" de
-    if(tara && ara > 4000) camBildir('info', '↺ ' + id, 'Zaten okundu, listede');
+  const mevcut = liste.find(o => o.id === id);
+  if(mevcut){                                            // bidon kamerada kaldıkça uyarma; gözden çıkıp tekrar gelirse "zaten okundu" de
+    const e = mevcut.etiket;
+    if(kamera && tmod === 'GIRIS' && akim && etiketOtoAcik() && e && e.durum === 'yok' && !e.hata && (mevcut.deneme || 0) < 4 && simdi - (mevcut.sonDeneme || 0) > 2200 && !etiketCalisiyor && !etiketKuyrugu.length){
+      camBildir('info', 'Etiket okunamadı', `Etiketi yaklaştır, tekrar deniyorum (${(mevcut.deneme || 0) + 1}/4)`);
+      etiketSiraEkle(mevcut); listeCizGuvenli();           // taze kare; 2. denemeden itibaren tam çözünürlüklü fotoğraf
+    } else if(tara && ara > 4000) camBildir('info', '↺ ' + id, 'Zaten okundu, listede');
     return false;
   }
   const d = degerlendir(id), o = { id, ...d };
@@ -1409,10 +1452,23 @@ function videoKaresi(){                                 // QR'ın okunduğu kare
   const c = document.createElement('canvas'); c.width = tamCv.width; c.height = tamCv.height; c.getContext('2d').drawImage(tamCv, 0, 0);
   return c;
 }
-function etiketSiraEkle(o){
-  const kare = videoKaresi();
-  if(!kare){ o.etiket = { durum:'yok' }; return; }
-  if(etiketKuyrugu.length >= 12){ o.etiket = { durum:'yok', mesaj:'sıra dolu' }; return; }
+async function yuksekCozunurluk(id){                    // yeniden denemede: kameranın tam çözünürlüklü fotoğrafı (QR aynı bidonu doğruluyorsa)
+  const iz = akim && akim.getVideoTracks()[0]; if(!iz || typeof ImageCapture === 'undefined') return null;
+  const blob = await zamanAsimi(new ImageCapture(iz).takePhoto({ fillLightMode:'off' }), 5000, 'foto');
+  const bmp = await createImageBitmap(blob), o = Math.min(1, 2400 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width * o); c.height = Math.round(bmp.height * o);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); if(bmp.close) bmp.close();
+  let kodlar = []; if(bd){ try{ kodlar = (await bd.detect(c)).map(x => x.rawValue); }catch(e){} }
+  if(!kodlar.length) kodlar = jsqrKare(c, 1280);
+  return kodlar.map(idTemizle).includes(id) ? c : null;   // başka bidon ya da QR görünmüyorsa kullanma
+}
+async function etiketSiraEkle(o){
+  o.deneme = (o.deneme || 0) + 1; o.sonDeneme = Date.now();
+  let kare = videoKaresi();                                // QR'ın okunduğu karenin kopyası (hemen alınır)
+  if(o.deneme >= 2){ const y = await yuksekCozunurluk(o.id).catch(() => null); if(y) kare = y; }
+  if(!liste.includes(o)) return;
+  if(!kare){ o.etiket = { durum:'yok', mesaj:'kamera karesi alınamadı' }; listeCizGuvenli(); return; }
+  if(etiketKuyrugu.length >= 12){ o.etiket = { durum:'yok', mesaj:'sıra dolu' }; listeCizGuvenli(); return; }
   o.etiket = { durum:'bekliyor' }; etiketKuyrugu.push({ id:o.id, kare });
   etiketIsle();
 }
@@ -1422,14 +1478,17 @@ async function etiketIsle(){
     while(etiketKuyrugu.length){
       const it = etiketKuyrugu.shift(), o = liste.find(x => x.id === it.id);
       if(!o) continue;
+      if(OCR.durum === 'hata' && Date.now() - (OCR.sonHata || 0) < 15000){   // okuyucu yok: sırayı bekletmeden bırak
+        o.etiket = { durum:'yok', mesaj:'okuyucu yüklenemedi', hata:true }; it.kare = null; listeCizGuvenli(); continue;
+      }
       o.etiket = { durum:'okunuyor' }; listeCizGuvenli();
       try{
         const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.85) : '';
-        const r = (await etiketOku(it.kare, jpg, { maxOcr:8, maxAday:4, iptal:() => !liste.includes(o) })).veri;
+        const r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:8, maxAday:4, iptal:() => !liste.includes(o) }), OCR_ZAMAN.okuma, 'okuma zaman aşımı')).veri;
         o.etiket = (r && r.urun && r.etiket !== 'yok')
           ? { durum:'tamam', urun:trBuyuk(r.urun), tarih:r.tarih || '', kisi:trBuyuk(r.kisi), mense:trBuyuk(r.mense), guven:r.guven }
-          : { durum:'yok' };
-      }catch(e){ o.etiket = { durum:'yok', mesaj:e.message }; }
+          : { durum:'yok', mesaj:'yazı okunamadı' };
+      }catch(e){ o.etiket = { durum:'yok', mesaj:e.message, hata:true }; }
       it.kare = null; listeCizGuvenli();
     }
   } finally { etiketCalisiyor = false; }
@@ -1440,10 +1499,12 @@ function listeCizGuvenli(){                              // düzenleme açıkken
 }
 function etiketSatiri(o){
   const e = o.etiket; if(!e || tmod !== 'GIRIS') return '';
-  if(e.durum === 'bekliyor') return '<small class="et-bekle">Etiket sırada…</small>';
-  if(e.durum === 'okunuyor') return '<small class="et-bekle">Etiket okunuyor…</small>';
+  if(e.durum === 'bekliyor' || e.durum === 'okunuyor'){
+    if(OCR.durum === 'yukleniyor') return '<small class="et-bekle">Etiket okuyucu yükleniyor, bekle…</small>';
+    return `<small class="et-bekle">Etiket ${e.durum === 'okunuyor' ? 'okunuyor' : 'sırada'}…${o.deneme > 1 ? ` (deneme ${o.deneme}/4)` : ''}</small>`;
+  }
   if(e.durum === 'tamam'){ const t = [e.urun, e.tarih, e.kisi, e.mense].filter(Boolean).join(' · '); const iyi = e.guven === 'yuksek'; return `<small class="${iyi ? 'et-ok' : 'et-kontrol'}">${esc(t)}${iyi ? '' : ' (kontrol et)'}</small>`; }
-  return '<small class="et-yok">Etiket okunamadı, ortak bilgi kullanılır (✎ ile düzenle)</small>';
+  return `<small class="et-yok">Etiket okunamadı${e.mesaj ? ' (' + esc(e.mesaj) + ')' : ''}${o.deneme > 1 ? ` · deneme ${o.deneme}/4` : ''}. Ortak bilgi kullanılır, ✎ ile yaz.</small>`;
 }
 function listeCiz(){
   listeKirli = false;
@@ -1972,6 +2033,22 @@ $('qTspl').onclick = async () => {
 })();
 if('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});   // çevrimdışı açılış (sw.js yoksa sessizce geçer)
 kuyrukGoster(); kuyrukGonder(); yukle(); qrOnizle();
+$('ocrYeniden').onclick = () => { OCR.durum = 'bekliyor'; tessHazir().catch(() => {}); ocrDurumGuncelle(); };
+$('ocrTest').onclick = async () => {                      // gerçek bir etiket çizip okutur: okuyucu çalışıyor mu?
+  const s = $('ocrTestSonuc'); s.style.color = ''; s.textContent = 'Deneniyor… (ilk seferde yaklaşık 5 MB iner, 1 dakika sürebilir)';
+  const t0 = performance.now();
+  try{
+    const c = document.createElement('canvas'); c.width = 1200; c.height = 900; const x = c.getContext('2d');
+    x.fillStyle = '#2a2f3a'; x.fillRect(0, 0, 1200, 900); x.fillStyle = '#ece6d4'; x.fillRect(220, 130, 760, 640);
+    x.fillStyle = '#222'; x.textAlign = 'center'; x.font = 'bold 104px Arial, Helvetica, sans-serif';
+    x.fillText('BİBERİYE', 600, 330); x.fillText('13.08.2026', 600, 500); x.fillText('SUAT', 600, 670);
+    await tessHazir();
+    const r = await zamanAsimi(EtiketOku.oku(c, tessOcr, urunListesi(), { yil:+simdiStr().slice(0, 4), bilinen:bilinenler(), maxOcr:6, maxAday:3 }), OCR_ZAMAN.okuma, 'okuma zaman aşımı');
+    const sn = ((performance.now() - t0) / 1000).toFixed(1);
+    if(r && r.urun){ s.style.color = '#177A4D'; s.textContent = `✓ Etiket okuyucu çalışıyor (${sn} sn). Deneme etiketinden okunan: ${[r.urun, r.tarih, r.kisi].filter(Boolean).join(' · ')}`; }
+    else{ s.style.color = '#B86F0E'; s.textContent = `Okuyucu yüklendi (${sn} sn) ama deneme yazısını okuyamadı. Telefonu güncelle ya da Chrome kullan.`; }
+  }catch(e){ s.style.color = '#C0352E'; s.textContent = '✗ Etiket okuyucu çalışmıyor: ' + e.message; }
+};
 if(AYAR.okuma === 'ucretsiz' && navigator.onLine) setTimeout(() => { tessHazir().catch(() => {}); }, 2500);   // okuyucuyu arka planda hazırla
 </script>
 </body>
