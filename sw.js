@@ -2,7 +2,7 @@
    - Sayfa: önce ağ (güncelleme gelsin), ağ yoksa/yavaşsa önbellekten.
    - Kütüphane dosyaları (CDN, sürümü sabit): önce önbellek.
    - Google Apps Script (POST, kayıtlar) ASLA önbelleğe alınmaz. */
-const SURUM = 'bidon-v3.0';
+const SURUM = 'bidon-v4.0-pro';
 const CDN = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 const ONCEDEN = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 

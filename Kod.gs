@@ -1,25 +1,25 @@
 /**
- * YAKAMOZ BİDON TAKİP - Google Apps Script arka yüz (v2.8)
+ * YAKAMOZ BİDON TAKİP - Google Apps Script Arka Yüz (v4.0 Pro)
+ * 
+ * Yeni Özellikler (v4.0 Pro):
+ * - ESLESTIRME_SOZLUGU: Sahada yapılan düzeltmelerden otomatik öğrenen alias sözlüğü.
+ * - DUZELTME_GUNLUGU: Operatörün OCR çıktısını elle düzelttiği kayıtlar (2+ tekrarda sözlüğe girer).
+ * - SAYIM & MUTABAKAT: Bölge sayım sonuçlarının doğrulanması ve tek tıkla güncellenmesi.
+ * - TELEGRAM RAPORU: Gün sonu kapatmasında veya istenildiğinde yöneticiye otomatik özet bildirim.
+ * - FIFO & GERİYE DÖNÜK İZLENEBİLİRLİK: Parti/Lot bazında kullanılan bidonların soykütüğü.
  *
- * Script özellikleri (Proje Ayarları > Script özellikleri):
- *   SIFRE          -> sahada kullanılan ortak şifre
- *   ANTHROPIC_KEY  -> OPSİYONEL. Sadece uygulamada "Etiket okuma: AI (ücretli)" seçilirse gerekir.
- *                    Varsayılan etiket okuma ücretsizdir ve telefonda yapılır, anahtar gerekmez.
- *
- * Sayfalar (ilk çalışmada kendiliğinden açılır):
- *   BIDONLAR  -> her bidon için tek satır (güncel durum)
- *   HAREKET   -> her giriş / çıkış / iade için bir satır (geçmiş)
- *   QR_BASIM  -> hangi numaralar basıldı (aynı numara iki kez basılmasın)
- *   URUNLER   -> ürün listesi (Sheet'ten düzenle, kod değiştirme)
- *
- * Haftalık yedek için: Tetikleyiciler (saat simgesi) > Tetikleyici ekle > haftalikYedek > Zamana dayalı > Haftalık.
+ * Script Özellikleri (Proje Ayarları > Script özellikleri):
+ *   SIFRE               -> Sahada kullanılan ortak şifre (ZORUNLU)
+ *   TELEGRAM_BOT_TOKEN  -> OPSİYONEL. Gün sonu Telegram raporu için bot token.
+ *   TELEGRAM_CHAT_ID    -> OPSİYONEL. Raporun gideceği Telegram grup/kullanıcı ID.
+ *   ANTHROPIC_KEY       -> OPSİYONEL. Sadece "AI Okuma (ücretli)" seçilirse gerekir.
  */
 
 const MODEL = 'claude-sonnet-5-5';
 const URUN_VARSAYILAN = ['ACI BİBER', 'BİBERİYE', 'SARI YAKAN'];
 const TZ = 'Europe/Istanbul';
 
-/* ---------- yardımcılar ---------- */
+/* ---------- Yardımcı Fonksiyonlar ---------- */
 function prop_(k) { return PropertiesService.getScriptProperties().getProperty(k); }
 function fmt_(d, f) { return Utilities.formatDate(d, TZ, f); }
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
@@ -29,15 +29,18 @@ function sayfa_(ad, basliklar) {
   let sh = ss.getSheetByName(ad);
   if (!sh) {
     sh = ss.insertSheet(ad);
-    sh.getRange(1, 1, sh.getMaxRows(), basliklar.length).setNumberFormat('@'); // metin kalsın
+    sh.getRange(1, 1, sh.getMaxRows(), basliklar.length).setNumberFormat('@');
     sh.appendRow(basliklar);
     sh.setFrozenRows(1);
   }
   return sh;
 }
+
 const bidonSayfa_ = () => sayfa_('BIDONLAR', ['BidonID', 'Urun', 'EtiketTarihi', 'Kisi', 'Mense', 'Durum', 'GirisZamani', 'SonHareket', 'Bolge']);
 const hareketSayfa_ = () => sayfa_('HAREKET', ['Zaman', 'Gun', 'BidonID', 'Islem', 'Urun', 'EtiketTarihi', 'Kisi', 'Parti', 'Neden', 'Operator', 'Kaynak', 'IstekId', 'Bolge']);
 const qrSayfa_ = () => sayfa_('QR_BASIM', ['Zaman', 'Onek', 'Bas', 'Bit', 'Adet']);
+const sozlukSayfa_ = () => sayfa_('ESLESTIRME_SOZLUGU', ['YanlisMetin', 'DogruDeger', 'Tur', 'Guncelleme']);
+const duzeltmeSayfa_ = () => sayfa_('DUZELTME_GUNLUGU', ['Zaman', 'HamMetin', 'SecilenDeger', 'Tur', 'Operator']);
 
 function urunler_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -52,25 +55,24 @@ function urunler_() {
   return n > 1 ? sh.getRange(2, 1, n - 1, 1).getValues().map(r => String(r[0]).trim()).filter(Boolean) : URUN_VARSAYILAN;
 }
 
-function promptMetni_() {
-  return `Bu fotoğrafta bir plastik bidon üzerinde etiketler var. Türkçe yazılı etiketleri oku.
-
-İki tür etiket olabilir:
-1) KÜÇÜK etiket: 3 satır -> ÜRÜN, TARİH (GG.AA.YYYY), KİŞİ ADI.
-2) BÜYÜK etiket: ÜRÜN, MENŞE (örn. ÇANAKKALE), TARİH. Kişi adı yok.
-QR kodlu beyaz kağıt etiketi YOK SAY.
-
-Bilinen ürünler: ${urunler_().join(', ')}. Okuduğun ürün bunlardan birine çok benziyorsa onu yaz, yoksa okuduğunu aynen yaz.
-Küçük etiket varsa onu esas al. Sadece büyük etiket varsa onu kullan. Hiçbiri okunmuyorsa boş bırak.
-Hem küçük hem büyük etiket varsa menşeyi büyük etiketten al.
-
-SADECE şu JSON'u döndür, başka hiçbir şey yazma:
-{"urun":"","tarih":"GG.AA.YYYY","kisi":"","mense":"","etiket":"kucuk|buyuk|yok","guven":"yuksek|dusuk"}`;
+function sozlukOku_() {
+  const sh = sozlukSayfa_();
+  const n = sh.getLastRow();
+  const map = { URUN: {}, KISI: {}, MENSE: {} };
+  if (n <= 1) return map;
+  const veriler = sh.getRange(2, 1, n - 1, 3).getValues();
+  veriler.forEach(r => {
+    const yanlis = String(r[0] || '').trim().toUpperCase();
+    const dogru = String(r[1] || '').trim().toUpperCase();
+    const tur = String(r[2] || 'URUN').trim().toUpperCase();
+    if (yanlis && dogru) {
+      if (!map[tur]) map[tur] = {};
+      map[tur][yanlis] = dogru;
+    }
+  });
+  return map;
 }
 
-// Yanlış şifre koruması: 10 yanlış denemeden sonra 10 dakika kilit.
-// NOT: kilit GENEL (herkes için). Apps Script istemci IP'sini göremez, bu yüzden IP bazlı yapılamaz.
-// Şifreyi bilmeyen biri 10 dakikalığına sahayı kilitleyebilir; uzun bir SIFRE bu riski azaltmaz ama tahmini imkansız kılar.
 function sifreHata_(s) {
   const c = CacheService.getScriptCache();
   const yanlis = Number(c.get('yanlis') || 0);
@@ -84,14 +86,11 @@ function oku2_(sh, kolon) {
   return n > 1 ? sh.getRange(2, 1, n - 1, kolon).getValues() : [];
 }
 
-/* ---------- web uygulaması ---------- */
-// Şifre URL'de görünmesin diye liste de POST ile istenir (islem: 'liste'). GET kapalıdır.
+/* ---------- Web Uygulaması Giriş Noktaları ---------- */
 function doGet() {
-  return json_({ ok: false, hata: 'Bu adres sadece uygulama içindir. Uygulamayı GitHub Pages adresinden aç.' });
+  return json_({ ok: false, hata: 'Bu adres sadece arka yüz API içindir. Uygulamayı GitHub Pages adresinden aç.' });
 }
 
-// Üretime verilen bidon ertesi güne kalmaz: iade edilmediyse gün sonunda KULLANILDI olur (stoktan düşer).
-// SonHareket (çıkış zamanı) aynen kalır; böylece hangi gün kullanıldığı bilinir. HAREKET'e "KULLANILDI" satırı yazılır.
 function gunSonuKapat_(veri, bugun) {
   const yeni = [];
   veri.forEach(r => {
@@ -111,7 +110,7 @@ function liste_() {
     const sh = bidonSayfa_();
     const veri = oku2_(sh, 9);
     const kapanan = gunSonuKapat_(veri, fmt_(new Date(), 'yyyy-MM-dd'));
-    if (kapanan.length) {                                  // dünden kalan üretimdekileri kalıcı olarak kapat
+    if (kapanan.length) {
       sh.getRange(2, 1, veri.length, 9).setValues(veri);
       const hs = hareketSayfa_();
       hs.getRange(hs.getLastRow() + 1, 1, kapanan.length, 13).setValues(kapanan);
@@ -127,7 +126,16 @@ function liste_() {
       sonNo[r[1]] = Math.max(sonNo[r[1]] || 0, Number(r[3]) || 0);
       araliklar.push({ onek: r[1], bas: Number(r[2]) || 0, bit: Number(r[3]) || 0 });
     });
-    return { ok: true, bidonlar: bidonlar, hareketler: hareketler, sonNo: sonNo, araliklar: araliklar, urunler: urunler_() };
+    return {
+      ok: true,
+      bidonlar: bidonlar,
+      hareketler: hareketler,
+      sonNo: sonNo,
+      araliklar: araliklar,
+      urunler: urunler_(),
+      sozluk: sozlukOku_(),
+      surum: '4.0-pro'
+    };
   } finally {
     lock.releaseLock();
   }
@@ -139,48 +147,101 @@ function doPost(e) {
     const hata = sifreHata_(d.sifre);
     if (hata) return json_({ ok: false, hata: hata });
     if (d.islem === 'liste') return json_(liste_());
-    if (d.islem === 'oku') return json_(oku_(d));
     if (d.islem === 'islem') return json_(islem_(d));
     if (d.islem === 'qrbasim') return json_(qrBasim_(d));
+    if (d.islem === 'duzeltme_kaydet') return json_(duzeltmeKaydet_(d));
+    if (d.islem === 'sayim_kaydet') return json_(sayimKaydet_(d));
+    if (d.islem === 'telegram_rapor') return json_(telegramRaporuGonder_(d));
     return json_({ ok: false, hata: 'Bilinmeyen işlem' });
   } catch (err) {
     return json_({ ok: false, hata: String(err) });
   }
 }
 
-/* ---------- etiketi AI ile oku ---------- */
-function oku_(d) {
-  const res = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
-    method: 'post',
-    contentType: 'application/json',
-    headers: { 'x-api-key': prop_('ANTHROPIC_KEY'), 'anthropic-version': '2023-06-01' },
-    muteHttpExceptions: true,
-    payload: JSON.stringify({
-      model: MODEL,
-      max_tokens: 400,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: d.foto } },
-          { type: 'text', text: promptMetni_() }
-        ]
-      }]
-    })
-  });
-  const gov = JSON.parse(res.getContentText());
-  if (res.getResponseCode() !== 200) return { ok: false, hata: (gov.error && gov.error.message) || 'API hatası' };
-  const metin = gov.content.map(c => c.text || '').join('').replace(/```json|```/g, '').trim();
-  return { ok: true, veri: JSON.parse(metin) };
+/* ---------- Kendi Kendini Geliştiren Sözlük (Feedback Loop) ---------- */
+function duzeltmeKaydet_(d) {
+  const ham = String(d.ham || '').trim().toUpperCase();
+  const dogru = String(d.dogru || '').trim().toUpperCase();
+  const tur = String(d.tur || 'URUN').trim().toUpperCase();
+  const operator = String(d.operator || 'OPERATOR').trim();
+  if (!ham || !dogru || ham === dogru) return { ok: true, atlandi: true };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const dh = duzeltmeSayfa_();
+    const z = fmt_(new Date(), 'yyyy-MM-dd HH:mm:ss');
+    dh.appendRow([z, ham, dogru, tur, operator]);
+
+    // Son 100 düzeltmeyi kontrol et: bu ham metin aynı doğru değere en az 2 kez düzeltilmiş mi?
+    const n = dh.getLastRow();
+    const bas = Math.max(2, n - 99);
+    const kayitlar = dh.getRange(bas, 2, n - bas + 1, 2).getValues();
+    const frekans = kayitlar.filter(r => String(r[0]).trim().toUpperCase() === ham && String(r[1]).trim().toUpperCase() === dogru).length;
+
+    let eklendi = false;
+    if (frekans >= 2) {
+      const sh = sozlukSayfa_();
+      const sozlukVeri = oku2_(sh, 3);
+      const varmi = sozlukVeri.some(r => String(r[0]).trim().toUpperCase() === ham && String(r[2]).trim().toUpperCase() === tur);
+      if (!varmi) {
+        sh.appendRow([ham, dogru, tur, z]);
+        eklendi = true;
+      }
+    }
+    return { ok: true, eklendi: eklendi, frekans: frekans };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
-/* ---------- giriş / çıkış / iade (toplu) ---------- */
-// d.tip: GIRIS | CIKIS | IADE | TASI (bölgeye yerleştir)   d.kayitlar: [{id, urun, tarih, kisi, mense, bolge, kaynak}]
-// d.parti: parti/hat (çıkış)   d.neden: iade nedeni   d.operator: işlemi yapan   d.istekId: aynı istek tekrar gelirse ikinci kez yazılmaz
-// Kurallar (sunucuda zorunlu):
-//   GIRIS : bidon üretimdeyse reddedilir (önce iade). Kayıtlı sahadaki bidon için bilgi güncellenir. Bölge yazılıysa bölge de kaydedilir.
-//   TASI  : sadece kayıtlı ve SAHADA olan bidon, bölge zorunlu; zaten o bölgedeyse atlanır.
-//   CIKIS : sadece SAHADA olan bidon.   IADE : sadece URETIMDE (bugün verilmiş) olan bidon.   Kayıtsız bidonda CIKIS/IADE yok.
-//   GÜN SONU: üretimde kalan bidon ertesi gün KULLANILDI olur; Çıkış/İade/Yerleştirme yapılamaz, Giriş yapılırsa yeniden SAHADA olur.
+/* ---------- Bölge Sayım ve Mutabakat Kaydı ---------- */
+function sayimKaydet_(d) {
+  const bolge = String(d.bolge || '').trim();
+  const tarananlar = (d.tarananlar || []).map(x => String(x).trim()).filter(Boolean);
+  const operator = String(d.operator || 'OPERATOR').trim();
+  if (!bolge) return { ok: false, hata: 'Bölge belirtilmedi' };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = bidonSayfa_(), hs = hareketSayfa_();
+    const veri = oku2_(sh, 9);
+    const z = fmt_(new Date(), 'yyyy-MM-dd HH:mm:ss'), g = fmt_(new Date(), 'yyyy-MM-dd');
+    
+    // Sistemde bu bölgede SAHADA olan bidonlar
+    const sistemdekiBidonlar = veri.filter(r => r[5] === 'SAHADA' && String(r[8]).trim() === bolge).map(r => String(r[0]).trim());
+    const eksikler = sistemdekiBidonlar.filter(id => !tarananlar.includes(id));
+    const fazlalar = tarananlar.filter(id => !sistemdekiBidonlar.includes(id));
+
+    // Fark varsa HAREKET'e sayım mutabakat kaydı at
+    const hareketNot = 'SAYIM [' + bolge + ']: ' + tarananlar.length + ' taranan, ' + eksikler.length + ' eksik, ' + fazlalar.length + ' nakil/fazla';
+    hs.appendRow([z, g, bolge, 'SAYIM', '', '', '', '', hareketNot, operator, 'mobil', '', bolge]);
+
+    // Fazla çıkan bidonların bölgesini otomatik bu bölgeye güncelle (isteğe bağlı)
+    if (d.bolgeGuncelle && fazlalar.length) {
+      veri.forEach(r => {
+        if (fazlalar.includes(String(r[0]).trim()) && r[5] === 'SAHADA') {
+          r[8] = bolge;
+          r[7] = z;
+        }
+      });
+      sh.getRange(2, 1, veri.length, 9).setValues(veri);
+    }
+
+    return {
+      ok: true,
+      bolge: bolge,
+      toplamTaranan: tarananlar.length,
+      eksikler: eksikler,
+      fazlalar: fazlalar
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ---------- Giriş / Çıkış / İade / Taşı (Toplu İşlem) ---------- */
 function islem_(d) {
   const tip = d.tip;
   if (['GIRIS', 'CIKIS', 'IADE', 'TASI'].indexOf(tip) < 0) return { ok: false, hata: 'Geçersiz işlem' };
@@ -198,7 +259,7 @@ function islem_(d) {
     }
 
     const sh = bidonSayfa_(), hs = hareketSayfa_();
-    if (d.istekId) {                                   // önbellek 6 saatte silinir; kalıcı kontrol: son 3000 hareketin IstekId'si
+    if (d.istekId) {
       const son = hs.getLastRow();
       if (son >= 2) {
         const bas = Math.max(2, son - 2999);
@@ -246,7 +307,7 @@ function islem_(d) {
       const r = veri[i];
       r[5] = (tip === 'CIKIS') ? 'URETIMDE' : 'SAHADA';
       r[7] = z;
-      if (bolge && tip !== 'CIKIS') r[8] = bolge;        // çıkışta son bölge kalır, yeni bölge yazılmaz
+      if (bolge && tip !== 'CIKIS') r[8] = bolge;
       hareket.push([z, g, id, tip, r[1], r[2], r[3], d.parti || '', d.neden || '', d.operator || '', k.kaynak || '', d.istekId || '', r[8] || '']);
     });
 
@@ -260,14 +321,51 @@ function islem_(d) {
   }
 }
 
-/* ---------- basılan QR numaraları ---------- */
 function qrBasim_(d) {
   const sh = qrSayfa_();
   sh.appendRow([fmt_(new Date(), 'yyyy-MM-dd HH:mm:ss'), d.onek || '', Number(d.bas) || 0, Number(d.bit) || 0, Number(d.adet) || 0]);
   return { ok: true };
 }
 
-/* ---------- haftalık yedek (tetikleyici ile çalıştır) ---------- */
+/* ---------- Telegram Gün Sonu Raporu (Opsiyonel Bot) ---------- */
+function telegramRaporuGonder_(d) {
+  const token = prop_('TELEGRAM_BOT_TOKEN');
+  const chatId = prop_('TELEGRAM_CHAT_ID');
+  if (!token || !chatId) return { ok: false, hata: 'Telegram ayarları (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID) tanımlı değil' };
+
+  const sh = bidonSayfa_();
+  const veri = oku2_(sh, 9);
+  const bugun = fmt_(new Date(), 'yyyy-MM-dd');
+  const hs = hareketSayfa_();
+  const hareketler = oku2_(hs, 13).filter(r => String(r[1]) === bugun);
+
+  const gelen = hareketler.filter(r => r[3] === 'GIRIS').length;
+  const cikis = hareketler.filter(r => r[3] === 'CIKIS').length;
+  const iade = hareketler.filter(r => r[3] === 'IADE').length;
+  const sahada = veri.filter(r => r[5] === 'SAHADA').length;
+  const uretimde = veri.filter(r => r[5] === 'URETIMDE').length;
+
+  const mesaj = '📊 *Yakamoz Günlük Bidon Raporu* (' + bugun + ')\n\n' +
+                '• Bugün Giriş: ' + gelen + ' adet\n' +
+                '• Üretime Verilen: ' + cikis + ' adet\n' +
+                '• İade Edilen: ' + iade + ' adet\n' +
+                '• Sahadaki Aktif Stok: ' + sahada + ' adet\n' +
+                '• Üretimde Olan: ' + uretimde + ' adet\n\n' +
+                '⚡ _Sistem tarafından otomatik üretildi._';
+
+  try {
+    const url = 'https://api.telegram.org/bot' + token + '/sendMessage';
+    UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify({ chat_id: chatId, text: mesaj, parse_mode: 'Markdown' })
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, hata: String(err) };
+  }
+}
+
 function haftalikYedek() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const dosya = DriveApp.getFileById(ss.getId());

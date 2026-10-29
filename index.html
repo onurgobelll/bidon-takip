@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bidon Takip</title>
+<title>Bidon Takip v4.0 Pro</title>
 <meta name="theme-color" content="#155B42" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#101A15" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -298,7 +298,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   .stock-panel{padding:14px}
 }
 
-/* ---- v3.5: stok yerleşimi ve bölge paneli ---- */
+/* ---- v4.0 Pro: stok yerleşimi ve bölge paneli ---- */
 .stock-layout{display:flex;flex-direction:column}
 .stock-col{display:contents}
 .stock-layout .kart{margin-bottom:12px}
@@ -334,7 +334,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 .region-more{font-size:11px;color:var(--soluk);margin:7px 2px 0}
 .region-detail .region-xls{min-height:44px;font-size:14px;margin-top:10px}
 
-/* ---- v3.5: toplu tarama geri bildirimi ---- */
+/* ---- v4.0 Pro: toplu tarama geri bildirimi ---- */
 .cam-wrap{position:relative;border-radius:14px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 0 transparent}
 .cam-wrap video{display:block;width:100%;max-height:42vh;object-fit:cover;border-radius:0}
 .cam-wrap.flash-ok{outline:4px solid #22A06B;outline-offset:-4px}
@@ -374,7 +374,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 .ortak-kart>div{padding:0 16px 14px}
 #modKart{padding-bottom:12px}
 
-/* ---- v3.5: özet kartı ayrıntısı ---- */
+/* ---- v4.0 Pro: özet kartı ayrıntısı ---- */
 .stock-summary[data-ozet]{cursor:pointer;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent}
 .stock-summary[data-ozet]:active{transform:scale(.98)}
 .stock-summary.secili{outline:3px solid var(--bidon);outline-offset:2px}
@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v3.5</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v4.0 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -500,11 +500,12 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   <!-- TOPLU -->
   <section id="sToplu" class="gizle">
     <div class="kart" id="modKart">
-      <div class="sira4m">
+      <div class="sira5m">
         <button id="mGiris" class="ikincil">Giriş</button>
         <button id="mCikis" class="mavi">Çıkış</button>
         <button id="mIade" class="ikincil">İade</button>
         <button id="mTasi" class="ikincil">Yerleştir</button>
+        <button id="mSayim" class="ikincil" style="color:var(--tuz);font-weight:700">Sayım</button>
       </div>
       <div class="kucuk" id="mYardim" style="margin-top:8px"></div>
     </div>
@@ -514,12 +515,14 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
         <video id="video" playsinline muted></video>
         <div class="cam-chips" id="camChips" aria-live="polite"></div>
         <div class="cam-toast gizle" id="camToast" role="status" aria-live="assertive"></div>
+        <div id="uykuPerdesi" class="cam-toast gizle" style="background:rgba(0,0,0,0.88);color:#fff;font-size:14px;padding:24px 16px;text-align:center;border-radius:12px;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:32px;margin-bottom:6px">💤</div><strong>Pil Tasarruf Modu</strong><span style="font-size:12px;opacity:0.85;margin-top:4px">Telefon eğildiğinde kamera duraklatılır.<br>Bidona doğrulttuğunuzda anında uyanır.</span></div>
       </div>
       <div class="cam-son gizle" id="camSon" aria-live="polite"></div>
       <div class="sira" style="margin-top:8px">
         <button id="kamAc">Kamerayı aç</button>
         <button id="kamKapat" class="ikincil">Durdur</button>
       </div>
+      <button class="ikincil" id="btnSeriMod" style="margin-top:6px;width:100%;font-weight:600">📌 Seri Parti Modu: KAPALI</button>
       <div id="kamAraclar" class="sira gizle" style="margin-top:10px">
         <button class="ikincil" id="fener">Fener</button>
         <input id="zoom" type="range" class="gizle" aria-label="Yakınlaştır">
@@ -609,6 +612,34 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
     </div>
       </div>
     </div>
+    
+    <!-- 2D Saha Haritası (Isı Haritası) -->
+    <div class="kart stock-panel stk-harita" style="margin-bottom:16px">
+      <div class="stock-panel-head">
+        <div>
+          <div class="stock-panel-title">🗺️ 2D Saha Haritası (Bölge Isı Haritası)</div>
+          <div class="stock-panel-note">Bölgelerin anlık doluluk durumu. Bir bölgeye dokunarak bidon dökümünü incele.</div>
+        </div>
+      </div>
+      <div id="sahaGrid" class="saha-grid"></div>
+      <div id="haritaDetay" class="kart gizle" style="margin-top:12px;background:var(--zemin);border:1px solid var(--cizgi)"></div>
+    </div>
+
+    <!-- Parti / Lot İzlenebilirlik -->
+    <div class="kart stock-panel stk-izlenebilirlik" style="margin-bottom:16px">
+      <div class="stock-panel-head">
+        <div>
+          <div class="stock-panel-title">🔎 Parti / Lot İzlenebilirlik (Traceability)</div>
+          <div class="stock-panel-note">Üretim partisi / lot numarasını yaz, o partide kullanılan tüm bidonların tam soykütüğünü dök.</div>
+        </div>
+      </div>
+      <div class="sira" style="grid-template-columns:1fr auto;gap:8px">
+        <input id="partiAra" placeholder="örn. P-2026-105 veya parti no" autocapitalize="characters" autocomplete="off">
+        <button id="btnPartiAra" style="width:100px">Sorgula</button>
+      </div>
+      <div id="partiSonuc" style="margin-top:10px"></div>
+    </div>
+
     <details class="kart stock-panel stock-export">
       <summary class="export-toggle">Excel raporlarını aç</summary>
       <div class="export-body">
@@ -1090,7 +1121,171 @@ async function islemYap(tip, kayitlar, parti, istekId, neden){
     return { ...s, beklemede:true };
   }
 }
-async function yukle(){
+async 
+/* ==================== V4.0 PRO ÇEKİRDEK ÖZELLİKLERİ ==================== */
+let sozluk = { URUN:{}, KISI:{}, MENSE:{} };
+let seriMod = false;
+let uykuModu = false;
+let sonLumaCheck = 0;
+
+// Web Audio API Gelişmiş Bildirimler
+function bipGelisim(tur){
+  try{
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const t = ac.currentTime;
+    if(tur === 'ok'){
+      // 2 tonlu melodik onay sesi
+      const o1 = ac.createOscillator(), g1 = ac.createGain();
+      o1.frequency.setValueAtTime(880, t);
+      o1.frequency.exponentialRampToValueAtTime(1174, t + 0.08);
+      g1.gain.setValueAtTime(0.18, t);
+      g1.gain.linearRampToValueAtTime(0.01, t + 0.12);
+      o1.connect(g1); g1.connect(ac.destination);
+      o1.start(t); o1.stop(t + 0.12);
+      if(navigator.vibrate) navigator.vibrate(50);
+    } else if(tur === 'fifo'){
+      // FIFO ikaz sesi
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(440, t);
+      o.frequency.setValueAtTime(330, t + 0.1);
+      g.gain.setValueAtTime(0.2, t);
+      g.gain.linearRampToValueAtTime(0.01, t + 0.25);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t + 0.25);
+      if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    } else {
+      // Hata buzzer
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(240, t);
+      g.gain.setValueAtTime(0.22, t);
+      g.gain.linearRampToValueAtTime(0.01, t + 0.2);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t + 0.2);
+      if(navigator.vibrate) navigator.vibrate([120, 60, 120]);
+    }
+  }catch(e){}
+}
+
+// 1. Seri Parti Modu Butonu
+$('btnSeriMod').onclick = () => {
+  seriMod = !seriMod;
+  $('btnSeriMod').classList.toggle('btn-seri-aktif', seriMod);
+  if(seriMod){
+    const u = $('cUrun').value.trim() || 'Sabit Ürün';
+    const t = $('cTarih').value.trim() || 'Sabit Tarih';
+    $('btnSeriMod').textContent = '📌 Seri Parti Modu: AKTİF (' + u + ' | ' + t + ')';
+    camBildir('ok', '📌 Seri Mod Açık', 'Etiket okuma atlanır, QR anında eklenir');
+  } else {
+    $('btnSeriMod').textContent = '📌 Seri Parti Modu: KAPALI';
+  }
+};
+
+// 2. Pil Tasarruf Modu (Cihaz Eğim Sensörü)
+if(window.DeviceOrientationEvent){
+  window.addEventListener('deviceorientation', e => {
+    if(!akim) return;
+    const beta = e.beta; // Dikey eğim
+    if(beta !== null && (beta > 80 || beta < 10)){
+      if(!uykuModu){
+        uykuModu = true;
+        $('uykuPerdesi').classList.remove('gizle');
+      }
+    } else if(uykuModu && beta !== null && beta >= 22 && beta <= 75){
+      uykuModu = false;
+      $('uykuPerdesi').classList.add('gizle');
+    }
+  }, { passive: true });
+}
+
+// 3. 2D Saha Haritası (Isı Haritası) Çizimi
+function cizSahaHaritasi(){
+  const grid = $('sahaGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  const sahaBidonlar = bidonlar.filter(sahadaMi);
+  const bolgeler = {};
+  sahaBidonlar.forEach(b => {
+    const k = (b.bolge || 'BÖLGESİZ').trim().toUpperCase();
+    bolgeler[k] = (bolgeler[k] || 0) + 1;
+  });
+  const bolgeAdlari = Object.keys(bolgeler).sort();
+  if(!bolgeAdlari.length){
+    grid.innerHTML = '<div class="kucuk" style="grid-column:1/-1;padding:12px;text-align:center">Sahada kayıtlı bidon bulunamadı.</div>';
+    return;
+  }
+  bolgeAdlari.forEach(bolge => {
+    const adet = bolgeler[bolge];
+    const kutu = document.createElement('div');
+    const sinif = adet > 150 ? 'dolu' : adet > 60 ? 'orta' : 'az';
+    kutu.className = 'saha-kutu ' + sinif;
+    kutu.innerHTML = '<div class="bolge-kod">' + bolge + '</div><div class="bolge-adet">' + adet + '</div><div class="bolge-etiket">bidon</div>';
+    kutu.onclick = () => haritaBolgeDetayAc(bolge);
+    grid.appendChild(kutu);
+  });
+}
+
+function haritaBolgeDetayAc(bolge){
+  const d = $('haritaDetay');
+  const bidonListesi = bidonlar.filter(b => sahadaMi(b) && (b.bolge || 'BÖLGESİZ').trim().toUpperCase() === bolge);
+  const urunlerSayim = {};
+  let enEski = null;
+  bidonListesi.forEach(b => {
+    urunlerSayim[b.urun || 'Belirtilmemiş'] = (urunlerSayim[b.urun || 'Belirtilmemiş'] || 0) + 1;
+    const iso = trToISO(b.tarih);
+    if(iso && (!enEski || iso < enEski)) enEski = iso;
+  });
+  let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>' + bolge + ' Bölgesi Detayları</strong><button class="ikincil" style="padding:2px 8px;font-size:12px" onclick="$(\'haritaDetay\').classList.add(\'gizle\')">Kapat ✕</button></div>';
+  html += '<div class="kucuk">Toplam: <b>' + bidonListesi.length + ' bidon</b>' + (enEski ? ' | En Eski Dolum: <b>' + isoToTR(enEski) + '</b>' : '') + '</div>';
+  html += '<ul style="margin:6px 0 0 16px;padding:0;font-size:13px">';
+  for(const [u, sayi] of Object.entries(urunlerSayim)){
+    html += '<li>' + u + ': <b>' + sayi + '</b> adet</li>';
+  }
+  html += '</ul>';
+  d.innerHTML = html;
+  d.classList.remove('gizle');
+}
+
+// 4. Parti / Lot İzlenebilirlik Sorgusu
+$('btnPartiAra').onclick = () => {
+  const q = $('partiAra').value.trim().toUpperCase();
+  const kutu = $('partiSonuc');
+  if(!q){ kutu.innerHTML = '<div class="kucuk hata">Lütfen bir parti numarası yazın.</div>'; return; }
+  const hareketListesi = hareketler.filter(h => h.parti && h.parti.toUpperCase().includes(q) && h.islem === 'CIKIS');
+  if(!hareketListesi.length){
+    kutu.innerHTML = '<div class="kucuk uyari">Bu parti numarasıyla eşleşen üretim çıkış kaydı bulunamadı.</div>';
+    return;
+  }
+  const idler = [...new Set(hareketListesi.map(h => h.id))];
+  const urunlerMap = {};
+  hareketListesi.forEach(h => { urunlerMap[h.urun || 'Ürün'] = (urunlerMap[h.urun || 'Ürün'] || 0) + 1; });
+  let html = '<div class="kart" style="background:var(--zemin);padding:10px;border:1px solid var(--cizgi)">';
+  html += '<div style="font-weight:700;margin-bottom:4px">Parti: ' + q + ' (Toplam ' + idler.length + ' bidon kullanıldı)</div>';
+  html += '<div class="kucuk" style="margin-bottom:8px">Kullanılan Ürünler: ' + Object.entries(urunlerMap).map(([u, c]) => u + ' (' + c + ')').join(', ') + '</div>';
+  html += '<div class="kaydir"><table style="font-size:12px;width:100%"><thead><tr><th>Bidon ID</th><th>Ürün</th><th>Etiket Tarihi</th><th>Kişi</th><th>Çıkış Saati</th></tr></thead><tbody>';
+  hareketListesi.slice(0, 50).forEach(h => {
+    html += '<tr><td><b>' + h.id + '</b></td><td>' + (h.urun||'') + '</td><td>' + (h.tarih||'') + '</td><td>' + (h.kisi||'') + '</td><td>' + (h.zaman||'') + '</td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+  kutu.innerHTML = html;
+};
+
+// 5. Otomatik Öğrenen Sözlük Geri Bildirimi
+async function arkaPlanDuzeltme(ham, dogru, tur){
+  if(!ham || !dogru || ham.toUpperCase() === dogru.toUpperCase()) return;
+  const ayar = ayarAl();
+  if(!ayar.adres || !ayar.sifre) return;
+  try{
+    fetch(ayar.adres, {
+      method: 'POST',
+      body: JSON.stringify({ islem: 'duzeltme_kaydet', sifre: ayar.sifre, ham, dogru, tur, operator: ayar.operator || 'OPERATOR' })
+    }).catch(() => {});
+  }catch(e){}
+}
+/* ==================== V4.0 PRO ÇEKİRDEK SONU ==================== */
+
+function yukle(){
   if(!demo() && kuyruk().length) return;                    // bekleyen işlem varken sunucu verisi ezmesin
   try{
     if(demo()){ DB = demoOku(); }
@@ -1372,7 +1567,19 @@ function degerlendir(id){
     const bol = $('cBolge').value.trim();
     if(bol && String(b.bolge || '') === bol) return { tur:'uyari', mesaj:'Zaten bu bölgede' };
   }
-  if(tmod === 'CIKIS' && !sahadaMi(b)) return { tur:'uyari', mesaj: kullanildiMi(b) ? 'Kullanıldı, önce Giriş yap' : 'Zaten üretimde' };
+  if(tmod === 'CIKIS'){
+    if(!sahadaMi(b)) return { tur:'uyari', mesaj: kullanildiMi(b) ? 'Kullanıldı, önce Giriş yap' : 'Zaten üretimde' };
+    // FIFO Kontrolü: Aynı üründen daha eski tarihli bidon var mı?
+    if(b.urun && b.tarih){
+      const buIso = trToISO(b.tarih);
+      if(buIso){
+        const dahaEski = bidonlar.find(x => sahadaMi(x) && x.urun === b.urun && x.id !== b.id && x.tarih && trToISO(x.tarih) && trToISO(x.tarih) < buIso);
+        if(dahaEski){
+          return { tur:'uyari', mesaj:'⚠️ FIFO: ' + (dahaEski.bolge || 'Sahada') + ' bölgesinde daha eski (' + dahaEski.tarih + ') bidon var!', fifo: true };
+        }
+      }
+    }
+  }
   if(tmod === 'IADE' && !uretimdeMi(b)) return { tur:'uyari', mesaj: kullanildiMi(b) ? 'Geçen güne kaldı, kullanıldı sayıldı. Önce Giriş yap' : 'Üretimde görünmüyor' };
   return { tur:'ok' };
 }
@@ -1436,8 +1643,16 @@ function ekle(id, tara, kamera){
   }
   const d = degerlendir(id), o = { id, ...d };
   liste.unshift(o);
-  if(tmod === 'GIRIS' && kamera && akim && etiketOtoAcik()) etiketSiraEkle(o);   // QR bulununca o anki kareyi etiket için sıraya al
-  bip(d.tur === 'ok');
+  if(tmod === 'GIRIS' && seriMod){
+    // Seri Parti Modu: OCR sırasına almadan anında sabit bilgileri ekle
+    o.etiket = { durum:'tamam', urun: trBuyuk($('cUrun').value) || (bul(id) && bul(id).urun) || 'SABİT ÜRÜN', tarih:$('cTarih').value, kisi:trBuyuk($('cKisi').value), mense:trBuyuk($('cMense').value), guven:'yuksek' };
+    bipGelisim('ok');
+  } else if(tmod === 'GIRIS' && kamera && akim && etiketOtoAcik()){
+    etiketSiraEkle(o);
+    bipGelisim(d.tur === 'ok' ? 'ok' : 'err');
+  } else {
+    bipGelisim(d.fifo ? 'fifo' : (d.tur === 'ok' ? 'ok' : 'err'));
+  }
   if(d.tur === 'ok') camBildir('ok', '✓ ' + id + ' ' + ISLEM_EKLENDI[tmod], (bul(id) && bul(id).urun) || '');
   else if(d.tur === 'uyari') camBildir('warn', '⚠ ' + id, d.mesaj);
   else camBildir('err', '✕ ' + id, d.mesaj);
@@ -1622,7 +1837,23 @@ function jsqrKare(v, maks){                              // yedek okuyucu: kare 
 }
 async function tara(){
   if(!akim) return;
+  if(uykuModu){ setTimeout(tara, 350); return; }
   const v = $('video');
+  // Otomatik Flaş (Luminance) Kontrolü
+  if(v.readyState >= 2 && v.videoWidth && Date.now() - sonLumaCheck > 2000 && !fenerAcik){
+    sonLumaCheck = Date.now();
+    try{
+      const tc = akim.getVideoTracks()[0];
+      const cap = tc.getCapabilities ? tc.getCapabilities() : {};
+      if(cap.torch && cx){
+        const p = cx.getImageData(cx.canvas.width/2 - 25, cx.canvas.height/2 - 25, 50, 50).data;
+        let luma = 0;
+        for(let i=0; i<p.length; i+=4) luma += (p[i]*0.299 + p[i+1]*0.587 + p[i+2]*0.114);
+        luma = luma / (p.length / 4);
+        if(luma < 38) tc.applyConstraints({ advanced:[{ torch: true }] }).then(() => { fenerAcik = true; $('fener').textContent = 'Feneri kapat'; }).catch(()=>{});
+      }
+    }catch(e){}
+  }
   try{
     if(v.readyState >= 2 && v.videoWidth){
       const kare = tamKareCiz(v);
