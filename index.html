@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v5.2 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v5.3 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -622,6 +622,10 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
         </div>
       </div>
       <div id="duzDurumMesaj"></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--cizgi)">
+        <button class="ikincil" id="stokKodEsitleBtn" style="border-color:var(--bidon);color:var(--bidon)">🔄 Google Sheet'teki Mevcut Bidonlara 104 Depo Stok Kodlarını İşle</button>
+        <div class="kucuk" style="margin-top:4px">Tabloda sadece ürün adı yazan (örn. BİBERİYE, ACI BİBER) kayıtları otomatik olarak resmi stok kodlu haline (örn. YMDOK 0019 - BİBERİYE (SARI) TURŞUSU) dönüştürür.</div>
+      </div>
     </div>
     <div class="stock-layout">
       <div class="stock-col">
@@ -941,7 +945,79 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <script>
 const $ = id => document.getElementById(id);
 const MODEL = 'claude-sonnet-5-5';
-const URUN_VARSAYILAN = ['ACI BİBER', 'BİBERİYE', 'SARI YAKAN'];
+const DEPO_104_KATALOG = [["YMDOK 0001", "SALATALIK TURŞUSU NO.00"], ["YMDOK 0002", "SALATALIK TURŞUSU NO.0"], ["YMDOK 0003", "SALATALIK TURŞUSU NO.1"], ["YMDOK 0004", "SALATALIK TURŞUSU NO.2"], ["YMDOK 0005", "SALATALIK TURŞUSU NO.3"], ["YMDOK 0006", "SALATALIK TURŞUSU NO.2 - KAVANOZLUK"], ["YMDOK 0007", "DOĞRAMALIK SALATALIK TURŞUSU"], ["YMDOK 0008", "ÇORBACI BİBER TURŞUSU"], ["YMDOK 0009", "LAHANA TURŞUSU"], ["YMDOK 0010", "HAVUÇ TURŞUSU"], ["YMDOK 0011", "DOMATES TURŞUSU (YEŞİL)"], ["YMDOK 0012", "KELEK TURŞUSU"], ["YMDOK 0013", "KAPYA BİBER TURŞUSU"], ["YMDOK 0014", "ÇUBUK SALATALIK TURŞUSU NO.3"], ["YMDOK 0015", "SARIMSAK TURŞUSU KARIŞIK BOY"], ["YMDOK 0016", "SALAMURA YAPRAK"], ["YMDOK 0017", "KIRMIZI PANCAR TURŞUSU"], ["YMDOK 0018", "ACI BİBER TURŞUSU"], ["YMDOK 0019", "BİBERİYE (SARI) TURŞUSU"], ["YMDOK 0020", "SARI YAKAN ACI BİBER TURŞUSU"], ["YMDOK 0021", "JALAPENO BİBER TURŞUSU"], ["YMDOK 0022", "KIRMIZILI ACI BİBER TURŞUSU"], ["YMDOK 0023", "KIRMIZILI BİBERİYE TURŞUSU"], ["YMDOK 0024", "KARDOLA BİBER TURŞUSU"], ["YMDOK 0025", "MAKEDON BİBER TURŞUSU"], ["YMDOK 0026", "TOPA BİBER (DOMATES BİBERİ) TURŞUSU"], ["YMDOK 0027", "ACUR TURŞUSU NO.0 (MİDYAT)"], ["YMDOK 0028", "KARIŞIK TURŞU (PET-KOVA-TNK)"], ["YMDOK 0029", "ŞEFTALİ ÇAĞLASI TURŞUSU"], ["YMDOK 0030", "ÇUBUK SALATALIK TURŞUSU NO.1 - ÇORUM"], ["YMDOK 0031", "KIRMIZILI JALAPENO BİBER TURŞUSU"], ["YMDOK 0032", "ÜÇBURUN BİBER TURŞUSU"], ["YMDOK 0033", "ÇUBUK SALATALIK TURŞUSU NO.0 - ANKARA"], ["YMDOK 0034", "ÇUBUK SALATALIK TURŞUSU NO.1 - ANKARA"], ["YMDOK 0035", "ÇUBUK SALATALIK TURŞUSU NO.2 - ÇORUM"], ["YMDOK 0036", "KELEK (KAVANOZLUK)"], ["YMDOK 0037", "KAPARİ TURŞUSU"], ["YMDOK 0039", "ACUR TURŞUSU NO.1 (MİDYAT)"], ["YMDOK 0041", "SARIMSAK TURŞUSU ORTA BOY -TAŞKÖPRÜ"], ["YMDOK 0042", "KARIŞIK TURŞU (720ML-1300ML-1700ML-1,5LT)"], ["YMDOK 0044", "SOSLU LAHANA TURŞUSU"], ["YMDOK 0045", "KİRAZ BİBER TURŞUSU"], ["YMDOK 0046", "FASULYE TURŞUSU"], ["YMDOK 0047", "PEZİK TURŞUSU"], ["YMDOK 0048", "ÇUBUK SALATALIK TURŞUSU NO.00 - ANKARA"], ["YMDOK 0049", "ACUR TURŞUSU NO.2 (MİDYAT)"], ["YMDOK 0050", "SALATALIK TURŞUSU NO.3 - HALKA DİLİMLİ"], ["YMDOK 0051", "ACUR TURŞUSU (ANTEP)"], ["YMDOK 0052", "DOMATES TURŞUSU (KIRMIZI)"], ["YMDOK 0053", "PAPAZ ERİĞİ TURŞUSU"], ["YMDOK 90005", "DEREOTU"], ["YMDOK 903", "SALATALIK TURŞUSU NO.1-(1)"], ["YMDOK 904", "SALATALIK TURŞUSU NO.2-(2)"], ["YMDOK 905", "SALATALIK TURŞUSU NO.3-(3)"]];
+const KISA_ESLESME = {
+  'ACI BİBER': 'YMDOK 0018',
+  'ACI BIBER': 'YMDOK 0018',
+  'BİBERİYE': 'YMDOK 0019',
+  'BIBERIYE': 'YMDOK 0019',
+  'SARI BİBERİYE': 'YMDOK 0019',
+  'SARI YAKAN': 'YMDOK 0020',
+  'SARI YAKAN ACI BİBER': 'YMDOK 0020',
+  'JALAPENO': 'YMDOK 0021',
+  'JALAPENO BİBER': 'YMDOK 0021',
+  'KIRMIZILI ACI BİBER': 'YMDOK 0022',
+  'KIRMIZILI BİBERİYE': 'YMDOK 0023',
+  'KARDOLA': 'YMDOK 0024',
+  'KARDOLA BİBER': 'YMDOK 0024',
+  'MAKEDON': 'YMDOK 0025',
+  'MAKEDON BİBER': 'YMDOK 0025',
+  'TOPA BİBER': 'YMDOK 0026',
+  'DOMATES BİBERİ': 'YMDOK 0026',
+  'LAHANA': 'YMDOK 0009',
+  'SOSLU LAHANA': 'YMDOK 0044',
+  'HAVUÇ': 'YMDOK 0010',
+  'KELEK': 'YMDOK 0012',
+  'KAPYA': 'YMDOK 0013',
+  'KAPYA BİBER': 'YMDOK 0013',
+  'ÇORBACI': 'YMDOK 0008',
+  'ÇORBACI BİBER': 'YMDOK 0008',
+  'YAPRAK': 'YMDOK 0016',
+  'SALAMURA YAPRAK': 'YMDOK 0016',
+  'PANCAR': 'YMDOK 0017',
+  'KIRMIZI PANCAR': 'YMDOK 0017',
+  'ÜÇBURUN': 'YMDOK 0032',
+  'ÜÇBURUN BİBER': 'YMDOK 0032',
+  'KAPARİ': 'YMDOK 0037',
+  'KİRAZ BİBER': 'YMDOK 0045',
+  'FASULYE': 'YMDOK 0046',
+  'PEZİK': 'YMDOK 0047',
+  'PAPAZ ERİĞİ': 'YMDOK 0053',
+  'ŞEFTALİ ÇAĞLASI': 'YMDOK 0029',
+  'DEREOTU': 'YMDOK 90005',
+  'YEŞİL DOMATES': 'YMDOK 0011',
+  'KIRMIZI DOMATES': 'YMDOK 0052',
+  'DOĞRAMALIK SALATALIK': 'YMDOK 0007',
+  'SALATALIK NO.00': 'YMDOK 0001',
+  'SALATALIK NO.0': 'YMDOK 0002',
+  'SALATALIK NO.1': 'YMDOK 0003',
+  'SALATALIK NO.2': 'YMDOK 0004',
+  'SALATALIK NO.3': 'YMDOK 0005'
+};
+const URUN_VARSAYILAN = DEPO_104_KATALOG.map(([kod, ad]) => `${kod} - ${ad}`);
+function stokCoz(ham){
+  const s = (ham || '').toString().trim().toLocaleUpperCase('tr-TR');
+  if(!s) return { kod:'', ad:'', tam:'' };
+  for(const [kod, ad] of DEPO_104_KATALOG){
+    const ku = kod.toLocaleUpperCase('tr-TR'), au = ad.toLocaleUpperCase('tr-TR');
+    if(s === `${ku} - ${au}` || s === ku || s === au || s.startsWith(ku + ' ') || s.startsWith(ku + '-')){
+      return { kod, ad, tam:`${kod} - ${ad}` };
+    }
+  }
+  const kisaKod = KISA_ESLESME[s];
+  if(kisaKod){
+    const bulunan = DEPO_104_KATALOG.find(([k]) => k === kisaKod);
+    if(bulunan) return { kod:bulunan[0], ad:bulunan[1], tam:`${bulunan[0]} - ${bulunan[1]}` };
+  }
+  for(const [kod, ad] of DEPO_104_KATALOG){
+    const kisaAd = ad.toLocaleUpperCase('tr-TR').replace(/\s*TURŞUSU\s*/g, ' ').trim();
+    if(s === kisaAd) return { kod, ad, tam:`${kod} - ${ad}` };
+  }
+  const m = /^(YMDOK\s*\d+)\s*[-–:]\s*(.+)$/i.exec(s);
+  if(m) return { kod:m[1].toUpperCase(), ad:m[2].trim(), tam:`${m[1].toUpperCase()} - ${m[2].trim()}` };
+  return { kod:'', ad:s, tam:s };
+}
+const urunNorm = ham => stokCoz(ham).tam;
 const BILINEN_KISI_VARSAYILAN = ['CAHİT', 'SADETTİN', 'KERİM', 'SUAT', 'YUSUF', 'İ.KILIÇ', 'M.SEZEN'];
 const BILINEN_MENSE_VARSAYILAN = ['ÇANAKKALE', 'BALIKESİR', 'BURSA', 'MANİSA', 'ANTALYA', 'ÇORUM'];
 const VARSAYILAN_URL = 'https://script.google.com/macros/s/AKfycbyjmN42qcMlfW2WZdBpRn1YNzwcc7Hai-8Dj_lbEO0V3W_XvY8qdcyQMden9ZkekcpHWg/exec';
@@ -990,7 +1066,10 @@ function idTemizle(ham){
   return decodeURIComponent(m ? m[1] : ham).trim();
 }
 function urunListesi(){
-  return [...new Set([...(DB.urunler && DB.urunler.length ? DB.urunler : URUN_VARSAYILAN), ...DB.bidonlar.map(b => b.urun).filter(Boolean)])].sort((a,b) => a.localeCompare(b, 'tr'));
+  return [...new Set([...URUN_VARSAYILAN, ...(DB.urunler || []).map(urunNorm).filter(Boolean), ...DB.bidonlar.map(b => urunNorm(b.urun)).filter(Boolean)])].sort((a,b) => a.localeCompare(b, 'tr'));
+}
+function ocrUrunAdaylari(){
+  return [...new Set([...Object.keys(KISA_ESLESME), ...DEPO_104_KATALOG.map(([, ad]) => ad), ...(DB.urunler || [])])];
 }
 const ISLEM_AD = { GIRIS:'Giriş', CIKIS:'Çıkış', IADE:'İade', TASI:'Yerleştirme', KULLANILDI:'Kullanıldı' };
 const BOLGE_VARSAYILAN = ['M1', 'Y2', 'Z5', 'Y5'];       // Excel bölge şemasındaki bölgeler, öneri olarak
@@ -1219,9 +1298,14 @@ function bilinenler(){
   return { kisi:[...k], mense:[...m] };
 }
 async function etiketOku(img, jpg, opt){
-  if(AYAR.okuma === 'ai') return api({ islem:'oku', foto: jpg.split(',')[1] });
+  if(AYAR.okuma === 'ai'){
+    const s = await api({ islem:'oku', foto: jpg.split(',')[1] });
+    if(s && s.veri && s.veri.urun) s.veri.urun = urunNorm(s.veri.urun);
+    return s;
+  }
   await tessHazir();
-  const r = await EtiketOku.oku(img, tessOcr, urunListesi(), Object.assign({ yil: +simdiStr().slice(0, 4), bilinen: bilinenler() }, opt || {}));
+  const r = await EtiketOku.oku(img, tessOcr, ocrUrunAdaylari(), Object.assign({ yil: +simdiStr().slice(0, 4), bilinen: bilinenler() }, opt || {}));
+  if(r && r.urun) r.urun = urunNorm(r.urun);
   return { ok:true, veri: r || { urun:'', tarih:'', kisi:'', mense:'', etiket:'yok', guven:'dusuk' } };
 }
 
@@ -1316,7 +1400,7 @@ async function fotoIsle(dosya){
       const b = bul(id);
       return b ? [etkinDurum(b) === 'URETIMDE' ? 'Bu bidon üretimde görünüyor. Önce İade yapılmalı.' : etkinDurum(b) === 'KULLANILDI' ? 'Bu bidon kullanılmış görünüyor. Giriş yapılırsa yeniden sahaya alınır.' : 'Bu bidon zaten kayıtlı, bilgileri güncellenecek.'] : [];
     };
-    const alan = x => ({ id, urun:trBuyuk(x.urun), tarih:x.tarih || '', kisi:trBuyuk(x.kisi), mense:trBuyuk(x.mense) });
+    const alan = x => ({ id, urun:urunNorm(x.urun), tarih:x.tarih || '', kisi:trBuyuk(x.kisi), mense:trBuyuk(x.mense) });
     let formAcik = false;
     const ilk = r => {                                   // ilk okuma hemen ekrana, doğrulama arkada sürer
       if(!aktif() || formAcik) return;
@@ -1373,7 +1457,7 @@ $('kaydet').onclick = async () => {
   if(!id){ mesaj('durum', 'Bidon ID boş.', 'hata'); return; }
   const tarih = $('fTarih').value.trim();
   if(tarih && !trToISO(tarih)){ mesaj('durum', 'Tarih GG.AA.YYYY olmalı (örn. 13.08.2026).', 'hata'); return; }
-  const kayit = { id, urun:trBuyuk($('fUrun').value), tarih, kisi:trBuyuk($('fKisi').value), mense:trBuyuk($('fMense').value), bolge:$('fBolge').value.trim(), kaynak:sonKaynak };
+  const kayit = { id, urun:urunNorm($('fUrun').value), tarih, kisi:trBuyuk($('fKisi').value), mense:trBuyuk($('fMense').value), bolge:$('fBolge').value.trim(), kaynak:sonKaynak };
   const imza = JSON.stringify(kayit);
   if(!girisBekleyen || girisBekleyen.imza !== imza) girisBekleyen = { imza, id:yeniId() };
   $('kaydet').disabled = true;
@@ -1555,7 +1639,7 @@ async function etiketIsle(){
         const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.85) : '';
         const r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:8, maxAday:4, iptal:() => !liste.includes(o) }), OCR_ZAMAN.okuma, 'okuma zaman aşımı')).veri;
         o.etiket = (r && r.urun && r.etiket !== 'yok')
-          ? { durum:'tamam', urun:trBuyuk(r.urun), tarih:r.tarih || '', kisi:trBuyuk(r.kisi), mense:trBuyuk(r.mense), guven:r.guven, ilkUrun:trBuyuk(r.urun), ilkKisi:trBuyuk(r.kisi), ilkMense:trBuyuk(r.mense) }
+          ? { durum:'tamam', urun:urunNorm(r.urun), tarih:r.tarih || '', kisi:trBuyuk(r.kisi), mense:trBuyuk(r.mense), guven:r.guven, ilkUrun:trBuyuk(r.urun), ilkKisi:trBuyuk(r.kisi), ilkMense:trBuyuk(r.mense) }
           : { durum:'yok', mesaj:'yazı okunamadı' };
         if(o.etiket.durum === 'tamam'){
           if(!$('cUrun').value && o.etiket.urun) $('cUrun').value = o.etiket.urun;
@@ -1756,7 +1840,7 @@ $('tKaydet').onclick = async () => {
   if(!liste.length) return;
   let ortak = {};
   if(tmod === 'GIRIS'){
-    const urun = trBuyuk($('cUrun').value), tarih = $('cTarih').value.trim();
+    const urun = urunNorm($('cUrun').value), tarih = $('cTarih').value.trim();
     if(tarih && !trToISO(tarih)){ mesaj('tDurum', 'Tarih GG.AA.YYYY olmalı.', 'hata'); return; }
     ortak = { urun, tarih, kisi:trBuyuk($('cKisi').value), mense:trBuyuk($('cMense').value) };
     const eksik = liste.filter(o => o.tur !== 'kayitsiz' && !girisKaydi(o, ortak).urun);
@@ -1796,7 +1880,7 @@ function stok(){
   const say = {};
   DB.bidonlar.forEach(b => {
     if(kullanildiMi(b)) return;                          // kullanılanlar stok değil
-    const u = b.urun || '(ürün yok)'; say[u] = say[u] || { saha:0, uretim:0 };
+    const u = urunNorm(b.urun) || '(ürün yok)'; say[u] = say[u] || { saha:0, uretim:0 };
     if(uretimdeMi(b)) say[u].uretim++; else say[u].saha++;
   });
   const sa = DB.bidonlar.filter(sahadaMi).length, ur = DB.bidonlar.filter(uretimdeMi).length, ku = DB.bidonlar.filter(kullanildiMi).length;
@@ -1868,7 +1952,7 @@ const bolgeAnahtar = b => b.bolge || BOLGESIZ;
 function bolgeTablo(){
   const sahada = DB.bidonlar.filter(sahadaMi);
   const g = {};
-  sahada.forEach(b => { const z = bolgeAnahtar(b); const x = g[z] || (g[z] = { n:0, u:{} }); x.n++; const u = b.urun || '(ürün yok)'; x.u[u] = (x.u[u] || 0) + 1; });
+  sahada.forEach(b => { const z = bolgeAnahtar(b); const x = g[z] || (g[z] = { n:0, u:{} }); x.n++; const u = urunNorm(b.urun) || '(ürün yok)'; x.u[u] = (x.u[u] || 0) + 1; });
   const uret = {}, kull = {};
   DB.bidonlar.filter(uretimdeMi).forEach(b => { const z = bolgeAnahtar(b); uret[z] = (uret[z] || 0) + 1; });
   DB.bidonlar.filter(kullanildiMi).forEach(b => { const z = bolgeAnahtar(b); kull[z] = (kull[z] || 0) + 1; });
@@ -1911,7 +1995,7 @@ function gunTablo(){
   if(!$('rGun').value) $('rGun').value = bugunISO();
   const gun = $('rGun').value, say = {};
   DB.hareketler.filter(h => h.gun === gun).forEach(h => {
-    const u = h.urun || '(ürün yok)'; say[u] = say[u] || { GIRIS:0, CIKIS:0, IADE:0 }; if(say[u][h.islem] !== undefined) say[u][h.islem]++;
+    const u = urunNorm(h.urun) || '(ürün yok)'; say[u] = say[u] || { GIRIS:0, CIKIS:0, IADE:0 }; if(say[u][h.islem] !== undefined) say[u][h.islem]++;
   });
   const t = { GIRIS:0, CIKIS:0, IADE:0 };
   const s = Object.entries(say).sort((a, b) => a[0].localeCompare(b[0], 'tr'));
@@ -1925,11 +2009,18 @@ function gunTablo(){
 $('rGun').onchange = gunTablo;
 $('yenile').onclick = yukle;
 function araBul(q){
-  const t = q.trim().toUpperCase(); if(!t) return [];
-  const tam = DB.bidonlar.filter(b => String(b.id).toUpperCase() === t);
+  const t = trBuyuk(q); if(!t) return [];
+  const tam = DB.bidonlar.filter(b => trBuyuk(b.id) === t);
   if(tam.length) return tam;
-  const son = DB.bidonlar.filter(b => String(b.id).toUpperCase().endsWith(t));      // 00042 -> BD-00042
-  return son.length ? son : DB.bidonlar.filter(b => String(b.id).toUpperCase().includes(t));
+  const son = DB.bidonlar.filter(b => trBuyuk(b.id).endsWith(t));      // 00042 -> BD-00042
+  if(son.length) return son;
+  return DB.bidonlar.filter(b =>
+    trBuyuk(b.id).includes(t) ||
+    trBuyuk(urunNorm(b.urun)).includes(t) ||
+    trBuyuk(b.kisi).includes(t) ||
+    trBuyuk(b.mense).includes(t) ||
+    trBuyuk(b.tarih).includes(t)
+  );
 }
 function bidonKart(b){
   const gec = DB.hareketler.filter(h => String(h.id) === String(b.id)).slice(-8).reverse();
@@ -1952,11 +2043,42 @@ $('ara').oninput = () => {
     l.slice(0, 8).map(b => `<div class="satir"><b>${esc(b.id)}</b> · ${esc(b.urun || '-')} · ${durumAd(b)}</div>`).join('');
 };
 
-/* ---------- Excel indirme ---------- */
-const bidonSatir = b => ({ 'Bidon ID':b.id, 'Ürün':b.urun, 'Etiket Tarihi':b.tarih, 'Kişi':b.kisi, 'Menşe':b.mense, 'Bölge':b.bolge,
-  'Durum': durumAd(b), 'İlk Kayıt':b.giris, 'Son Hareket':b.son });
-const hareketSatir = h => ({ 'Zaman':h.zaman, 'Gün':h.gun, 'Bidon ID':h.id, 'İşlem':ISLEM_AD[h.islem] || h.islem, 'Ürün':h.urun,
-  'Etiket Tarihi':h.tarih, 'Kişi (hazırlayan)':h.kisi, 'Parti / Hat':h.parti, 'İade Nedeni':h.neden, 'Bölge':h.bolge, 'İşlemi Yapan':h.operator, 'Kaynak':h.kaynak });
+/* ---------- Excel indirme (104 Depo Stok Kodu + Stok Adı Entegreli) ---------- */
+const bidonSatir = b => {
+  const st = stokCoz(b.urun);
+  return {
+    'Bidon ID': b.id,
+    'Stok Kodu': st.kod || '-',
+    'Stok Adı': st.ad || b.urun || '',
+    'Ürün (Kod + Ad)': st.tam || b.urun || '',
+    'Etiket Tarihi': b.tarih,
+    'Kişi': b.kisi,
+    'Menşe': b.mense,
+    'Bölge': b.bolge,
+    'Durum': durumAd(b),
+    'İlk Kayıt': b.giris,
+    'Son Hareket': b.son
+  };
+};
+const hareketSatir = h => {
+  const st = stokCoz(h.urun);
+  return {
+    'Zaman': h.zaman,
+    'Gün': h.gun,
+    'Bidon ID': h.id,
+    'İşlem': ISLEM_AD[h.islem] || h.islem,
+    'Stok Kodu': st.kod || '-',
+    'Stok Adı': st.ad || h.urun || '',
+    'Ürün (Kod + Ad)': st.tam || h.urun || '',
+    'Etiket Tarihi': h.tarih,
+    'Kişi (hazırlayan)': h.kisi,
+    'Parti / Hat': h.parti,
+    'İade Nedeni': h.neden,
+    'Bölge': h.bolge,
+    'İşlemi Yapan': h.operator,
+    'Kaynak': h.kaynak
+  };
+};
 function excelYaz(ad, sayfalar){
   const wb = XLSX.utils.book_new();
   sayfalar.forEach(([isim, satirlar]) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(satirlar.length ? satirlar : [{ Bilgi:'Kayıt yok' }]), isim));
@@ -1964,15 +2086,17 @@ function excelYaz(ad, sayfalar){
 }
 $('indirSaha').onclick = () => {
   const l = DB.bidonlar.filter(sahadaMi);
-  const ozet = {}; l.forEach(b => { const u = b.urun || '(ürün yok)'; ozet[u] = (ozet[u] || 0) + 1; });
+  const ozet = {}; l.forEach(b => { const u = urunNorm(b.urun) || '(ürün yok)'; ozet[u] = (ozet[u] || 0) + 1; });
   excelYaz(`sahadaki-bidonlar-${bugunISO()}.xlsx`, [
     ['Sahadaki bidonlar', l.map(bidonSatir)],
-    ['Özet', Object.entries(ozet).map(([u, n]) => ({ 'Ürün':u, 'Bidon adedi':n }))]
+    ['Özet', Object.entries(ozet).map(([u, n]) => { const st = stokCoz(u); return { 'Stok Kodu': st.kod || '-', 'Stok Adı': st.ad || u, 'Bidon Adedi': n }; })],
+    ['104 Depo Stok Listesi', DEPO_104_KATALOG.map(([kod, ad]) => ({ 'Stok Kodu': kod, 'Stok Adı': ad }))]
   ]);
 };
 $('indirHepsi').onclick = () => excelYaz(`bidon-tum-kayit-${bugunISO()}.xlsx`, [
   ['Bidonlar', DB.bidonlar.map(bidonSatir)],
-  ['Hareketler', DB.hareketler.filter(h => (!$('xBas').value || h.gun >= $('xBas').value) && (!$('xBit').value || h.gun <= $('xBit').value)).map(hareketSatir)]
+  ['Hareketler', DB.hareketler.filter(h => (!$('xBas').value || h.gun >= $('xBas').value) && (!$('xBit').value || h.gun <= $('xBit').value)).map(hareketSatir)],
+  ['104 Depo Stok Listesi', DEPO_104_KATALOG.map(([kod, ad]) => ({ 'Stok Kodu': kod, 'Stok Adı': ad }))]
 ]);
 
 /* ---------- QR üret + yazdır ---------- */
@@ -2131,7 +2255,7 @@ $('ocrTest').onclick = async () => {                      // gerçek bir etiket 
     x.fillStyle = '#222'; x.textAlign = 'center'; x.font = 'bold 104px Arial, Helvetica, sans-serif';
     x.fillText('BİBERİYE', 600, 330); x.fillText('13.08.2026', 600, 500); x.fillText('SUAT', 600, 670);
     await tessHazir();
-    const r = await zamanAsimi(EtiketOku.oku(c, tessOcr, urunListesi(), { yil:+simdiStr().slice(0, 4), bilinen:bilinenler(), maxOcr:6, maxAday:3 }), OCR_ZAMAN.okuma, 'okuma zaman aşımı');
+    const r = await zamanAsimi(EtiketOku.oku(c, tessOcr, ocrUrunAdaylari(), { yil:+simdiStr().slice(0, 4), bilinen:bilinenler(), maxOcr:6, maxAday:3 }), OCR_ZAMAN.okuma, 'okuma zaman aşımı'); if(r && r.urun) r.urun = urunNorm(r.urun);
     const sn = ((performance.now() - t0) / 1000).toFixed(1);
     if(r && r.urun){ s.style.color = '#177A4D'; s.textContent = `✓ Etiket okuyucu çalışıyor (${sn} sn). Deneme etiketinden okunan: ${[r.urun, r.tarih, r.kisi].filter(Boolean).join(' · ')}`; }
     else{ s.style.color = '#B86F0E'; s.textContent = `Okuyucu yüklendi (${sn} sn) ama deneme yazısını okuyamadı. Telefonu güncelle ya da Chrome kullan.`; }
@@ -2183,7 +2307,7 @@ function duzBilgiGetir(){
   if(idler.length === 1){
     if(ilk){
       $('duzBilgiNot').textContent = `${ilk.id} bulundu (Mevcut durum: ${durumAd(ilk)}). Bilgileri aşağıdan değiştirip kaydedin:`;
-      $('duzUrun').value = ilk.urun || '';
+      $('duzUrun').value = urunNorm(ilk.urun || '');
       $('duzTarih').value = ilk.tarih || '';
       $('duzKisi').value = ilk.kisi || '';
       $('duzMense').value = ilk.mense || '';
@@ -2196,7 +2320,7 @@ function duzBilgiGetir(){
   } else {
     const kayitliSay = idler.filter(x => !!bul(x)).length;
     $('duzBilgiNot').textContent = `Seri seçildi: Toplam ${idler.length} bidon (${idler[0]} … ${idler[idler.length - 1]}), ${kayitliSay} tanesi sistemde kayıtlı. Yazdığınız alanlar tüm seriye uygulanacak:`;
-    $('duzUrun').value = ilk ? (ilk.urun || '') : '';
+    $('duzUrun').value = ilk ? urunNorm(ilk.urun || '') : '';
     $('duzTarih').value = ilk ? (ilk.tarih || '') : '';
     $('duzKisi').value = ilk ? (ilk.kisi || '') : '';
     $('duzMense').value = ilk ? (ilk.mense || '') : '';
@@ -2216,7 +2340,7 @@ $('duzIptalBtn').onclick = () => { $('duzForm').classList.add('gizle'); mesaj('d
 $('duzKaydetBtn').onclick = async () => {
   if(!duzHedefIdler.length) duzBilgiGetir();
   if(!duzHedefIdler.length) return;
-  const urun = trBuyuk($('duzUrun').value);
+  const urun = urunNorm($('duzUrun').value);
   const tarih = $('duzTarih').value.trim();
   const kisi = trBuyuk($('duzKisi').value);
   const mense = trBuyuk($('duzMense').value);
@@ -2238,7 +2362,7 @@ $('duzKaydetBtn').onclick = async () => {
       const mevcut = bul(id) || {};
       return {
         id,
-        urun: urun || mevcut.urun || '',
+        urun: urun || urunNorm(mevcut.urun) || '',
         tarih: tarih || mevcut.tarih || '',
         kisi: kisi || mevcut.kisi || '',
         mense: mense || mevcut.mense || '',
@@ -2257,6 +2381,34 @@ $('duzKaydetBtn').onclick = async () => {
     mesaj('duzDurumMesaj', 'Hata: ' + err.message, 'hata');
   }
   $('duzKaydetBtn').disabled = false;
+};
+
+$('stokKodEsitleBtn').onclick = async () => {
+  const degisecekler = DB.bidonlar.filter(b => b.urun && urunNorm(b.urun) !== b.urun && etkinDurum(b) !== 'URETIMDE');
+  if(!degisecekler.length){
+    mesaj("duzDurumMesaj", "✓ Tüm kayıtlı bidonların stok kodları zaten güncel (YMDOK formatında)!", "bilgi");
+    return;
+  }
+  if(!confirm(`Google Sheet'teki ${degisecekler.length} bidonun ürün bilgisi 104 Depo resmi Stok Kodu + Stok Adı (YMDOK ...) formatına dönüştürülsün mü?`)) return;
+  $('stokKodEsitleBtn').disabled = true;
+  mesaj("duzDurumMesaj", `${degisecekler.length} bidonun stok kodları Google Sheet tablosuna işleniyor…`);
+  try{
+    const kayitlar = degisecekler.map(b => ({
+      id: b.id,
+      urun: urunNorm(b.urun),
+      tarih: b.tarih || '',
+      kisi: b.kisi || '',
+      mense: b.mense || '',
+      bolge: b.bolge || '',
+      kaynak: '104-depo-esitleme'
+    }));
+    await islemYap('GIRIS', kayitlar, '', yeniId());
+    mesaj("duzDurumMesaj", `✓ ${degisecekler.length} bidon Google Sheet'te resmi 104 Depo Stok Kodu ve Stok Adı ile güncellendi!`, "bilgi");
+    stok();
+  }catch(err){
+    mesaj("duzDurumMesaj", "Hata: " + err.message, "hata");
+  }
+  $('stokKodEsitleBtn').disabled = false;
 };
 </script>
 </body>
