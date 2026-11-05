@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v5.1 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v5.2 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -2175,7 +2175,7 @@ function bidonDuzeltAc(id){
 function duzBilgiGetir(){
   mesaj('duzDurumMesaj', '');
   const girdi = $('duzId').value.trim();
-  if(!girdi){ mesaj('duzDurumMesaj', 'Lütfen düzeltilecek Bidon ID'sini veya seri aralığını (örn. BD-00001..BD-00010) yazın.', 'uyari'); return; }
+  if(!girdi){ mesaj("duzDurumMesaj", "Lütfen düzeltilecek Bidon numarasını veya seri aralığını (örn. BD-00001..BD-00010) yazın.", "uyari"); return; }
   const idler = seriCoz(girdi);
   duzHedefIdler = idler;
   const ilk = bul(idler[0]);
@@ -2226,7 +2226,7 @@ $('duzKaydetBtn').onclick = async () => {
   if(tarih && !trToISO(tarih)){ mesaj('duzDurumMesaj', 'Tarih GG.AA.YYYY formatında olmalı (örn. 13.08.2026).', 'hata'); return; }
 
   $('duzKaydetBtn').disabled = true;
-  mesaj('duzDurumMesaj', 'Değişiklikler Google Sheet'e kaydediliyor…');
+  mesaj("duzDurumMesaj", "Değişiklikler Google Sheet tablosuna kaydediliyor…");
   try{
     // Mevcut Kod.gs v2.8'de ÜRETİMDE olan bidona doğrudan GİRİŞ yapılamaz ("önce iade yap" der).
     // Bu yüzden ÜRETİMDE olanları önce otomatik İADE alıp ardından güncel bilgilerle GİRİŞ yapıyoruz!
