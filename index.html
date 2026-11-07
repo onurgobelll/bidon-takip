@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v5.3 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v5.6 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -482,8 +482,8 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       <button class="ikincil" id="qrTekrar">QR için tekrar fotoğraf çek</button>
       <label for="fUrun">Ürün</label>
       <input id="fUrun" list="urunListe" autocapitalize="characters" autocomplete="off">
-      <label for="fTarih">Etiket tarihi (GG.AA.YYYY)</label>
-      <input id="fTarih" inputmode="numeric" placeholder="13.08.2026" autocomplete="off">
+      <label for="fTarih">Seri No (GG.AA.YYYY-001 — sadece tarih yazarsan sıra no otomatik verilir)</label>
+      <input id="fTarih" placeholder="13.10.2026 veya 13.10.2026-001" autocomplete="off">
       <label for="fKisi">Kişi (küçük etiket)</label>
       <input id="fKisi" autocapitalize="characters" autocomplete="off">
       <label for="fMense">Menşe (büyük etiket)</label>
@@ -549,8 +549,8 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
         <div class="kucuk" id="etiketOtoNot" style="margin:2px 0 4px">Kamerayı bidonun QR'ına ve etiketine birlikte tut. QR anında eklenir, etiket yazısı arkada okunur; sen sıradaki bidona geçebilirsin. Okunamayanlar için aşağıdaki ortak bilgi kullanılır.</div>
         <label for="cUrun">Ortak ürün (etiket okunamazsa)</label>
         <input id="cUrun" list="urunListe" autocapitalize="characters" autocomplete="off">
-        <label for="cTarih">Etiket tarihi (GG.AA.YYYY)</label>
-        <input id="cTarih" inputmode="numeric" placeholder="13.08.2026" autocomplete="off">
+        <label for="cTarih">Seri No Tarihi (GG.AA.YYYY — sıra no -001, -002 otomatik verilir)</label>
+        <input id="cTarih" placeholder="13.10.2026 veya 13.10.2026-001" autocomplete="off">
         <div class="sira">
           <div><label for="cKisi">Kişi</label><input id="cKisi" autocapitalize="characters" autocomplete="off"></div>
           <div><label for="cMense">Menşe</label><input id="cMense" autocapitalize="characters" autocomplete="off"></div>
@@ -601,7 +601,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
         <div class="kucuk" id="duzBilgiNot" style="margin-bottom:8px;font-weight:700;color:var(--tuz)"></div>
         <div class="sira">
           <div><label for="duzUrun" style="margin-top:0">Ürün</label><input id="duzUrun" list="urunListe" autocapitalize="characters" autocomplete="off"></div>
-          <div><label for="duzTarih" style="margin-top:0">Etiket Tarihi (GG.AA.YYYY)</label><input id="duzTarih" inputmode="numeric" placeholder="13.08.2026" autocomplete="off"></div>
+          <div><label for="duzTarih" style="margin-top:0">Seri No (GG.AA.YYYY-001)</label><input id="duzTarih" placeholder="13.10.2026 veya 13.10.2026-001" autocomplete="off"></div>
         </div>
         <div class="sira">
           <div><label for="duzKisi">Kişi</label><input id="duzKisi" autocapitalize="characters" autocomplete="off"></div>
@@ -623,8 +623,8 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       </div>
       <div id="duzDurumMesaj"></div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--cizgi)">
-        <button class="ikincil" id="stokKodEsitleBtn" style="border-color:var(--bidon);color:var(--bidon)">🔄 Google Sheet'teki Mevcut Bidonlara 104 Depo Stok Kodlarını İşle</button>
-        <div class="kucuk" style="margin-top:4px">Tabloda sadece ürün adı yazan (örn. BİBERİYE, ACI BİBER) kayıtları otomatik olarak resmi stok kodlu haline (örn. YMDOK 0019 - BİBERİYE (SARI) TURŞUSU) dönüştürür.</div>
+        <button class="ikincil" id="stokKodEsitleBtn" style="border-color:var(--bidon);color:var(--bidon)">🔄 Mevcut Bidonların Seri No (-001, -002) ve 104 Depo Stok Kodlarını Google Sheet'e İşle</button>
+        <div class="kucuk" style="margin-top:4px">Aynı tarihli bidonları sırayla <b>13.10.2026-001, 13.10.2026-002…</b> şeklinde Seri No yapar ve ürün adlarını 104 Depo stok kodlarıyla eşitler.</div>
       </div>
     </div>
     <div class="stock-layout">
@@ -1021,13 +1021,21 @@ const urunNorm = ham => stokCoz(ham).tam;
 const BILINEN_KISI_VARSAYILAN = ['CAHİT', 'SADETTİN', 'KERİM', 'SUAT', 'YUSUF', 'İ.KILIÇ', 'M.SEZEN'];
 const BILINEN_MENSE_VARSAYILAN = ['ÇANAKKALE', 'BALIKESİR', 'BURSA', 'MANİSA', 'ANTALYA', 'ÇORUM'];
 const VARSAYILAN_URL = 'https://script.google.com/macros/s/AKfycbyjmN42qcMlfW2WZdBpRn1YNzwcc7Hai-8Dj_lbEO0V3W_XvY8qdcyQMden9ZkekcpHWg/exec';
+const VARSAYILAN_SIFRE = '2026';
+const VARSAYILAN_OPERATOR = 'Onur';
 const AYAR = {
   url: localStorage.getItem('bt_url') || localStorage.getItem('yakamoz_url') || VARSAYILAN_URL,
-  sifre: localStorage.getItem('bt_sifre') || localStorage.getItem('yakamoz_sifre') || '',
+  sifre: localStorage.getItem('bt_sifre') || localStorage.getItem('yakamoz_sifre') || VARSAYILAN_SIFRE,
   demoKey: localStorage.getItem('bt_demokey') || '',
-  operator: localStorage.getItem('bt_op') || localStorage.getItem('yakamoz_op') || 'Onur',
+  operator: localStorage.getItem('bt_op') || localStorage.getItem('yakamoz_op') || VARSAYILAN_OPERATOR,
   okuma: localStorage.getItem('bt_okuma') || 'ucretsiz'
 };
+// Yeni açılan her cihazda ayarların boş kalmaması için başlangıçta otomatik kaydet
+try {
+  if(!localStorage.getItem('bt_url')) localStorage.setItem('bt_url', AYAR.url);
+  if(!localStorage.getItem('bt_sifre')) localStorage.setItem('bt_sifre', AYAR.sifre);
+  if(!localStorage.getItem('bt_op')) localStorage.setItem('bt_op', AYAR.operator);
+} catch(e) {}
 const sozlukOku = () => { try { return JSON.parse(localStorage.getItem('bt_sozluk') || '{}'); } catch(e) { return {}; } };
 const sozlukOgren = (yanlis, dogru) => {
   if(!yanlis || !dogru || yanlis === dogru || yanlis.length < 2) return;
@@ -1040,7 +1048,20 @@ window.__sozlukDuzelt = (metin) => {
   for(const [y, d] of Object.entries(s)){ m = m.split(y).join(d); }
   return m;
 };
-let DB = { bidonlar: [], hareketler: [], sonNo: {} };
+function yerelDbOku(){
+  try {
+    const s = localStorage.getItem('bt_db_cache');
+    if(s){
+      const d = JSON.parse(s);
+      if(d && Array.isArray(d.bidonlar)) return d;
+    }
+  } catch(e) {}
+  return { bidonlar: [], hareketler: [], sonNo: {}, araliklar: [], urunler: [] };
+}
+function yerelDbYaz(db){
+  try { localStorage.setItem('bt_db_cache', JSON.stringify(db)); } catch(e) {}
+}
+let DB = yerelDbOku();
 let sonKaynak = 'foto';
 let okuToken = 0;
 let aktifSekme = 'Giris';       // yeni fotoğraf/kapatma gelince arkadaki okumayı iptal eder
@@ -1051,7 +1072,50 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&l
 const trBuyuk = s => (s || '').toString().trim().toLocaleUpperCase('tr-TR');
 const simdiStr = () => new Date().toLocaleString('sv-SE', { timeZone: 'Europe/Istanbul' });
 const bugunISO = () => simdiStr().slice(0, 10);
-function trToISO(t){ const m = /^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/.exec((t || '').trim()); return m ? `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}` : ''; }
+function seriNoCoz(t){
+  const m = /^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})(?:\s*-\s*(\d{1,4}))?$/.exec((t || '').trim());
+  if(!m) return null;
+  const gg = m[1].padStart(2, '0'), aa = m[2].padStart(2, '0'), yyyy = m[3];
+  const bazTarih = `${gg}.${aa}.${yyyy}`;
+  const iso = `${yyyy}-${aa}-${gg}`;
+  const sira = m[4] ? parseInt(m[4], 10) : null;
+  const tam = sira ? `${bazTarih}-${String(sira).padStart(3, '0')}` : bazTarih;
+  return { bazTarih, iso, sira, tam };
+}
+function trToISO(t){ const c = seriNoCoz(t); return c ? c.iso : ''; }
+function mevcutEnBuyukSeriSira(bazTarih, haricIdSet){
+  let maks = 0;
+  DB.bidonlar.forEach(b => {
+    if(haricIdSet && haricIdSet.has(String(b.id))) return;
+    const c = seriNoCoz(b.tarih);
+    if(c && c.bazTarih === bazTarih){
+      if(c.sira && c.sira > maks) maks = c.sira;
+    }
+  });
+  return maks;
+}
+function seriNoOtomatikDoldur(kayitlar){
+  // Kayıtlarda sadece tarih (örn. 13.10.2026) varsa veya birden fazla bidona aynı tarih girildiyse sırayla -001, -002, -003 verir
+  const guncellenenIdler = new Set(kayitlar.map(k => String(k.id)));
+  const sayacHarita = {};
+  return kayitlar.map((k, idx) => {
+    const ham = (k.tarih || '').trim();
+    if(!ham) return k;
+    const c = seriNoCoz(ham);
+    if(!c) return k;
+    // Eğer tekil kayıtta açıkça -005 gibi sıra yazılmışsa ve çoklu seri değilse (veya ilk kayıttan itibaren artacaksa)
+    if(c.sira !== null && kayitlar.length === 1){
+      return Object.assign({}, k, { tarih: c.tam });
+    }
+    if(sayacHarita[c.bazTarih] === undefined){
+      // Eğer kullanıcı başlangıç olarak 13.10.2026-005 yazdıysa çoklu kayıtta 005, 006 diye devam etsin; sadece 13.10.2026 yazdıysa mevcut en büyük + 1'den başlasın
+      sayacHarita[c.bazTarih] = (c.sira !== null) ? (c.sira - 1) : mevcutEnBuyukSeriSira(c.bazTarih, guncellenenIdler);
+    }
+    sayacHarita[c.bazTarih]++;
+    const yeniSeriNo = `${c.bazTarih}-${String(sayacHarita[c.bazTarih]).padStart(3, '0')}`;
+    return Object.assign({}, k, { tarih: yeniSeriNo });
+  });
+}
 function isoToTR(i){ const [y,m,d] = i.split('-'); return `${d}.${m}.${y}`; }
 function mesaj(id, msg, tur = 'bilgi'){ $(id).innerHTML = msg ? `<div class="durum ${tur}">${esc(msg)}</div>` : ''; }
 const bul = id => DB.bidonlar.find(b => String(b.id) === String(id));
@@ -1145,12 +1209,28 @@ async function aiDirekt(b64){
 
 // Ağ hatası (internet yok) => e.ag = true. Sunucu reddederse normal hata.
 async function gonder(g){
+  const hedefUrl = (AYAR.url || VARSAYILAN_URL).trim();
+  const gonderSifre = (AYAR.sifre || VARSAYILAN_SIFRE);
   let r;
-  try{ r = await fetch(AYAR.url, { method:'POST', body: JSON.stringify({ ...g, sifre: AYAR.sifre }) }); }
-  catch(e){ const x = new Error('Bağlantı yok'); x.ag = true; throw x; }
+  try{
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const tId = ctrl ? setTimeout(() => ctrl.abort(), 20000) : null;
+    r = await fetch(hedefUrl, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ ...g, sifre: gonderSifre }),
+      signal: ctrl ? ctrl.signal : undefined
+    });
+    if(tId) clearTimeout(tId);
+  }catch(e){
+    const x = new Error('Ağ bağlantısı yok veya zayıf'); x.ag = true; throw x;
+  }
   let j;
   try{ j = await r.json(); }
-  catch(e){ throw new Error('Sunucu yanıtı geçersiz. Adres /exec ile mi bitiyor, erişim "Herkes" mi?'); }
+  catch(e){
+    const x = new Error('Sunucuya ulaşılamadı (geçici ağ hatası)'); x.ag = true; throw x;
+  }
   if(!j.ok) throw new Error(j.hata || 'Bilinmeyen hata');
   return j;
 }
@@ -1191,8 +1271,9 @@ async function kuyrukGonder(){
   } finally { kuyrukCalisiyor = false; }
   if(!kuyruk().length) yukle();
 }
-window.addEventListener('online', kuyrukGonder);
-setInterval(kuyrukGonder, 30000);
+window.addEventListener('online', () => { kuyrukGonder(); yukle(); });
+document.addEventListener('visibilitychange', () => { if(!document.hidden){ kuyrukGonder(); } });
+setInterval(kuyrukGonder, 15000);
 $('kuyrukBanner').onclick = e => {
   const b = e.target.closest('button'); if(!b) return;
   const a = b.dataset.act, k = kuyruk();
@@ -1208,35 +1289,59 @@ $('kuyrukBanner').onclick = e => {
 };
 
 async function islemYap(tip, kayitlar, parti, istekId, neden){
-  if(!AYAR.operator) throw new Error('Önce Ayarlar\'a adını yaz (işlemi yapan olarak kaydedilir).');
-  const g = { islem:'islem', tip, kayitlar, parti: parti || '', neden: neden || '', operator: AYAR.operator, istekId: istekId || yeniId() };
+  const op = (AYAR.operator || VARSAYILAN_OPERATOR).trim();
+  const idKod = istekId || yeniId();
+  const g = { islem:'islem', tip, kayitlar, parti: parti || '', neden: neden || '', operator: op, istekId: idKod };
   if(demo()){ const s = await api(g); DB = demoOku(); yenileUI(); return s; }
   try{
     const s = await gonder(g);
     const atl = new Set((s.atlanan || []).map(a => String(a.id)));
     uygula(DB, tip, kayitlar.filter(k => !atl.has(String(k.id))), g.parti, g.operator, g.neden);
+    yerelDbYaz(DB);
     yenileUI(); yukle();
     return s;
   }catch(e){
     if(!e.ag) throw e;
     const k = kuyruk();
     if(k.reduce((a, x) => a + x.kayitlar.length, 0) + kayitlar.length > 500) throw new Error('Bekleyen işlem 500 bidonu aştı. İnternet gelene kadar yeni işlem alınmıyor; "Şimdi gönder"i dene.');
-    k.push(g); kuyrukYaz(k);                               // aynı istekId ile, tekrar gönderilse çift kayıt olmaz
-    const s = uygula(DB, tip, kayitlar, g.parti, g.operator, g.neden);
-    yenileUI();
-    return { ...s, beklemede:true };
+    // Aynı istekId zaten kuyrukta varsa ikinci kez ekleme (çift/yanlış kayıt koruması)
+    if(!k.some(x => x.istekId === idKod)){
+      g.yerelUygulandi = true;
+      k.push(g); kuyrukYaz(k);
+      const s = uygula(DB, tip, kayitlar, g.parti, g.operator, g.neden);
+      yerelDbYaz(DB);
+      yenileUI();
+      return { ...s, beklemede:true };
+    }
+    return { ok:true, islenen:kayitlar.length, yeni:0, atlanan:[], beklemede:true };
   }
 }
 async function yukle(){
-  if(!demo() && kuyruk().length) return;                    // bekleyen işlem varken sunucu verisi ezmesin
+  // Önce yerel önbellekteki veriyi ekrana hemen yansıt (sayfa yeni açıldığında veya internet yokken sıfır görünmesin)
+  if(DB && DB.bidonlar && DB.bidonlar.length) yenileUI();
+  if(!demo() && kuyruk().length){
+    // Bekleyen işlem varsa önce onları sunucuya göndermeyi dene; gönderilemiyorsa yerel önbelleği koru
+    await kuyrukGonder();
+    if(kuyruk().length){ yenileUI(); return; }
+  }
   try{
     if(demo()){ DB = demoOku(); }
     else {
       const j = await gonder({ islem:'liste' });             // şifre URL'ye değil, POST gövdesine gider
       DB = { bidonlar:j.bidonlar, hareketler:j.hareketler, sonNo:j.sonNo || {}, araliklar:j.araliklar || [], urunler:j.urunler || [] };
+      yerelDbYaz(DB);
     }
+    if(($('durum').textContent || '').includes('Veri yüklenemedi') || ($('durum').textContent || '').includes('Çevrimdışı')) mesaj('durum', '');
     yenileUI();
-  }catch(e){ mesaj('durum', 'Veri yüklenemedi: ' + e.message, 'hata'); }
+  }catch(e){
+    const kach = yerelDbOku();
+    if(kach.bidonlar && kach.bidonlar.length){
+      DB = kach; yenileUI();
+      mesaj('durum', 'Çevrimdışı mod: Son kaydedilen ' + DB.bidonlar.length + ' bidon hafızadan yüklendi. Yapacağın işlemler kaydedilir ve internet gelince otomatik gönderilir.', 'uyari');
+    } else {
+      mesaj('durum', 'Sunucuya bağlanılamadı: ' + e.message, 'hata');
+    }
+  }
 }
 function yenileUI(){
   $('urunListe').innerHTML = urunListesi().map(u => `<option>${esc(u)}</option>`).join('');
@@ -1318,7 +1423,11 @@ $('ayarBtn').onclick = () => {
 function ayarGoster(){ $('denemeAyar').classList.toggle('gizle', !!$('url').value.trim() || $('okuma').value !== 'ai'); }
 $('url').oninput = ayarGoster; $('okuma').onchange = ayarGoster;
 $('ayarKaydet').onclick = () => {
-  AYAR.url = $('url').value.trim(); AYAR.sifre = $('sifre').value; AYAR.demoKey = $('demoKey').value.trim(); AYAR.operator = $('operator').value.trim(); AYAR.okuma = $('okuma').value;
+  AYAR.url = $('url').value.trim() || VARSAYILAN_URL;
+  AYAR.sifre = $('sifre').value.trim() || VARSAYILAN_SIFRE;
+  AYAR.demoKey = $('demoKey').value.trim();
+  AYAR.operator = $('operator').value.trim() || VARSAYILAN_OPERATOR;
+  AYAR.okuma = $('okuma').value;
   localStorage.setItem('bt_op', AYAR.operator); localStorage.setItem('bt_okuma', AYAR.okuma); localStorage.setItem('bt_url', AYAR.url); localStorage.setItem('bt_sifre', AYAR.sifre); localStorage.setItem('bt_demokey', AYAR.demoKey);
   ayarGorunum(false); yukle();
 };
@@ -1456,8 +1565,8 @@ $('kaydet').onclick = async () => {
   const id = $('fId').value.trim();
   if(!id){ mesaj('durum', 'Bidon ID boş.', 'hata'); return; }
   const tarih = $('fTarih').value.trim();
-  if(tarih && !trToISO(tarih)){ mesaj('durum', 'Tarih GG.AA.YYYY olmalı (örn. 13.08.2026).', 'hata'); return; }
-  const kayit = { id, urun:urunNorm($('fUrun').value), tarih, kisi:trBuyuk($('fKisi').value), mense:trBuyuk($('fMense').value), bolge:$('fBolge').value.trim(), kaynak:sonKaynak };
+  if(tarih && !trToISO(tarih)){ mesaj('durum', 'Seri No GG.AA.YYYY veya GG.AA.YYYY-001 olmalı (örn. 13.10.2026-001).', 'hata'); return; }
+  const kayit = seriNoOtomatikDoldur([{ id, urun:urunNorm($('fUrun').value), tarih, kisi:trBuyuk($('fKisi').value), mense:trBuyuk($('fMense').value), bolge:$('fBolge').value.trim(), kaynak:sonKaynak }])[0];
   const imza = JSON.stringify(kayit);
   if(!girisBekleyen || girisBekleyen.imza !== imza) girisBekleyen = { imza, id:yeniId() };
   $('kaydet').disabled = true;
@@ -1688,7 +1797,7 @@ function listeCiz(){
     const e = o.etiket || {};
     const form = (o.duzenle && tmod === 'GIRIS') ? `<div class="et-edit" data-edit-for="${esc(o.id)}">
         <input data-f="urun" list="urunListe" placeholder="Ürün" value="${esc(e.urun || '')}" autocapitalize="characters">
-        <input data-f="tarih" placeholder="GG.AA.YYYY" inputmode="numeric" value="${esc(e.tarih || '')}">
+        <input data-f="tarih" placeholder="Seri No (13.10.2026-001)" value="${esc(e.tarih || '')}">
         <input data-f="kisi" placeholder="Kişi" value="${esc(e.kisi || '')}" autocapitalize="characters">
         <input data-f="mense" placeholder="Menşe" value="${esc(e.mense || '')}" autocapitalize="characters">
         <button data-edit-ok="${esc(o.id)}">Tamam</button></div>` : '';
@@ -1702,7 +1811,7 @@ function listeCiz(){
 }
 $('tListe').onclick = e => {
   const ed = e.target.closest('button[data-edit]'); if(ed){ const o = liste.find(x => x.id === ed.dataset.edit); if(o){ o.duzenle = !o.duzenle; if(o.duzenle && !o.etiket) o.etiket = { durum:'tamam', guven:'yuksek' }; listeCiz(); } return; }
-  const ok = e.target.closest('button[data-edit-ok]'); if(ok){ const o = liste.find(x => x.id === ok.dataset.editOk); if(o){ o.duzenle = false; if(o.etiket){ if(o.etiket.ilkUrun && o.etiket.urun && o.etiket.ilkUrun !== o.etiket.urun) sozlukOgren(o.etiket.ilkUrun, o.etiket.urun); if(o.etiket.ilkKisi && o.etiket.kisi && o.etiket.ilkKisi !== o.etiket.kisi) sozlukOgren(o.etiket.ilkKisi, o.etiket.kisi); if(o.etiket.ilkMense && o.etiket.mense && o.etiket.ilkMense !== o.etiket.mense) sozlukOgren(o.etiket.ilkMense, o.etiket.mense); } const t = (o.etiket && o.etiket.tarih || '').trim(); if(t && !trToISO(t)){ mesaj('tDurum', 'Tarih GG.AA.YYYY olmalı (örn. 13.08.2026).', 'hata'); o.etiket.tarih = ''; } else mesaj('tDurum', '✓ Düzeltme kaydedildi ve sözlüğe öğretildi.'); listeCiz(); } return; }
+  const ok = e.target.closest('button[data-edit-ok]'); if(ok){ const o = liste.find(x => x.id === ok.dataset.editOk); if(o){ o.duzenle = false; if(o.etiket){ if(o.etiket.ilkUrun && o.etiket.urun && o.etiket.ilkUrun !== o.etiket.urun) sozlukOgren(o.etiket.ilkUrun, o.etiket.urun); if(o.etiket.ilkKisi && o.etiket.kisi && o.etiket.ilkKisi !== o.etiket.kisi) sozlukOgren(o.etiket.ilkKisi, o.etiket.kisi); if(o.etiket.ilkMense && o.etiket.mense && o.etiket.ilkMense !== o.etiket.mense) sozlukOgren(o.etiket.ilkMense, o.etiket.mense); } const t = (o.etiket && o.etiket.tarih || '').trim(); if(t && !trToISO(t)){ mesaj('tDurum', 'Seri No GG.AA.YYYY veya GG.AA.YYYY-001 olmalı (örn. 13.10.2026-001).', 'hata'); o.etiket.tarih = ''; } else mesaj('tDurum', '✓ Düzeltme kaydedildi ve sözlüğe öğretildi.'); listeCiz(); } return; }
   const b = e.target.closest('button[data-id]'); if(!b) return;
   liste = liste.filter(o => o.id !== b.dataset.id); listeCiz();
 };
@@ -1841,7 +1950,7 @@ $('tKaydet').onclick = async () => {
   let ortak = {};
   if(tmod === 'GIRIS'){
     const urun = urunNorm($('cUrun').value), tarih = $('cTarih').value.trim();
-    if(tarih && !trToISO(tarih)){ mesaj('tDurum', 'Tarih GG.AA.YYYY olmalı.', 'hata'); return; }
+    if(tarih && !trToISO(tarih)){ mesaj('tDurum', 'Seri No GG.AA.YYYY veya GG.AA.YYYY-001 olmalı.', 'hata'); return; }
     ortak = { urun, tarih, kisi:trBuyuk($('cKisi').value), mense:trBuyuk($('cMense').value) };
     const eksik = liste.filter(o => o.tur !== 'kayitsiz' && !girisKaydi(o, ortak).urun);
     if(eksik.length){ mesaj('tDurum', `${eksik.length} bidonun ürün bilgisi yok (etiket okunamadı). Satırdaki ✎ ile yaz ya da yukarıya "Ortak ürün"ü yaz.`, 'hata'); return; }
@@ -1855,7 +1964,8 @@ $('tKaydet').onclick = async () => {
   const ks = liste.length - gidecek.length;
   if(!gidecek.length){ mesaj('tDurum', 'Listedeki bidonların hiçbiri kayıtlı değil. Önce Giriş modunda kaydet.', 'hata'); return; }
   if(ks && !confirm(`${ks} bidon sistemde kayıtlı değil, bunlar kaydedilmeyecek (önce Giriş). Diğer ${gidecek.length} bidon kaydedilsin mi?`)) return;
-  const kay = gidecek.map(o => tmod === 'GIRIS' ? girisKaydi(o, ortak) : { id:o.id, ...ortak, kaynak:'toplu' });
+  const hamKay = gidecek.slice().reverse().map(o => tmod === 'GIRIS' ? girisKaydi(o, ortak) : { id:o.id, ...ortak, kaynak:'toplu' });
+  const kay = tmod === 'GIRIS' ? seriNoOtomatikDoldur(hamKay) : hamKay;
   const imza = tmod + '|' + bolge + '|' + JSON.stringify(kay);
   if(!bekleyen || bekleyen.imza !== imza) bekleyen = { imza, id:yeniId() };
   $('tKaydet').disabled = true;
@@ -2051,7 +2161,7 @@ const bidonSatir = b => {
     'Stok Kodu': st.kod || '-',
     'Stok Adı': st.ad || b.urun || '',
     'Ürün (Kod + Ad)': st.tam || b.urun || '',
-    'Etiket Tarihi': b.tarih,
+    'Seri No': b.tarih,
     'Kişi': b.kisi,
     'Menşe': b.mense,
     'Bölge': b.bolge,
@@ -2070,7 +2180,7 @@ const hareketSatir = h => {
     'Stok Kodu': st.kod || '-',
     'Stok Adı': st.ad || h.urun || '',
     'Ürün (Kod + Ad)': st.tam || h.urun || '',
-    'Etiket Tarihi': h.tarih,
+    'Seri No': h.tarih,
     'Kişi (hazırlayan)': h.kisi,
     'Parti / Hat': h.parti,
     'İade Nedeni': h.neden,
@@ -2347,7 +2457,7 @@ $('duzKaydetBtn').onclick = async () => {
   const bolge = $('duzBolge').value.trim().toUpperCase();
   const hedefDurum = $('duzDurum').value;
 
-  if(tarih && !trToISO(tarih)){ mesaj('duzDurumMesaj', 'Tarih GG.AA.YYYY formatında olmalı (örn. 13.08.2026).', 'hata'); return; }
+  if(tarih && !trToISO(tarih)){ mesaj('duzDurumMesaj', 'Seri No GG.AA.YYYY veya GG.AA.YYYY-001 formatında olmalı (örn. 13.10.2026-001).', 'hata'); return; }
 
   $('duzKaydetBtn').disabled = true;
   mesaj("duzDurumMesaj", "Değişiklikler Google Sheet tablosuna kaydediliyor…");
@@ -2358,7 +2468,7 @@ $('duzKaydetBtn').onclick = async () => {
     if(uretimdekiler.length){
       await islemYap('IADE', uretimdekiler.map(id => ({ id, bolge, kaynak:'duzeltme' })), '', yeniId(), 'Bilgi düzeltme için otomatik iade');
     }
-    const kayitlar = duzHedefIdler.map(id => {
+    const hamKayitlar = duzHedefIdler.map(id => {
       const mevcut = bul(id) || {};
       return {
         id,
@@ -2370,6 +2480,7 @@ $('duzKaydetBtn').onclick = async () => {
         kaynak: 'duzeltme'
       };
     });
+    const kayitlar = tarih ? seriNoOtomatikDoldur(hamKayitlar) : hamKayitlar;
     await islemYap('GIRIS', kayitlar, '', yeniId());
     if(hedefDurum === 'URETIMDE'){
       await islemYap('CIKIS', duzHedefIdler.map(id => ({ id, kaynak:'duzeltme' })), '', yeniId());
@@ -2384,26 +2495,50 @@ $('duzKaydetBtn').onclick = async () => {
 };
 
 $('stokKodEsitleBtn').onclick = async () => {
-  const degisecekler = DB.bidonlar.filter(b => b.urun && urunNorm(b.urun) !== b.urun && etkinDurum(b) !== 'URETIMDE');
-  if(!degisecekler.length){
-    mesaj("duzDurumMesaj", "✓ Tüm kayıtlı bidonların stok kodları zaten güncel (YMDOK formatında)!", "bilgi");
+  // Tüm bidonları (ID sırasına göre) tarayıp her baz tarih için -001, -002, -003 Seri No ve 104 Depo Stok Kodu oluştur
+  const sirali = DB.bidonlar.slice().sort((a, b) => String(a.id).localeCompare(String(b.id), 'tr', { numeric:true }));
+  const tarihSayac = {};
+  // Önce halihazırda -001 gibi sıra numarası olanları kaydet ki çakışma olmasın
+  sirali.forEach(b => {
+    const c = seriNoCoz(b.tarih);
+    if(c && c.sira !== null){
+      tarihSayac[c.bazTarih] = Math.max(tarihSayac[c.bazTarih] || 0, c.sira);
+    }
+  });
+  const guncellenecek = [];
+  sirali.forEach(b => {
+    if(etkinDurum(b) === 'URETIMDE') return;
+    const yeniUrun = urunNorm(b.urun);
+    let yeniTarih = b.tarih || '';
+    const c = seriNoCoz(yeniTarih);
+    if(c && c.sira === null){
+      tarihSayac[c.bazTarih] = (tarihSayac[c.bazTarih] || 0) + 1;
+      yeniTarih = `${c.bazTarih}-${String(tarihSayac[c.bazTarih]).padStart(3, '0')}`;
+    } else if(c && c.sira !== null){
+      yeniTarih = c.tam;
+    }
+    if(yeniUrun !== (b.urun || '') || yeniTarih !== (b.tarih || '')){
+      guncellenecek.push({
+        id: b.id,
+        urun: yeniUrun,
+        tarih: yeniTarih,
+        kisi: b.kisi || '',
+        mense: b.mense || '',
+        bolge: b.bolge || '',
+        kaynak: 'seri-ve-stok-esitleme'
+      });
+    }
+  });
+  if(!guncellenecek.length){
+    mesaj("duzDurumMesaj", "✓ Tüm kayıtlı bidonların Seri Noları (GG.AA.YYYY-001) ve 104 Depo Stok Kodları zaten güncel!", "bilgi");
     return;
   }
-  if(!confirm(`Google Sheet'teki ${degisecekler.length} bidonun ürün bilgisi 104 Depo resmi Stok Kodu + Stok Adı (YMDOK ...) formatına dönüştürülsün mü?`)) return;
+  if(!confirm(`Google Sheet'teki ${guncellenecek.length} bidonun Seri No (örn. 13.10.2026-001, -002…) ve 104 Depo Stok Kodları güncellensin mi?`)) return;
   $('stokKodEsitleBtn').disabled = true;
-  mesaj("duzDurumMesaj", `${degisecekler.length} bidonun stok kodları Google Sheet tablosuna işleniyor…`);
+  mesaj("duzDurumMesaj", `${guncellenecek.length} bidonun Seri No ve Stok Kodları Google Sheet tablosuna işleniyor…`);
   try{
-    const kayitlar = degisecekler.map(b => ({
-      id: b.id,
-      urun: urunNorm(b.urun),
-      tarih: b.tarih || '',
-      kisi: b.kisi || '',
-      mense: b.mense || '',
-      bolge: b.bolge || '',
-      kaynak: '104-depo-esitleme'
-    }));
-    await islemYap('GIRIS', kayitlar, '', yeniId());
-    mesaj("duzDurumMesaj", `✓ ${degisecekler.length} bidon Google Sheet'te resmi 104 Depo Stok Kodu ve Stok Adı ile güncellendi!`, "bilgi");
+    await islemYap('GIRIS', guncellenecek, '', yeniId());
+    mesaj("duzDurumMesaj", `✓ ${guncellenecek.length} bidon Google Sheet'te sıralı Seri No (-001, -002…) ve 104 Depo Stok Kodu ile güncellendi!`, "bilgi");
     stok();
   }catch(err){
     mesaj("duzDurumMesaj", "Hata: " + err.message, "hata");
