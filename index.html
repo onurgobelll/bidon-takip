@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.2 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.3 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -836,12 +836,14 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   }
   function temizSatir(s){ return s.replace(/[^A-Za-zÇĞİıÖŞÜçğöşü0-9.\s\-\/,]/g,' ').replace(/\s+/g,' ').trim(); }
 
-  function isimTemizle(s, bilinen){
+  function isimTemizle(s, bilinen, sıkı){
     let t = s.split(' ').filter(w => w.length>2 || w.includes('.')).join(' ').trim();
-    if(!t) t = s.trim();
+    if(!t) return '';
     t = t.toLocaleUpperCase('tr-TR');
     let en=null, es=0; for(const b of (bilinen||[])){ const sk=benzer(t,b); if(sk>es){ es=sk; en=b; } }
-    return (en && es>=0.72) ? en.toLocaleUpperCase('tr-TR') : t;
+    if(en && es>=0.65) return en.toLocaleUpperCase('tr-TR');
+    if(sıkı) return ''; // Bilinen kişi listesinde yoksa kenar gölgesi/paraziti kişi adı sanma!
+    return t;
   }
   function coz(metin, urunler, yil0, bilinen){
     if(root.__sozlukDuzelt) metin = root.__sozlukDuzelt(metin);
@@ -861,17 +863,34 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       if(i===ti) continue;
       for(const u of urunler){ const sk=benzer(satirlar[i],u); if(sk>ps){ ps=sk; pu=u; pi=i; } }
     }
-    const urunBulundu = ps>=0.45;
-    if(!urunBulundu){ pu = ti>0 ? katla(satirlar[ti-1])&&satirlar[ti-1].toLocaleUpperCase('tr-TR') : ''; pi = ti-1; }
-    // kişi: tarihten sonraki ilk geçerli satır; menşe: ürün ile tarih arasındaki harf satırı
+    const urunBulundu = ps>=0.56;
+    if(!urunBulundu) return null;
+    // önce menşeyi (ürün ile tarih arasındaki satır) kontrol et
     const harf = s => /^[A-Za-zÇĞİıÖŞÜçğöşü.\s]+$/.test(s) && katla(s).length>=3;
-    const yasak = /BASKILI|SLOTLU|BOLGE|TAVA|ML\b|B1/i;
+    const yasak = /BASKILI|SLOTLU|BOLGE|TAVA|ML\b|B1|YAKAMOZ|TURSUSU|TURŞUSU/i;
     let kisi='', mense='';
-    for(let i=ti+1;i<satirlar.length && !kisi;i++){ const s=satirlar[i]; if(harf(s)&&!yasak.test(katla(s)+' '+s)&&benzer(s,pu)<0.6){ kisi=isimTemizle(s, bilinen&&bilinen.kisi); } }
-    for(let i=Math.max(0,pi)+1;i<ti;i++){ const s=satirlar[i]; if(harf(s)&&benzer(s,pu)<0.6){ mense=isimTemizle(s, bilinen&&bilinen.mense); break; } }
-    if(!urunBulundu && !pu) return null;
+    for(let i=Math.max(0,pi)+1;i<ti;i++){
+      const s=satirlar[i];
+      if(harf(s)&&!yasak.test(katla(s)+' '+s)&&benzer(s,pu)<0.55){
+        mense=isimTemizle(s, bilinen&&bilinen.mense, false);
+        break;
+      }
+    }
+    // Eğer menşe bulunduysa bu bir BÜYÜK ETİKETTİR (Ürün -> Menşe -> Tarih); tarihin altında kişi adı olmaz, alt kenar parazitini (BĞN BOSE, ZİR KEYİ vb.) yoksay!
+    if(!mense){
+      for(let i=ti+1;i<satirlar.length && !kisi;i++){
+        const s=satirlar[i];
+        if(harf(s)&&!yasak.test(katla(s)+' '+s)&&benzer(s,pu)<0.55){
+          // Önce tarihin altındaki satır aslında menşe mi (örn. ADANA) diye kontrol et
+          const olasiMense = isimTemizle(s, bilinen&&bilinen.mense, true);
+          if(olasiMense){ mense = olasiMense; break; }
+          // Değilse bilinen kişilerden biri mi diye sıkı kontrol et (BĞN BOSE, EA Bİ gibi anlamsız OCR gürültülerini reddet)
+          kisi = isimTemizle(s, bilinen&&bilinen.kisi, true);
+        }
+      }
+    }
     const tarih = String(T.g).padStart(2,'0')+'.'+String(T.a).padStart(2,'0')+'.'+T.y;
-    const sag = urunBulundu && !T.degisti && ps>=0.8 && !!(kisi||mense);
+    const sag = urunBulundu && !T.degisti && ps>=0.75 && !!(kisi||mense);
     return { urun: pu, tarih, kisi, mense, duzeltildi: T.degisti, etiket: kisi ? 'kucuk' : (mense ? 'buyuk' : 'kucuk'), guven: sag ? 'yuksek' : 'dusuk', kaynakMetin: satirlar.join(' / ') };
   }
 
@@ -1029,7 +1048,7 @@ function stokCoz(ham){
 }
 const urunNorm = ham => stokCoz(ham).tam;
 const BILINEN_KISI_VARSAYILAN = ['CAHİT', 'SADETTİN', 'KERİM', 'SUAT', 'YUSUF', 'İ.KILIÇ', 'M.SEZEN'];
-const BILINEN_MENSE_VARSAYILAN = ['ÇANAKKALE', 'BALIKESİR', 'BURSA', 'MANİSA', 'ANTALYA', 'ÇORUM'];
+const BILINEN_MENSE_VARSAYILAN = ['ADANA', 'AFYON', 'AMASYA', 'ANKARA', 'ANTALYA', 'ANTEP', 'AYDIN', 'BALIKESİR', 'BİLECİK', 'BURSA', 'ÇANAKKALE', 'ÇORUM', 'DENİZLİ', 'ESKİŞEHİR', 'GAZİANTEP', 'HATAY', 'ISPARTA', 'İZMİR', 'KONYA', 'KÜTAHYA', 'MANİSA', 'MARDİN', 'MERSİN', 'MİDYAT', 'MUĞLA', 'NİĞDE', 'SAKARYA', 'SAMSUN', 'TAŞKÖPRÜ', 'TOKAT', 'URFA', 'UŞAK', 'YALOVA', 'YOZGAT'];
 const VARSAYILAN_URL = 'https://script.google.com/macros/s/AKfycbzr3-nsR1dLlyz6Z3aDtjahqkXnBx0QAF1ZRrd2jCoOUC4OnNaxCT05S3msWnAbpmsu3Q/exec';
 const VARSAYILAN_SIFRE = '2026';
 const VARSAYILAN_OPERATOR = 'Yakamoz Saha';
