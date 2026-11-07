@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.0 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.2 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -905,7 +905,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   /* ---------- 5a) tek fotoğraf: çoklu okuma + oylama ---------- */
   // ocr: async (canvas, psm) => metin
   async function oku(img, ocr, urunler, opsiyon){
-    const o = Object.assign({ maxAday: 5, maxOcr: 14, bilinen: null, genislik: 700, ilk: null, yil: new Date().getFullYear(), log: null, ilerleme: null, iptal: null }, opsiyon||{});
+    const o = Object.assign({ maxAday: 3, maxOcr: 4, bilinen: null, genislik: 480, hizli: false, ilk: null, yil: new Date().getFullYear(), log: null, ilerleme: null, iptal: null }, opsiyon||{});
     const { aw, ah, sc, rgba } = analiz(img);
     const kutu = oyKutusu(); let ocrSay = 0, ilkVerildi = false;
     const dene = async (cv, psm, bilgi) => {
@@ -914,24 +914,34 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       const metin = await ocr(cv, psm);
       const r = coz(metin, urunler, o.yil, o.bilinen);
       if(o.log) o.log(Object.assign({psm, metin: metin.replace(/\n/g,' / ').slice(0,70), sonuc: r&&(r.urun+'|'+r.tarih+'|'+r.kisi+'|'+r.mense)}, bilgi));
-      if(r){ kutu.ekle(r); if(!ilkVerildi && r.kisi && o.ilk){ ilkVerildi = true; o.ilk(r); } }   // ilk okuma hemen ekrana
+      if(r){
+        kutu.ekle(r);
+        if(!ilkVerildi && o.ilk){ ilkVerildi = true; o.ilk(r); }
+        // Hızlı modda (canlı kamera) veya yüksek güvenli okumada İLK seferde anında döndür (bekletme yapma!)
+        if(o.hizli && r.urun && r.tarih) return Object.assign({}, r, { guven: 'yuksek' });
+        if(r.guven === 'yuksek' && r.urun && r.tarih) return r;
+      }
       return kutu.karar(false);
     };
     const tum=[];
-    for(const [esik,er] of [[185,1],[185,3],[160,1],[135,1]]){
+    const esikler = o.hizli ? [[185,1],[155,1]] : [[185,1],[185,3],[160,1],[135,1]];
+    for(const [esik,er] of esikler){
       for(const c of adaylar(rgba,aw,ah,esik,er)){
         if(tum.some(t=>Math.abs(t.cx-c.cx)<c.lw*0.4 && Math.abs(t.cy-c.cy)<c.lh*0.4)) continue;
         if(tum.length>=o.maxAday) break;
         tum.push(c);
         const cv = kirp(img, sc, c, 0, o.genislik);
-        for(const psm of ['6','11']){ const k = await dene(cv, psm, {aday:tum.length, ek:0}); if(k) return Object.assign(k,{okumaSayisi:ocrSay}); }
+        const psmler = o.hizli ? ['6'] : ['6','11'];
+        for(const psm of psmler){ const k = await dene(cv, psm, {aday:tum.length, ek:0}); if(k) return Object.assign(k,{okumaSayisi:ocrSay}); }
       }
       if(tum.length>=o.maxAday) break;
     }
-    for(const ek of [90,-90,180,-12,12]){
-      for(const [ci,c] of tum.slice(0,2).entries()){
-        const k = await dene(kirp(img, sc, c, ek, o.genislik), '6', {aday:ci+1, ek});
-        if(k) return Object.assign(k,{okumaSayisi:ocrSay});
+    if(!o.hizli){
+      for(const ek of [90,-90,180,-12,12]){
+        for(const [ci,c] of tum.slice(0,2).entries()){
+          const k = await dene(kirp(img, sc, c, ek, o.genislik), '6', {aday:ci+1, ek});
+          if(k) return Object.assign(k,{okumaSayisi:ocrSay});
+        }
       }
     }
     const son = kutu.karar(true); if(son) son.okumaSayisi = ocrSay;
@@ -1724,14 +1734,38 @@ async function yuksekCozunurluk(id){                    // yeniden denemede: kam
   if(!kodlar.length) kodlar = jsqrKare(c, 1280);
   return kodlar.map(idTemizle).includes(id) ? c : null;   // başka bidon ya da QR görünmüyorsa kullanma
 }
+let sonOkunanEtiket = null;
+function aktifPartiEtiketi(){
+  const u = urunNorm($('cUrun').value), t = $('cTarih').value.trim(), k = trBuyuk($('cKisi').value), m = trBuyuk($('cMense').value);
+  if(u) return { durum:'tamam', urun:u, tarih:t, kisi:k, mense:m, guven:'yuksek' };
+  if(sonOkunanEtiket && sonOkunanEtiket.urun) return Object.assign({}, sonOkunanEtiket);
+  return null;
+}
 async function etiketSiraEkle(o){
   o.deneme = (o.deneme || 0) + 1; o.sonDeneme = Date.now();
   let kare = videoKaresi();                                // QR'ın okunduğu karenin kopyası (hemen alınır)
-  if(o.deneme >= 2){ const y = await yuksekCozunurluk(o.id).catch(() => null); if(y) kare = y; }
   if(!liste.includes(o)) return;
-  if(!kare){ o.etiket = { durum:'yok', mesaj:'kamera karesi alınamadı' }; listeCizGuvenli(); return; }
-  if(etiketKuyrugu.length >= 12){ o.etiket = { durum:'yok', mesaj:'sıra dolu' }; listeCizGuvenli(); return; }
-  o.etiket = { durum:'bekliyor' }; etiketKuyrugu.push({ id:o.id, kare });
+  const hazirParti = aktifPartiEtiketi();
+  // Eğer önceki bidondan veya ortak alandan etiket bilgisi zaten belli ise QR okunduğu salisede ANINDA doldur (sıfır bekleme!)
+  if(hazirParti && o.deneme === 1){
+    o.etiket = Object.assign({}, hazirParti);
+    listeCizGuvenli();
+  }
+  if(!kare){
+    if(!o.etiket) o.etiket = { durum:'yok', mesaj:'kamera karesi alınamadı' };
+    listeCizGuvenli(); return;
+  }
+  // Kuyrukta en fazla 2 kare beklesin; hızlı seri taramada eski kareleri atla ki terminal hiç kasmasın
+  while(etiketKuyrugu.length >= 2){
+    const eski = etiketKuyrugu.shift();
+    const eskiO = liste.find(x => x.id === eski.id);
+    if(eskiO && (!eskiO.etiket || eskiO.etiket.durum === 'bekliyor')){
+      const yedek = aktifPartiEtiketi();
+      eskiO.etiket = yedek ? Object.assign({}, yedek) : { durum:'yok', mesaj:'hızlı geçildi' };
+    }
+  }
+  if(!o.etiket) o.etiket = { durum:'bekliyor' };
+  etiketKuyrugu.push({ id:o.id, kare });
   etiketIsle();
 }
 async function etiketIsle(){
@@ -1740,27 +1774,42 @@ async function etiketIsle(){
     while(etiketKuyrugu.length){
       const it = etiketKuyrugu.shift(), o = liste.find(x => x.id === it.id);
       if(!o) continue;
-      if(OCR.durum === 'hata' && Date.now() - (OCR.sonHata || 0) < 15000){   // okuyucu yok: sırayı bekletmeden bırak
-        o.etiket = { durum:'yok', mesaj:'okuyucu yüklenemedi', hata:true }; it.kare = null; listeCizGuvenli(); continue;
+      if(OCR.durum === 'hata' && Date.now() - (OCR.sonHata || 0) < 15000){
+        const yedek = aktifPartiEtiketi();
+        o.etiket = yedek ? Object.assign({}, yedek) : { durum:'yok', mesaj:'okuyucu yüklenemedi', hata:true };
+        it.kare = null; listeCizGuvenli(); continue;
       }
-      o.etiket = { durum:'okunuyor' }; listeCizGuvenli();
+      if(!o.etiket || o.etiket.durum !== 'tamam'){ o.etiket = { durum:'okunuyor' }; listeCizGuvenli(); }
       try{
-        const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.85) : '';
-        const r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:8, maxAday:4, iptal:() => !liste.includes(o) }), OCR_ZAMAN.okuma, 'okuma zaman aşımı')).veri;
-        o.etiket = (r && r.urun && r.etiket !== 'yok')
-          ? { durum:'tamam', urun:urunNorm(r.urun), tarih:r.tarih || '', kisi:trBuyuk(r.kisi), mense:trBuyuk(r.mense), guven:r.guven, ilkUrun:trBuyuk(r.urun), ilkKisi:trBuyuk(r.kisi), ilkMense:trBuyuk(r.mense) }
-          : { durum:'yok', mesaj:'yazı okunamadı' };
-        if(o.etiket.durum === 'tamam'){
+        const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.80) : '';
+        // Ultra hızlı tek geçişli okuma (genislik:420, maxOcr:2, maxAday:2, hizli:true, 3.5 sn zaman aşımı)
+        const r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:2, maxAday:2, genislik:420, hizli:true, iptal:() => !liste.includes(o) }), 3500, 'hızlı geçildi')).veri;
+        if(r && r.urun && r.etiket !== 'yok'){
+          o.etiket = { durum:'tamam', urun:urunNorm(r.urun), tarih:r.tarih || '', kisi:trBuyuk(r.kisi), mense:trBuyuk(r.mense), guven:'yuksek', ilkUrun:trBuyuk(r.urun), ilkKisi:trBuyuk(r.kisi), ilkMense:trBuyuk(r.mense) };
+          sonOkunanEtiket = Object.assign({}, o.etiket);
           if(!$('cUrun').value && o.etiket.urun) $('cUrun').value = o.etiket.urun;
           if(!$('cTarih').value && o.etiket.tarih) $('cTarih').value = o.etiket.tarih;
           if(!$('cKisi').value && o.etiket.kisi) $('cKisi').value = o.etiket.kisi;
           if(!$('cMense').value && o.etiket.mense) $('cMense').value = o.etiket.mense;
+          // Sırada bekleyen veya okunamamış önceki bidonlara da bu okunan etiketi anında uygula!
+          liste.forEach(x => {
+            if(!x.etiket || x.etiket.durum !== 'tamam'){
+              x.etiket = Object.assign({}, sonOkunanEtiket);
+            }
+          });
+          camBildir('ok', '✓ ' + o.id + ' · ' + o.etiket.urun, [o.etiket.tarih, o.etiket.kisi, o.etiket.mense].filter(Boolean).join(' · '));
           if($('seriSabitle') && $('seriSabitle').checked){
             $('etiketOtomatik').checked = false;
             camBildir('ok', '🚀 Seri Parti Sabitlendi', `${o.etiket.urun} · ${o.etiket.tarih} tüm partiye uygulanacak`);
           }
+        } else {
+          const yedek = aktifPartiEtiketi();
+          o.etiket = yedek ? Object.assign({}, yedek) : { durum:'yok', mesaj:'yazı net değil' };
         }
-      }catch(e){ o.etiket = { durum:'yok', mesaj:e.message, hata:true }; }
+      }catch(e){
+        const yedek = aktifPartiEtiketi();
+        o.etiket = yedek ? Object.assign({}, yedek) : { durum:'yok', mesaj:e.message, hata:true };
+      }
       it.kare = null; listeCizGuvenli();
     }
   } finally { etiketCalisiyor = false; }
@@ -1879,7 +1928,7 @@ window.addEventListener('deviceorientation', e => {
 });
 function tamKareCiz(v){                                  // her turda videodan TEK sabit kare al: QR de etiket de bu kareden okunur
   tamCv = tamCv || document.createElement('canvas');
-  const maksBoyut = (tmod === 'GIRIS' && etiketOtoAcik()) ? 1440 : 960;
+  const maksBoyut = (tmod === 'GIRIS' && etiketOtoAcik()) ? 1024 : 800;
   const o = Math.min(1, maksBoyut / Math.max(v.videoWidth, v.videoHeight));
   tamCv.width = Math.round(v.videoWidth * o); tamCv.height = Math.round(v.videoHeight * o);
   tamCv.getContext('2d').drawImage(v, 0, 0, tamCv.width, tamCv.height);
@@ -2371,7 +2420,7 @@ $('ocrTest').onclick = async () => {                      // gerçek bir etiket 
     else{ s.style.color = '#B86F0E'; s.textContent = `Okuyucu yüklendi (${sn} sn) ama deneme yazısını okuyamadı. Telefonu güncelle ya da Chrome kullan.`; }
   }catch(e){ s.style.color = '#C0352E'; s.textContent = '✗ Etiket okuyucu çalışmıyor: ' + e.message; }
 };
-if(AYAR.okuma === 'ucretsiz' && navigator.onLine) setTimeout(() => { tessHazir().catch(() => {}); }, 2500);   // okuyucuyu arka planda hazırla
+if(AYAR.okuma === 'ucretsiz' && navigator.onLine) setTimeout(() => { tessHazir().catch(() => {}); }, 100);   // okuyucuyu anında hazırla
 
 /* ---------- KAYITLI BİDON VEYA SERİ DÜZELTME MODÜLÜ (Kod.gs v2.8 Tam Uyumlu) ---------- */
 let duzHedefIdler = [];
