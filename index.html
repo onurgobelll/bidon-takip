@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.4 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.5 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -1681,6 +1681,18 @@ function bip(iyi){
   }catch(e){}
   if(navigator.vibrate) navigator.vibrate(iyi ? 40 : [60, 40, 60]);
 }
+function bipEtiket(){
+  try{
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    [1046, 1318].forEach((frek, i) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = frek; g.gain.value = 0.18; o.connect(g); g.connect(ac.destination);
+      const t0 = ac.currentTime + i * 0.09;
+      o.start(t0); o.stop(t0 + 0.075);
+    });
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([35, 45, 55]);
+}
 /* ---- kamera üstü geri bildirim ---- */
 let camTimer = null, camFlashTimer = null; const sonDup = {};
 function camBildir(tur, baslik, alt){
@@ -1724,9 +1736,10 @@ function ekle(id, tara, kamera){
   const mevcut = liste.find(o => o.id === id);
   if(mevcut){                                            // bidon kamerada kaldıkça uyarma; gözden çıkıp tekrar gelirse "zaten okundu" de
     const e = mevcut.etiket;
-    if(kamera && tmod === 'GIRIS' && akim && etiketOtoAcik() && e && e.durum === 'yok' && !e.hata && (mevcut.deneme || 0) < 4 && simdi - (mevcut.sonDeneme || 0) > 2200 && !etiketCalisiyor && !etiketKuyrugu.length){
-      camBildir('info', 'Etiket okunamadı', `Etiketi yaklaştır, tekrar deniyorum (${(mevcut.deneme || 0) + 1}/4)`);
-      etiketSiraEkle(mevcut); listeCizGuvenli();           // taze kare; 2. denemeden itibaren tam çözünürlüklü fotoğraf
+    const eksikEtiket = e && (e.durum === 'yok' || (e.durum === 'tamam' && (!e.tarih || !e.urun)));
+    if(kamera && tmod === 'GIRIS' && akim && etiketOtoAcik() && eksikEtiket && !e.hata && (mevcut.deneme || 0) < 5 && simdi - (mevcut.sonDeneme || 0) > 1200 && !etiketCalisiyor && !etiketKuyrugu.length){
+      camBildir('info', 'Etiket tekrar okunuyor…', `Kamerayı etikete sabit tut (${(mevcut.deneme || 0) + 1}/5)`);
+      etiketSiraEkle(mevcut); listeCizGuvenli();
     } else if(tara && ara > 4000) camBildir('info', '↺ ' + id, 'Zaten okundu, listede');
     return false;
   }
@@ -1759,39 +1772,50 @@ async function yuksekCozunurluk(id){                    // yeniden denemede: kam
   return kodlar.map(idTemizle).includes(id) ? c : null;   // başka bidon ya da QR görünmüyorsa kullanma
 }
 let sonOkunanEtiket = null;
-function aktifPartiEtiketi(){
-  // Önce en son kameradan okunan canlı etiketi baz al (Jalapeno'dan Lahana'ya geçince anında Lahana olsun!)
-  if(sonOkunanEtiket && sonOkunanEtiket.urun) return Object.assign({}, sonOkunanEtiket);
-  const u = urunNorm($('cUrun').value), t = $('cTarih').value.trim(), k = trBuyuk($('cKisi').value), m = trBuyuk($('cMense').value);
-  if(u) return { durum:'tamam', urun:u, tarih:t, kisi:k, mense:m, guven:'yuksek' };
+const seriModAcik = () => !!($('seriSabitle') && $('seriSabitle').checked);
+function elleOrtakEtiket(){
+  // Sadece kullanıcının kendi eliyle yazdığı ortak alanları veya Seri Parti Modu açıksa sabitlenen partiyi döndürür.
+  // Normal modda önceki bidonun tarihini (örn. 04.11.2026) ASLA yeni bidona (05.11.2026) otomatik kopyalamaz!
+  if(seriModAcik() && sonOkunanEtiket && sonOkunanEtiket.urun) return Object.assign({}, sonOkunanEtiket);
+  const u = ($('cUrun').dataset && $('cUrun').dataset.elle) ? urunNorm($('cUrun').value) : '';
+  const t = ($('cTarih').dataset && $('cTarih').dataset.elle) ? $('cTarih').value.trim() : '';
+  const k = ($('cKisi').dataset && $('cKisi').dataset.elle) ? trBuyuk($('cKisi').value) : '';
+  const m = ($('cMense').dataset && $('cMense').dataset.elle) ? trBuyuk($('cMense').value) : '';
+  if(u || t) return { durum:'tamam', urun:u, tarih:t, kisi:k, mense:m, guven:'yuksek' };
   return null;
 }
 async function etiketSiraEkle(o){
   o.deneme = (o.deneme || 0) + 1; o.sonDeneme = Date.now();
-  let kare = videoKaresi();                                // QR'ın okunduğu karenin kopyası (hemen alınır)
+  const kareIlk = videoKaresi();                           // 1. kare: QR yakalandığı salise
   if(!liste.includes(o)) return;
-  const hazirParti = aktifPartiEtiketi();
-  // QR okunduğu salisede ekranda "bekliyor" kalmaması için son okunan partiyi önizleme (gecici:true) olarak hemen yaz;
-  // ama arka planda bu bidonun kendi etiketini ve tarihini mutlaka oku!
-  if(hazirParti && o.deneme === 1){
-    o.etiket = Object.assign({}, hazirParti, { gecici:true });
-    listeCizGuvenli();
-  }
-  if(!kare){
-    if(!o.etiket) o.etiket = { durum:'yok', mesaj:'kamera karesi alınamadı' };
+  const sabitParti = elleOrtakEtiket();
+  if(seriModAcik() && sabitParti && sabitParti.urun && sabitParti.tarih){
+    o.etiket = Object.assign({}, sabitParti, { gecici:false });
     listeCizGuvenli(); return;
   }
-  // Kuyrukta en fazla 8 kare beklesin (her bidonun kendi tarihi okunabilsin)
+  o.etiket = { durum:'bekliyor' };
+  listeCizGuvenli();
+  // Anti-Blur (Hareket Bulanıklığı Önleyici): El bidonun önünde sabitlensin diye 250ms bekle ve 2. net kareyi al!
+  let kareNet = null;
+  if(akim){
+    await new Promise(res => setTimeout(res, 250));
+    if(!liste.includes(o)) return;
+    kareNet = videoKaresi();
+  }
+  if(o.deneme >= 2){ const y = await yuksekCozunurluk(o.id).catch(() => null); if(y) kareNet = y; }
+  const anaKare = kareNet || kareIlk;
+  if(!anaKare){
+    o.etiket = { durum:'yok', mesaj:'kamera karesi alınamadı' };
+    listeCizGuvenli(); return;
+  }
   while(etiketKuyrugu.length >= 8){
     const eski = etiketKuyrugu.shift();
     const eskiO = liste.find(x => x.id === eski.id);
-    if(eskiO && (!eskiO.etiket || eskiO.etiket.durum === 'bekliyor' || eskiO.etiket.gecici)){
-      const yedek = aktifPartiEtiketi();
-      eskiO.etiket = yedek ? Object.assign({}, yedek, { gecici:false }) : { durum:'yok', mesaj:'hızlı geçildi' };
+    if(eskiO && (!eskiO.etiket || eskiO.etiket.durum === 'bekliyor')){
+      eskiO.etiket = { durum:'yok', mesaj:'hızlı geçildi — tekrar okut veya ✎ ile yaz' };
     }
   }
-  if(!o.etiket) o.etiket = { durum:'bekliyor' };
-  etiketKuyrugu.push({ id:o.id, kare });
+  etiketKuyrugu.push({ id:o.id, kare:anaKare, yedekKare: (kareNet && kareIlk) ? kareIlk : null });
   etiketIsle();
 }
 async function etiketIsle(){
@@ -1801,52 +1825,74 @@ async function etiketIsle(){
       const it = etiketKuyrugu.shift(), o = liste.find(x => x.id === it.id);
       if(!o) continue;
       if(OCR.durum === 'hata' && Date.now() - (OCR.sonHata || 0) < 15000){
-        const yedek = aktifPartiEtiketi();
-        o.etiket = yedek ? Object.assign({}, yedek, { gecici:false }) : { durum:'yok', mesaj:'okuyucu yüklenemedi', hata:true };
-        it.kare = null; listeCizGuvenli(); continue;
+        o.etiket = { durum:'yok', mesaj:'okuyucu yüklenemedi', hata:true };
+        it.kare = null; it.yedekKare = null; listeCizGuvenli(); continue;
       }
-      if(!o.etiket || (o.etiket.durum !== 'tamam' && !o.etiket.gecici)){ o.etiket = { durum:'okunuyor' }; listeCizGuvenli(); }
+      o.etiket = { durum:'okunuyor' }; listeCizGuvenli();
       try{
-        const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.80) : '';
-        // Her bidonun kendi ürününü ve kendi tarihini okuyan hızlı mod (genislik:480, maxOcr:3, maxAday:3)
-        const r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:3, maxAday:3, genislik:480, hizli:true, iptal:() => !liste.includes(o) }), 4000, 'hızlı geçildi')).veri;
-        const yedek = aktifPartiEtiketi() || {};
-        if(r && (r.urun || r.tarih) && r.etiket !== 'yok'){
-          const okunanUrun = r.urun ? urunNorm(r.urun) : (yedek.urun || '');
-          const urunDegisti = r.urun && yedek.urun && urunNorm(r.urun) !== yedek.urun;
-          const okunanTarih = r.tarih || (urunDegisti ? '' : (yedek.tarih || ''));
-          const okunanKisi = trBuyuk(r.kisi) || (urunDegisti ? '' : (yedek.kisi || ''));
-          const okunanMense = trBuyuk(r.mense) || (urunDegisti ? '' : (yedek.mense || ''));
-          if(okunanUrun){
-            o.etiket = { durum:'tamam', gecici:false, urun:okunanUrun, tarih:okunanTarih, kisi:okunanKisi, mense:okunanMense, guven:'yuksek', ilkUrun:trBuyuk(r.urun || okunanUrun), ilkKisi:okunanKisi, ilkMense:okunanMense };
-            sonOkunanEtiket = Object.assign({}, o.etiket);
-            // Ortak bilgi kutularını da en son okunan aktif ürün ve tarihle canlı güncelle (eski üründe takılı kalmasın!)
-            if(!($('cUrun').dataset && $('cUrun').dataset.elle)) $('cUrun').value = okunanUrun;
-            if(okunanTarih && !($('cTarih').dataset && $('cTarih').dataset.elle)) $('cTarih').value = okunanTarih;
-            if(okunanKisi && !($('cKisi').dataset && $('cKisi').dataset.elle)) $('cKisi').value = okunanKisi;
-            if(okunanMense && !($('cMense').dataset && $('cMense').dataset.elle)) $('cMense').value = okunanMense;
-            // Sadece henüz hiç etiketi olmayan veya geçici önizlemede bekleyen bidonları yeni partiyle güncelle
-            liste.forEach(x => {
-              if(!x.etiket || x.etiket.durum === 'bekliyor' || x.etiket.durum === 'yok'){
-                x.etiket = Object.assign({}, sonOkunanEtiket, { gecici:true });
-              }
-            });
-            camBildir('ok', '✓ ' + o.id + ' · ' + o.etiket.urun, [o.etiket.tarih, o.etiket.kisi, o.etiket.mense].filter(Boolean).join(' · '));
-            if($('seriSabitle') && $('seriSabitle').checked){
-              $('etiketOtomatik').checked = false;
-              camBildir('ok', '🚀 Seri Parti Sabitlendi', `${o.etiket.urun} · ${o.etiket.tarih} tüm partiye uygulanacak`);
-            }
-          } else {
-            o.etiket = yedek.urun ? Object.assign({}, yedek, { gecici:false }) : { durum:'yok', mesaj:'ürün okunamadı' };
+        const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.82) : '';
+        // Önce 250ms sabitlenmiş net kareyi oku
+        let r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:3, maxAday:3, genislik:500, hizli:true, iptal:() => !liste.includes(o) }), 4000, 'zaman aşımı')).veri;
+        // Eğer net karede hem ürün hem tarih çıkmadıysa ve ilk kare duruyorsa, ilk kareyi de dene ve eksik alanı tamamla!
+        if((!r || !r.urun || !r.tarih) && it.yedekKare && AYAR.okuma !== 'ai'){
+          const r2 = (await zamanAsimi(etiketOku(it.yedekKare, '', { maxOcr:2, maxAday:2, genislik:480, hizli:true, iptal:() => !liste.includes(o) }), 3000, 'zaman aşımı')).veri;
+          if(r2){
+            r = {
+              urun: (r && r.urun) || r2.urun || '',
+              tarih: (r && r.tarih) || r2.tarih || '',
+              kisi: (r && r.kisi) || r2.kisi || '',
+              mense: (r && r.mense) || r2.mense || '',
+              etiket: (r && r.etiket !== 'yok') ? r.etiket : r2.etiket,
+              guven: 'yuksek'
+            };
           }
+        }
+        const elle = elleOrtakEtiket() || {};
+        // DİKKAT: Normal modda tarih ASLA önceki bidondan (`sonOkunanEtiket.tarih`) kopyalanmaz! Sadece bu bidonun kendi okunan tarihi (`r.tarih`) veya elle girilen ortak tarih (`elle.tarih`) kullanılır.
+        const okunanTarih = (r && r.tarih) ? r.tarih : (elle.tarih || '');
+        // Ürün ise: Bu bidonda ürün okunduysa onu al; sadece tarih okunduysa (örn. 05.11.2026 okundu ama üstteki LAHANA yazısı parladıysa) aktif ürünü (`sonOkunanEtiket.urun`) tamamla.
+        const okunanUrun = (r && r.urun) ? urunNorm(r.urun) : (elle.urun || (okunanTarih && sonOkunanEtiket ? sonOkunanEtiket.urun : ''));
+        const urunDegisti = (r && r.urun && sonOkunanEtiket && sonOkunanEtiket.urun && urunNorm(r.urun) !== sonOkunanEtiket.urun);
+        const okunanKisi = (r && trBuyuk(r.kisi)) || elle.kisi || (!urunDegisti && okunanTarih && sonOkunanEtiket ? sonOkunanEtiket.kisi : '');
+        const okunanMense = (r && trBuyuk(r.mense)) || elle.mense || (!urunDegisti && okunanTarih && sonOkunanEtiket ? sonOkunanEtiket.mense : '');
+
+        if(okunanUrun && okunanTarih){
+          const tamOkuma = !!(r && r.urun && r.tarih);
+          o.etiket = {
+            durum:'tamam',
+            gecici:false,
+            urun:okunanUrun,
+            tarih:okunanTarih,
+            kisi:okunanKisi,
+            mense:okunanMense,
+            guven: tamOkuma ? 'yuksek' : 'dusuk',
+            ilkUrun:trBuyuk((r && r.urun) || okunanUrun),
+            ilkKisi:okunanKisi,
+            ilkMense:okunanMense
+          };
+          sonOkunanEtiket = Object.assign({}, o.etiket);
+          bipEtiket(); // Etiket + Tarih doğrulandığında çift onay bipi çal!
+          camBildir('ok', '✓ ' + o.id + ' · ' + o.etiket.tarih, [o.etiket.urun, o.etiket.kisi, o.etiket.mense].filter(Boolean).join(' · '));
+          if(seriModAcik()){
+            $('cUrun').value = okunanUrun; $('cTarih').value = okunanTarih;
+            if(okunanKisi) $('cKisi').value = okunanKisi;
+            if(okunanMense) $('cMense').value = okunanMense;
+            $('etiketOtomatik').checked = false;
+            camBildir('ok', '🚀 Seri Parti Sabitlendi', `${o.etiket.urun} · ${o.etiket.tarih} tüm partiye uygulanacak`);
+          }
+        } else if(okunanUrun && !okunanTarih){
+          // Ürün okundu ama tarih okunamadıysa eski tarihi (04.11.2026) ASLA yapıştırma! Kullanıcıyı uyar.
+          sonOkunanEtiket = { urun:okunanUrun, tarih:'', kisi:okunanKisi, mense:okunanMense };
+          o.etiket = { durum:'yok', urun:okunanUrun, mesaj:`${okunanUrun} okundu ama TARİH okunamadı — kamerayı etikete tekrar tut veya ✎ ile tarih yaz` };
+          camBildir('warn', '⚠ ' + o.id + ' · Tarih Okunamadı', okunanUrun + ' — Tarihi tekrar göster veya ✎ ile gir');
         } else {
-          o.etiket = yedek.urun ? Object.assign({}, yedek, { gecici:false }) : { durum:'yok', mesaj:'yazı net değil' };
+          o.etiket = { durum:'yok', mesaj:'etiket net okunamadı — kamerayı etikete tekrar tut veya ✎ ile yaz' };
+          camBildir('warn', '⚠ ' + o.id + ' · Etiket Okunamadı', 'Kamerayı etikete yarım saniye sabit tut');
         }
       }catch(e){
-        const yedek = aktifPartiEtiketi();
-        o.etiket = (yedek && yedek.urun) ? Object.assign({}, yedek, { gecici:false }) : { durum:'yok', mesaj:e.message, hata:true };
+        o.etiket = { durum:'yok', mesaj:e.message, hata:true };
       }
-      it.kare = null; listeCizGuvenli();
+      it.kare = null; it.yedekKare = null; listeCizGuvenli();
     }
   } finally { etiketCalisiyor = false; }
 }
@@ -2039,7 +2085,9 @@ $('tKaydet').onclick = async () => {
     if(tarih && !trToISO(tarih)){ mesaj('tDurum', 'Seri No GG.AA.YYYY veya GG.AA.YYYY-001 olmalı.', 'hata'); return; }
     ortak = { urun, tarih, kisi:trBuyuk($('cKisi').value), mense:trBuyuk($('cMense').value) };
     const eksik = liste.filter(o => o.tur !== 'kayitsiz' && !girisKaydi(o, ortak).urun);
-    if(eksik.length){ mesaj('tDurum', `${eksik.length} bidonun ürün bilgisi yok (etiket okunamadı). Satırdaki ✎ ile yaz ya da yukarıya "Ortak ürün"ü yaz.`, 'hata'); return; }
+    if(eksik.length){ mesaj('tDurum', `${eksik.length} bidonun ürün bilgisi yok (${eksik.map(x=>x.id).slice(0,3).join(', ')}). Kamerayı etikete tekrar tut, satırdaki ✎ ile yaz ya da "Ortak ürün" gir.`, 'hata'); return; }
+    const tarihEksik = liste.filter(o => o.tur !== 'kayitsiz' && !girisKaydi(o, ortak).tarih);
+    if(tarihEksik.length){ mesaj('tDurum', `${tarihEksik.length} bidonun TARİH / SERİ NO bilgisi okunamadı (${tarihEksik.map(x=>x.id).slice(0,3).join(', ')}). Kamerayı o bidonun etiketine tekrar tut ya da satırdaki ✎ ile tarihini yaz.`, 'hata'); return; }
     const bek = liste.filter(o => o.tur !== 'kayitsiz' && o.etiket && (o.etiket.durum === 'bekliyor' || o.etiket.durum === 'okunuyor')).length;
     if(bek && !confirm(`${bek} bidonun etiketi hâlâ okunuyor. Beklemeden, okunamayanlar ortak bilgiyle kaydedilsin mi?\n(Tamam = şimdi kaydet, İptal = bekle)`)) return;
   }
