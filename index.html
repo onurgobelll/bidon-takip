@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.5 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.6 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -764,7 +764,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       let minx=w,miny=h,maxx=0,maxy=0,area=0; const xs=[], ys=[];
       while(sp){
         const p=st[--sp], x=p%w, y=(p/w)|0; area++;
-        if(area%2===0){ xs.push(x); ys.push(y); }
+        if(area%4===0){ xs.push(x); ys.push(y); }
         if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y;
         if(x>0&&e[p-1]&&!lab[p-1]){lab[p-1]=id;st[sp++]=p-1}
         if(x<w-1&&e[p+1]&&!lab[p+1]){lab[p+1]=id;st[sp++]=p+1}
@@ -775,7 +775,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       if(frac>0.003 && frac<0.45 && bw>w*0.07 && bh>h*0.04 && asp>0.3 && asp<4){
         // en küçük alanlı döndürülmüş dikdörtgen -> eğim açısı
         let best=null;
-        for(let a=-45;a<=45;a+=2){
+        for(let a=-42;a<=42;a+=3){
           const t=a*Math.PI/180, c=Math.cos(t), s2=Math.sin(t);
           let u0=1e9,u1=-1e9,v0=1e9,v1=-1e9;
           for(let i=0;i<xs.length;i++){ const u=xs[i]*c+ys[i]*s2, v=-xs[i]*s2+ys[i]*c;
@@ -922,7 +922,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   }
   function analiz(img){
     const iw = img.naturalWidth||img.videoWidth||img.width, ih = img.naturalHeight||img.videoHeight||img.height;
-    const aw = 480, ah = Math.round(aw*ih/iw), ac = yeniCanvas(aw, ah), ax = ac.getContext('2d'); ax.drawImage(img,0,0,aw,ah);
+    const aw = 360, ah = Math.round(aw*ih/iw), ac = yeniCanvas(aw, ah), ax = ac.getContext('2d'); ax.drawImage(img,0,0,aw,ah);
     return { aw, ah, sc: iw/aw, rgba: ax.getImageData(0,0,aw,ah).data };
   }
 
@@ -1394,7 +1394,7 @@ function yenileUI(){
 }
 
 /* ---------- etiket okuma: ücretsiz (telefonda) veya AI (ücretli) ---------- */
-let tessWorker = null, tessYukleniyor = null, sonPsm = '';
+let tessWorker = null, tessWorker2 = null, tessYukleniyor = null, tessMesgul1 = false;
 function scriptYukle(src){
   return new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok;
     e.onerror = () => no(new Error('Etiket okuyucu indirilemedi. İlk kullanımda internet gerekir.')); document.head.appendChild(e); });
@@ -1408,18 +1408,31 @@ function ocrDurumGuncelle(){
   const el = $('ocrDurum');
   if(el){
     el.className = 'ocr-durum ' + OCR.durum;
-    el.textContent = OCR.durum === 'hazir' ? 'Etiket okuyucu hazır ✓' : OCR.durum === 'yukleniyor' ? 'Etiket okuyucu yükleniyor (ilk seferde yaklaşık 5 MB, bekle)…' : OCR.durum === 'hata' ? 'Etiket okuyucu yüklenemedi: ' + OCR.hata : '';
+    el.textContent = OCR.durum === 'hazir' ? 'Hızlı etiket okuyucu hazır ⚡' : OCR.durum === 'yukleniyor' ? 'Hızlı etiket okuyucu hazırlanıyor…' : OCR.durum === 'hata' ? 'Etiket okuyucu yüklenemedi: ' + OCR.hata : '';
   }
   const yb = $('ocrYeniden'); if(yb) yb.classList.toggle('gizle', OCR.durum !== 'hata');
   camChipler();
+}
+async function yeniTessWorker(){
+  let w;
+  try{
+    w = await Tesseract.createWorker('tur', 1, { langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_fast' });
+  }catch(e){
+    w = await Tesseract.createWorker('tur', 1, { langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_best_int' });
+  }
+  await w.setParameters({ tessedit_pageseg_mode:'6' });
+  w.__psm = '6';
+  return w;
 }
 async function tessHazir(){
   if(tessWorker) return tessWorker;
   if(!tessYukleniyor) tessYukleniyor = (async () => {
     OCR.durum = 'yukleniyor'; OCR.hata = ''; ocrDurumGuncelle();
     if(!window.Tesseract) await zamanAsimi(scriptYukle('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'), OCR_ZAMAN.script, 'indirme çok yavaş ya da internet yok');
-    mesaj('durum', 'Etiket okuyucu hazırlanıyor (ilk seferde yaklaşık 5 MB iner, sonra telefonda kalır)…');
-    tessWorker = await zamanAsimi(Tesseract.createWorker('tur', 1, { langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_best_int' }), OCR_ZAMAN.worker, 'hazırlanamadı (zaman aşımı), interneti kontrol et');
+    mesaj('durum', 'Hızlı etiket okuyucu hazırlanıyor…');
+    tessWorker = await zamanAsimi(yeniTessWorker(), OCR_ZAMAN.worker, 'hazırlanamadı (zaman aşımı), interneti kontrol et');
+    // İkinci paralel okuyucuyu arka planda sessizce hazırla (seri taramada 2 kat hız sağlar)
+    yeniTessWorker().then(w2 => { tessWorker2 = w2; }).catch(() => {});
     if(($('durum').textContent || '').includes('hazırlanıyor')) mesaj('durum', '');
     OCR.durum = 'hazir'; ocrDurumGuncelle();
     return tessWorker;
@@ -1427,9 +1440,17 @@ async function tessHazir(){
   return tessYukleniyor;
 }
 async function tessOcr(cv, psm){
-  const w = await tessHazir();
-  if(psm !== sonPsm){ await w.setParameters({ tessedit_pageseg_mode:psm }); sonPsm = psm; }
-  return (await w.recognize(cv)).data.text;
+  await tessHazir();
+  let w = tessWorker;
+  let kullanilan = 1;
+  if(tessMesgul1 && tessWorker2){ w = tessWorker2; kullanilan = 2; }
+  if(kullanilan === 1) tessMesgul1 = true;
+  try{
+    if(psm && psm !== w.__psm){ await w.setParameters({ tessedit_pageseg_mode:psm }); w.__psm = psm; }
+    return (await w.recognize(cv)).data.text;
+  } finally {
+    if(kullanilan === 1) tessMesgul1 = false;
+  }
 }
 function bilinenler(){
   const k = new Set(BILINEN_KISI_VARSAYILAN), m = new Set(BILINEN_MENSE_VARSAYILAN);
@@ -1737,7 +1758,7 @@ function ekle(id, tara, kamera){
   if(mevcut){                                            // bidon kamerada kaldıkça uyarma; gözden çıkıp tekrar gelirse "zaten okundu" de
     const e = mevcut.etiket;
     const eksikEtiket = e && (e.durum === 'yok' || (e.durum === 'tamam' && (!e.tarih || !e.urun)));
-    if(kamera && tmod === 'GIRIS' && akim && etiketOtoAcik() && eksikEtiket && !e.hata && (mevcut.deneme || 0) < 5 && simdi - (mevcut.sonDeneme || 0) > 1200 && !etiketCalisiyor && !etiketKuyrugu.length){
+    if(kamera && tmod === 'GIRIS' && akim && etiketOtoAcik() && eksikEtiket && !e.hata && (mevcut.deneme || 0) < 5 && simdi - (mevcut.sonDeneme || 0) > 1200 && aktifOkumaSayisi === 0 && !etiketKuyrugu.length){
       camBildir('info', 'Etiket tekrar okunuyor…', `Kamerayı etikete sabit tut (${(mevcut.deneme || 0) + 1}/5)`);
       etiketSiraEkle(mevcut); listeCizGuvenli();
     } else if(tara && ara > 4000) camBildir('info', '↺ ' + id, 'Zaten okundu, listede');
@@ -1754,11 +1775,19 @@ function ekle(id, tara, kamera){
   return true;
 }
 /* ---- giriş: etiketi arka planda otomatik oku ---- */
-const etiketKuyrugu = []; let etiketCalisiyor = false, listeKirli = false;
+const etiketKuyrugu = []; let aktifOkumaSayisi = 0, listeKirli = false;
 const etiketOtoAcik = () => $('etiketOtomatik').checked;
-function videoKaresi(){                                 // QR'ın okunduğu karenin kopyası (kamera bir sonraki bidona geçse bile doğru etiket)
+function videoKaresi(id){                                // QR'ın okunduğu karenin kopyası + QR etiketini maskeleme (OCR doğrudan ürün etiketini okusun!)
   if(!tamCv || !tamCv.width) return null;
-  const c = document.createElement('canvas'); c.width = tamCv.width; c.height = tamCv.height; c.getContext('2d').drawImage(tamCv, 0, 0);
+  const c = document.createElement('canvas'); c.width = tamCv.width; c.height = tamCv.height;
+  const x = c.getContext('2d');
+  x.drawImage(tamCv, 0, 0);
+  // QR kodunun bulunduğu beyaz etiketi koyu griyle kapat ki OCR motoru QR etiketini okumakla vakit kaybetmesin, doğrudan ürün etiketini 1. aday olarak okusun!
+  const qk = id && sonQrKutular[id];
+  if(qk && qk.w > 0 && qk.h > 0){
+    x.fillStyle = '#2d3330';
+    x.fillRect(Math.max(0, qk.x - qk.w * 0.35), Math.max(0, qk.y - qk.h * 0.35), qk.w * 2.8, qk.h * 1.7);
+  }
   return c;
 }
 async function yuksekCozunurluk(id){                    // yeniden denemede: kameranın tam çözünürlüklü fotoğrafı (QR aynı bidonu doğruluyorsa)
@@ -1774,8 +1803,6 @@ async function yuksekCozunurluk(id){                    // yeniden denemede: kam
 let sonOkunanEtiket = null;
 const seriModAcik = () => !!($('seriSabitle') && $('seriSabitle').checked);
 function elleOrtakEtiket(){
-  // Sadece kullanıcının kendi eliyle yazdığı ortak alanları veya Seri Parti Modu açıksa sabitlenen partiyi döndürür.
-  // Normal modda önceki bidonun tarihini (örn. 04.11.2026) ASLA yeni bidona (05.11.2026) otomatik kopyalamaz!
   if(seriModAcik() && sonOkunanEtiket && sonOkunanEtiket.urun) return Object.assign({}, sonOkunanEtiket);
   const u = ($('cUrun').dataset && $('cUrun').dataset.elle) ? urunNorm($('cUrun').value) : '';
   const t = ($('cTarih').dataset && $('cTarih').dataset.elle) ? $('cTarih').value.trim() : '';
@@ -1786,21 +1813,21 @@ function elleOrtakEtiket(){
 }
 async function etiketSiraEkle(o){
   o.deneme = (o.deneme || 0) + 1; o.sonDeneme = Date.now();
-  const kareIlk = videoKaresi();                           // 1. kare: QR yakalandığı salise
+  const kareIlk = videoKaresi(o.id);                      // 1. kare: QR maskelenmiş anlık kare
   if(!liste.includes(o)) return;
   const sabitParti = elleOrtakEtiket();
   if(seriModAcik() && sabitParti && sabitParti.urun && sabitParti.tarih){
     o.etiket = Object.assign({}, sabitParti, { gecici:false });
     listeCizGuvenli(); return;
   }
-  o.etiket = { durum:'bekliyor' };
+  o.etiket = { durum:'okunuyor' };
   listeCizGuvenli();
-  // Anti-Blur (Hareket Bulanıklığı Önleyici): El bidonun önünde sabitlensin diye 250ms bekle ve 2. net kareyi al!
+  // Çok kısa (80ms) odak sabitleme: elin durduğu net kareyi yakala ama kullanıcıyı hiç bekletme!
   let kareNet = null;
-  if(akim){
-    await new Promise(res => setTimeout(res, 250));
+  if(akim && o.deneme === 1){
+    await new Promise(res => setTimeout(res, 80));
     if(!liste.includes(o)) return;
-    kareNet = videoKaresi();
+    kareNet = videoKaresi(o.id);
   }
   if(o.deneme >= 2){ const y = await yuksekCozunurluk(o.id).catch(() => null); if(y) kareNet = y; }
   const anaKare = kareNet || kareIlk;
@@ -1811,7 +1838,7 @@ async function etiketSiraEkle(o){
   while(etiketKuyrugu.length >= 8){
     const eski = etiketKuyrugu.shift();
     const eskiO = liste.find(x => x.id === eski.id);
-    if(eskiO && (!eskiO.etiket || eskiO.etiket.durum === 'bekliyor')){
+    if(eskiO && (!eskiO.etiket || eskiO.etiket.durum === 'bekliyor' || eskiO.etiket.durum === 'okunuyor')){
       eskiO.etiket = { durum:'yok', mesaj:'hızlı geçildi — tekrar okut veya ✎ ile yaz' };
     }
   }
@@ -1819,7 +1846,9 @@ async function etiketSiraEkle(o){
   etiketIsle();
 }
 async function etiketIsle(){
-  if(etiketCalisiyor) return; etiketCalisiyor = true;
+  const maksParalel = tessWorker2 ? 2 : 1;
+  if(aktifOkumaSayisi >= maksParalel) return;
+  aktifOkumaSayisi++;
   try{
     while(etiketKuyrugu.length){
       const it = etiketKuyrugu.shift(), o = liste.find(x => x.id === it.id);
@@ -1830,12 +1859,11 @@ async function etiketIsle(){
       }
       o.etiket = { durum:'okunuyor' }; listeCizGuvenli();
       try{
-        const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.82) : '';
-        // Önce 250ms sabitlenmiş net kareyi oku
-        let r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:3, maxAday:3, genislik:500, hizli:true, iptal:() => !liste.includes(o) }), 4000, 'zaman aşımı')).veri;
-        // Eğer net karede hem ürün hem tarih çıkmadıysa ve ilk kare duruyorsa, ilk kareyi de dene ve eksik alanı tamamla!
+        const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.80) : '';
+        // QR etiketi maskelendiği için 1. aday doğrudan ürün etiketidir! (genislik:360, maxOcr:2, maxAday:2 -> ~0.3 sn)
+        let r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:2, maxAday:2, genislik:360, hizli:true, iptal:() => !liste.includes(o) }), 2800, 'zaman aşımı')).veri;
         if((!r || !r.urun || !r.tarih) && it.yedekKare && AYAR.okuma !== 'ai'){
-          const r2 = (await zamanAsimi(etiketOku(it.yedekKare, '', { maxOcr:2, maxAday:2, genislik:480, hizli:true, iptal:() => !liste.includes(o) }), 3000, 'zaman aşımı')).veri;
+          const r2 = (await zamanAsimi(etiketOku(it.yedekKare, '', { maxOcr:1, maxAday:1, genislik:360, hizli:true, iptal:() => !liste.includes(o) }), 2000, 'zaman aşımı')).veri;
           if(r2){
             r = {
               urun: (r && r.urun) || r2.urun || '',
@@ -1894,7 +1922,7 @@ async function etiketIsle(){
       }
       it.kare = null; it.yedekKare = null; listeCizGuvenli();
     }
-  } finally { etiketCalisiyor = false; }
+  } finally { aktifOkumaSayisi--; }
 }
 function listeCizGuvenli(){                              // düzenleme açıkken yazı kaybolmasın
   if(liste.some(o => o.duzenle)){ listeKirli = true; camChipler(); return; }
@@ -2017,6 +2045,7 @@ function tamKareCiz(v){                                  // her turda videodan T
   tamCv.getContext('2d').drawImage(v, 0, 0, tamCv.width, tamCv.height);
   return tamCv;
 }
+let sonQrKutular = {};
 function jsqrKare(v, maks){                              // yedek okuyucu: kare başına en fazla 2 QR (ilk bulunanı silip yeniden tara)
   const o = Math.min(1, maks / v.width);
   cv.width = Math.round(v.width * o); cv.height = Math.round(v.height * o);
@@ -2029,6 +2058,8 @@ function jsqrKare(v, maks){                              // yedek okuyucu: kare 
     sonuc.push(r.data);
     const l = r.location, xs = [l.topLeftCorner.x, l.topRightCorner.x, l.bottomLeftCorner.x, l.bottomRightCorner.x], ys = [l.topLeftCorner.y, l.topRightCorner.y, l.bottomLeftCorner.y, l.bottomRightCorner.y];
     const x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0, hh = Math.max(...ys) - y0, pad = Math.max(w, hh) * 0.25;
+    const temiz = idTemizle(r.data);
+    if(temiz) sonQrKutular[temiz] = { x: x0 / o, y: y0 / o, w: w / o, h: hh / o };
     cx.fillStyle = '#808080'; cx.fillRect(x0 - pad, y0 - pad, w + 2 * pad, hh + 2 * pad);
   }
   return sonuc;
@@ -2040,17 +2071,23 @@ async function tara(){
     if(v.readyState >= 2 && v.videoWidth){
       const kare = tamKareCiz(v);
       let kodlar = [];
-      if(bd){ kodlar = (await bd.detect(kare)).map(x => x.rawValue); }
-      else{
-        kodlar = jsqrKare(kare, 960);
-        if(!kodlar.length && (++taraSay % 2 === 0)) kodlar = jsqrKare(kare, 1280);   // bulunamazsa ara sıra tam çözünürlükle dene
+      if(bd){
+        const bulunanlar = await bd.detect(kare);
+        kodlar = bulunanlar.map(x => {
+          const temiz = idTemizle(x.rawValue);
+          if(temiz && x.boundingBox) sonQrKutular[temiz] = { x: x.boundingBox.x, y: x.boundingBox.y, w: x.boundingBox.width, h: x.boundingBox.height };
+          return x.rawValue;
+        });
+      } else {
+        kodlar = jsqrKare(kare, 800);
+        if(!kodlar.length && (++taraSay % 2 === 0)) kodlar = jsqrKare(kare, 1024);
       }
       const idler = [...new Set(kodlar.map(idTemizle).filter(Boolean))];
       const bidonlar = idler.filter(bidonKodu);
       (bidonlar.length ? bidonlar : idler).forEach(k => ekle(k, true, true));         // aynı karede bidon QR'ı varsa bölge kodu yok sayılır (bidondaki eski bölge etiketi)
     }
   }catch(e){}
-  if(akim) setTimeout(tara, cihazEgilimli ? 850 : 180);
+  if(akim) setTimeout(tara, cihazEgilimli ? 850 : 140);
 }
 async function qrHepsi(img){
   const c = kanvas(img, 2000);
