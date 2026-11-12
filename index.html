@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.6 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.8 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -1414,13 +1414,10 @@ function ocrDurumGuncelle(){
   camChipler();
 }
 async function yeniTessWorker(){
-  let w;
-  try{
-    w = await Tesseract.createWorker('tur', 1, { langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_fast' });
-  }catch(e){
-    w = await Tesseract.createWorker('tur', 1, { langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_best_int' });
-  }
-  await w.setParameters({ tessedit_pageseg_mode:'6' });
+  const w = await Tesseract.createWorker('tur', 1, {
+    langPath: 'https://cdn.jsdelivr.net/npm/@tesseract.js-data/tur@1.0.0/4.0.0_best_int'
+  });
+  await w.setParameters({ tessedit_pageseg_mode: '6' });
   w.__psm = '6';
   return w;
 }
@@ -1428,15 +1425,20 @@ async function tessHazir(){
   if(tessWorker) return tessWorker;
   if(!tessYukleniyor) tessYukleniyor = (async () => {
     OCR.durum = 'yukleniyor'; OCR.hata = ''; ocrDurumGuncelle();
-    if(!window.Tesseract) await zamanAsimi(scriptYukle('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'), OCR_ZAMAN.script, 'indirme çok yavaş ya da internet yok');
-    mesaj('durum', 'Hızlı etiket okuyucu hazırlanıyor…');
-    tessWorker = await zamanAsimi(yeniTessWorker(), OCR_ZAMAN.worker, 'hazırlanamadı (zaman aşımı), interneti kontrol et');
-    // İkinci paralel okuyucuyu arka planda sessizce hazırla (seri taramada 2 kat hız sağlar)
+    if(!window.Tesseract) await zamanAsimi(scriptYukle('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'), 25000, 'indirme çok yavaş ya da internet yok');
+    mesaj('durum', 'Etiket okuyucu hazırlanıyor (ilk seferde yaklaşık 5 MB iner)…');
+    tessWorker = await zamanAsimi(yeniTessWorker(), 35000, 'hazırlanamadı (zaman aşımı), interneti kontrol et');
+    // İkinci okuyucuyu arka planda sessizce hazırla (varsa hızlandırır, yoksa hata fırlatmaz)
     yeniTessWorker().then(w2 => { tessWorker2 = w2; }).catch(() => {});
     if(($('durum').textContent || '').includes('hazırlanıyor')) mesaj('durum', '');
     OCR.durum = 'hazir'; ocrDurumGuncelle();
     return tessWorker;
-  })().catch(e => { tessYukleniyor = null; tessWorker = null; OCR.durum = 'hata'; OCR.hata = e.message; OCR.sonHata = Date.now(); ocrDurumGuncelle(); throw e; });
+  })().catch(e => {
+    tessYukleniyor = null; tessWorker = null;
+    if(($('durum').textContent || '').includes('hazırlanıyor')) mesaj('durum', '');
+    OCR.durum = 'hata'; OCR.hata = e.message; OCR.sonHata = Date.now(); ocrDurumGuncelle();
+    throw e;
+  });
   return tessYukleniyor;
 }
 async function tessOcr(cv, psm){
@@ -1860,20 +1862,18 @@ async function etiketIsle(){
       o.etiket = { durum:'okunuyor' }; listeCizGuvenli();
       try{
         const jpg = AYAR.okuma === 'ai' ? it.kare.toDataURL('image/jpeg', 0.80) : '';
-        // QR etiketi maskelendiği için 1. aday doğrudan ürün etiketidir! (genislik:360, maxOcr:2, maxAday:2 -> ~0.3 sn)
-        let r = (await zamanAsimi(etiketOku(it.kare, jpg, { maxOcr:2, maxAday:2, genislik:360, hizli:true, iptal:() => !liste.includes(o) }), 2800, 'zaman aşımı')).veri;
-        if((!r || !r.urun || !r.tarih) && it.yedekKare && AYAR.okuma !== 'ai'){
-          const r2 = (await zamanAsimi(etiketOku(it.yedekKare, '', { maxOcr:1, maxAday:1, genislik:360, hizli:true, iptal:() => !liste.includes(o) }), 2000, 'zaman aşımı')).veri;
-          if(r2){
-            r = {
-              urun: (r && r.urun) || r2.urun || '',
-              tarih: (r && r.tarih) || r2.tarih || '',
-              kisi: (r && r.kisi) || r2.kisi || '',
-              mense: (r && r.mense) || r2.mense || '',
-              etiket: (r && r.etiket !== 'yok') ? r.etiket : r2.etiket,
-              guven: 'yuksek'
-            };
-          }
+        // v6.8: Çift aşamalı akıllı deneme (1. hızlı maskeli kare, 2. yedek net kare, 3. tam çözünürlük acil deneme)
+        let r = null;
+        for(let denemeIdx = 0; denemeIdx < 2; denemeIdx++){
+          const hedefKare = (denemeIdx === 0) ? it.kare : it.yedekKare;
+          if(!hedefKare) continue;
+          try{
+            const res = (await zamanAsimi(etiketOku(hedefKare, jpg, { maxOcr: denemeIdx === 0 ? 2 : 3, maxAday: denemeIdx === 0 ? 2 : 3, genislik: denemeIdx === 0 ? 360 : 420, hizli: true, iptal: () => !liste.includes(o) }), 4000, 'zaman aşımı')).veri;
+            if(res && (res.urun || res.tarih) && res.etiket !== 'yok'){
+              r = res;
+              if(r.urun && r.tarih) break; // Hem ürün hem tarih bulunduysa döngüden çık
+            }
+          }catch(err){}
         }
         const elle = elleOrtakEtiket() || {};
         // DİKKAT: Normal modda tarih ASLA önceki bidondan (`sonOkunanEtiket.tarih`) kopyalanmaz! Sadece bu bidonun kendi okunan tarihi (`r.tarih`) veya elle girilen ortak tarih (`elle.tarih`) kullanılır.

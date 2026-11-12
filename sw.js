@@ -1,4 +1,4 @@
-const CACHE = 'bidon-v6.6';
+const CACHE = 'bidon-v6.8';
 const DOSYALAR = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
