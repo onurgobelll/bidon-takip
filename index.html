@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.8 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.10 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -462,6 +462,12 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
     </div>
     <div class="section-label">HIZLI İŞLEM</div>
     <div class="kart entry-card">
+      <div class="sira" style="margin-bottom:12px; grid-template-columns: 1fr;">
+        <div>
+          <label for="hizliBolge" style="margin-top:0; margin-bottom:4px; font-size:12px; color:var(--tuz)">📍 Çalışılan Bölge (İsteğe Bağlı)</label>
+          <input id="hizliBolge" list="bolgeListe" placeholder="Örn. M1" autocapitalize="characters" style="min-height:44px; border-color:var(--tuz-acik); background:var(--tuz-acik)">
+        </div>
+      </div>
       <input type="file" id="foto" accept="image/*" capture="environment" class="gizle">
       <input type="file" id="fotoQR" accept="image/*" capture="environment" class="gizle">
       <button id="otoGiris"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 12h8"/></svg>Otomatik tara (foto çekmeden)</button>
@@ -836,13 +842,21 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
   }
   function temizSatir(s){ return s.replace(/[^A-Za-zÇĞİıÖŞÜçğöşü0-9.\s\-\/,]/g,' ').replace(/\s+/g,' ').trim(); }
 
-  function isimTemizle(s, bilinen, sıkı){
-    let t = s.split(' ').filter(w => w.length>2 || w.includes('.')).join(' ').trim();
-    if(!t) return '';
+  function isimTemizle(s, bilinen, sıkı, tur){
+    let t = s.replace(/[0-9]/g, '').split(' ').filter(w => w.length>2 || w.includes('.')).join(' ').trim();
+    if(!t) t = s.trim();
     t = t.toLocaleUpperCase('tr-TR');
     let en=null, es=0; for(const b of (bilinen||[])){ const sk=benzer(t,b); if(sk>es){ es=sk; en=b; } }
-    if(en && es>=0.65) return en.toLocaleUpperCase('tr-TR');
-    if(sıkı) return ''; // Bilinen kişi listesinde yoksa kenar gölgesi/paraziti kişi adı sanma!
+    
+    let esikDeger = 0.65;
+    if (sıkı) {
+        esikDeger = (tur === 'mense') ? 0.76 : 0.58; // Kişi adlarında daha esnek (SUAT, KERİM), Menşede katı (MERSİN)
+    } else {
+        esikDeger = 0.55;
+    }
+    
+    if(en && es >= esikDeger) return en.toLocaleUpperCase('tr-TR');
+    if(sıkı) return ''; 
     return t;
   }
   function coz(metin, urunler, yil0, bilinen){
@@ -1661,6 +1675,7 @@ function modSec(m){
   $('bolgeAlan').classList.toggle('gizle', m === 'CIKIS');
   $('cBolgeLbl').textContent = m === 'TASI' ? 'Bölge (zorunlu)' : 'Bölge (isteğe bağlı)';
   $('cNotLbl').textContent = m === 'IADE' ? 'İade nedeni (kalite, yanlış çıkış, numune… isteğe bağlı)' : 'Parti / hat (isteğe bağlı)';
+  $('cBolge').value = localStorage.getItem('bt_sonbolge') || ''; // Mod değişince güncel bölgeyi getir
   if(m === 'GIRIS') etiketOtoUygula();
   mesaj('tDurum', ''); listeCiz();
 }
@@ -1943,11 +1958,20 @@ function listeCiz(){
   camChipler(); camSonCiz();
   if(!liste.length){ $('tOzet').textContent = 'Liste boş'; $('tListe').innerHTML = ''; $('tKaydet').textContent = 'Kaydet'; $('tKaydet').disabled = true; return; }
   let h = `<b>${liste.length}</b> bidon` + (uy ? ` · uyarı ${uy}` : '') + (ks ? ` · kayıtsız ${ks}` : '') + (tmod !== 'CIKIS' && $('cBolge').value.trim() ? ` · bölge <b>${esc($('cBolge').value.trim())}</b>` : '');
-  if(tmod !== 'GIRIS'){
-    const say = {}; liste.forEach(o => { const b = bul(o.id); if(b){ const u = b.urun || '(ürün yok)'; say[u] = (say[u] || 0) + 1; } });
-    const s = Object.entries(say).sort((a, b) => b[1] - a[1]).map(([u, n]) => `${esc(u)} ${n}`).join(' · ');
-    if(s) h += `<div class="kucuk">${s}</div>`;
-  }
+  const say = {}; 
+  liste.forEach(o => { 
+    let u = '(ürün yok)';
+    if(tmod === 'GIRIS'){
+      if(o.etiket && o.etiket.urun) u = o.etiket.urun;
+      else if($('cUrun').value) u = urunNorm($('cUrun').value); // Hâlâ okunmadıysa ortak ürünü baz al
+    } else {
+      const b = bul(o.id);
+      if(b && b.urun) u = b.urun;
+    }
+    say[u] = (say[u] || 0) + 1; 
+  });
+  const s = Object.entries(say).sort((a, b) => b[1] - a[1]).map(([u, n]) => `<b>${n}</b> ${esc(u)}`).join(' + ');
+  if(s) h += `<div class="kucuk" style="margin-top:8px;padding:8px 10px;background:var(--tuz-acik);color:var(--tuz);border-radius:10px;font-weight:600;line-height:1.4">📦 Kayıt Edilecek Miktar:<br>${s}</div>`;
   $('tOzet').innerHTML = h;
   $('tListe').innerHTML = liste.map(o => {
     const b = bul(o.id);
@@ -1982,7 +2006,18 @@ $('tListe').addEventListener('input', e => {
 });
 ['cUrun','cTarih','cKisi','cMense'].forEach(id => $(id).addEventListener('input', () => { $(id).dataset.elle = $(id).value.trim() ? '1' : ''; }));
 $('tTemizle').onclick = () => { if(!liste.length || confirm('Liste temizlensin mi?')){ liste = []; sonOkunanEtiket = null; ['cUrun','cTarih','cKisi','cMense'].forEach(id => { if(!$(id).dataset.elle) $(id).value = ''; }); mesaj('tDurum', ''); listeCiz(); } };
-$('cBolge').oninput = () => { liste = liste.map(o => ({ ...o, ...degerlendir(o.id) })); listeCiz(); };
+$('cBolge').oninput = () => { 
+  localStorage.setItem('bt_sonbolge', $('cBolge').value.trim());
+  if($('hizliBolge')) $('hizliBolge').value = $('cBolge').value.trim();
+  liste = liste.map(o => ({ ...o, ...degerlendir(o.id) })); listeCiz(); 
+};
+if($('hizliBolge')){
+  $('hizliBolge').value = localStorage.getItem('bt_sonbolge') || '';
+  $('hizliBolge').oninput = () => {
+    localStorage.setItem('bt_sonbolge', $('hizliBolge').value.trim());
+    $('cBolge').value = $('hizliBolge').value.trim();
+  };
+}
 $('elleEkle').onclick = () => {
   const v = $('elleId').value.trim(); if(!v) return;
   const l = araBul(v); const id = (l.length === 1) ? String(l[0].id) : v;   // 00042 yazınca BD-00042
@@ -2173,9 +2208,26 @@ function stok(){
   $('urunSayisi').textContent = `${satirlar.length} ürün`;
   $('stokUrunGrafik').innerHTML = satirlar.length ? satirlar.map(([u, s]) => {
     const toplam = s.saha + s.uretim, genislik = toplam / maxUrun * 100, sahaYuzde = toplam ? s.saha / toplam * 100 : 0;
-    return `<div class="product-row"><div class="product-top"><div><div class="product-name">${esc(u)}</div><div class="product-meta">${s.saha.toLocaleString('tr-TR')} sahada <span aria-hidden="true">·</span> ${s.uretim.toLocaleString('tr-TR')} üretimde</div></div><div class="product-total">${toplam.toLocaleString('tr-TR')}<small>bidon</small></div></div><div class="product-track" role="img" aria-label="${esc(u)}: ${s.saha} sahada, ${s.uretim} üretimde"><div class="product-total-bar" style="width:${genislik}%"><span class="bar-field" style="width:${sahaYuzde}%"></span><span class="bar-production" style="width:${100 - sahaYuzde}%"></span></div></div></div>`;
+    const acik = acikUrunler.has(u);
+    let detay = '';
+    if(acik){
+      const liste = DB.bidonlar.filter(b => urunNorm(b.urun) === u && !kullanildiMi(b)).sort((a,b) => String(b.son).localeCompare(String(a.son)));
+      detay = `<div class="region-detail" style="margin-top:8px"><div class="region-list">${liste.slice(0, 200).map(b => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 9px"><div><b style="font-size:13px">${esc(b.id)}</b><br><span style="color:var(--soluk);font-size:11px">${esc([b.tarih, b.kisi, b.bolge].filter(Boolean).join(' · '))}</span></div><button class="ikincil" style="min-height:32px;width:auto;padding:0 12px;font-size:12px;font-weight:700" onclick="bidonDuzeltAc('${esc(b.id)}');event.stopPropagation()">✎ Düzelt</button></div>`).join('')}</div>${liste.length > 200 ? '<div class="region-more">İlk 200 bidon listelendi.</div>' : ''}</div>`;
+    }
+    return `<div class="product-row ${acik ? 'acik' : ''}" data-urun="${esc(u)}" style="padding:10px;border-radius:12px;margin:0 -10px;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--zemin)'" onmouseout="this.style.background=this.classList.contains('acik')?'var(--zemin)':'transparent'"><div class="product-top"><div><div class="product-name">${esc(u)}</div><div class="product-meta">${s.saha.toLocaleString('tr-TR')} sahada <span aria-hidden="true">·</span> ${s.uretim.toLocaleString('tr-TR')} üretimde</div></div><div class="product-total">${toplam.toLocaleString('tr-TR')}<small>bidon</small></div></div><div class="product-track" role="img" aria-label="${esc(u)}: ${s.saha} sahada, ${s.uretim} üretimde"><div class="product-total-bar" style="width:${genislik}%"><span class="bar-field" style="width:${sahaYuzde}%"></span><span class="bar-production" style="width:${100 - sahaYuzde}%"></span></div></div>${detay}</div>`;
   }).join('') : '<div class="chart-empty">Henüz stok kaydı bulunmuyor.</div>';
   ozetDetayCiz(); bolgeTablo(); gunTablo();
+}
+const acikUrunler = new Set();
+$('stokUrunGrafik').addEventListener('click', e => {
+  const r = e.target.closest('.product-row');
+  if(r && !e.target.closest('button')){
+    const u = r.dataset.urun;
+    if(acikUrunler.has(u)) acikUrunler.delete(u); else acikUrunler.add(u);
+    stok();
+  }
+});
+/*
 }
 /* ---- özet kartlarına dokununca ayrıntı ---- */
 let acikOzet = null;
