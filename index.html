@@ -418,7 +418,7 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 <body>
 <main>
   <div class="ust">
-    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.10 Pro</span></h1></div></div>
+    <div class="brand"><img class="brand-logo" src="icon-192.png" alt=""><div class="brand-copy"><span class="brand-kicker">YAKAMOZ • OPERASYON</span><h1>Bidon Takip <span class="app-version">v6.12 Pro</span></h1></div></div>
     <button class="ikincil" id="ayarBtn" aria-label="Ayarlar">Ayarlar</button>
   </div>
   <div class="deneme gizle" id="tarayiciUyari"></div>
@@ -844,19 +844,14 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
 
   function isimTemizle(s, bilinen, sıkı, tur){
     let t = s.replace(/[0-9]/g, '').split(' ').filter(w => w.length>2 || w.includes('.')).join(' ').trim();
-    if(!t) t = s.trim();
+    if(!t) return '';
     t = t.toLocaleUpperCase('tr-TR');
     let en=null, es=0; for(const b of (bilinen||[])){ const sk=benzer(t,b); if(sk>es){ es=sk; en=b; } }
-    
-    let esikDeger = 0.65;
-    if (sıkı) {
-        esikDeger = (tur === 'mense') ? 0.76 : 0.58; // Kişi adlarında daha esnek (SUAT, KERİM), Menşede katı (MERSİN)
-    } else {
-        esikDeger = 0.55;
-    }
-    
+    const esikDeger = sıkı ? ((tur === 'mense') ? 0.76 : 0.62) : 0.55;
     if(en && es >= esikDeger) return en.toLocaleUpperCase('tr-TR');
-    if(sıkı) return ''; 
+    // Listede olmayan yeni bir personel adıysa (örn. ERAY, MEHMET vb.) temiz tek kelime ve sesli harf içeriyorsa kabul et; BĞN BOSE gibi parazitleri reddet!
+    if(tur === 'kisi' && /^[A-ZÇĞİÖŞÜ.]{3,14}$/.test(t) && /[AEIİOÖUÜ]/.test(t)) return t;
+    if(sıkı) return '';
     return t;
   }
   function coz(metin, urunler, yil0, bilinen){
@@ -879,14 +874,14 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
     const urunBulundu = ps>=0.58;
     // Ne tarih ne ürün bulunamadıysa geçersiz
     if(!T && !urunBulundu) return null;
-    const harf = s => /^[A-Za-zÇĞİıÖŞÜçğöşü.\s]+$/.test(s) && katla(s).length>=3;
+    const harf = s => katla(s.replace(/[0-9]/g, '')).length >= 3;
     const yasak = /BASKILI|SLOTLU|BOLGE|TAVA|ML\b|B1|YAKAMOZ|TURSUSU|TURŞUSU/i;
     let kisi='', mense='';
     const ustSinir = ti >= 0 ? ti : satirlar.length;
     for(let i=Math.max(0,pi)+1;i<ustSinir;i++){
       const s=satirlar[i];
       if(harf(s)&&!yasak.test(katla(s)+' '+s)&&(!pu || benzer(s,pu)<0.55)){
-        const mBul = isimTemizle(s, bilinen&&bilinen.mense, true);
+        const mBul = isimTemizle(s, bilinen&&bilinen.mense, true, 'mense');
         if(mBul){ mense = mBul; break; }
       }
     }
@@ -895,9 +890,9 @@ button:focus-visible,input:focus,select:focus,textarea:focus{outline:3px solid c
       for(let i=ti+1;i<satirlar.length && !kisi;i++){
         const s=satirlar[i];
         if(harf(s)&&!yasak.test(katla(s)+' '+s)&&(!pu || benzer(s,pu)<0.55)){
-          const olasiMense = isimTemizle(s, bilinen&&bilinen.mense, true);
+          const olasiMense = isimTemizle(s, bilinen&&bilinen.mense, true, 'mense');
           if(olasiMense){ mense = olasiMense; break; }
-          kisi = isimTemizle(s, bilinen&&bilinen.kisi, true);
+          kisi = isimTemizle(s, bilinen&&bilinen.kisi, true, 'kisi');
         }
       }
     }
@@ -1066,7 +1061,7 @@ function stokCoz(ham){
   return { kod:'', ad:s, tam:s };
 }
 const urunNorm = ham => stokCoz(ham).tam;
-const BILINEN_KISI_VARSAYILAN = ['CAHİT', 'SADETTİN', 'KERİM', 'SUAT', 'YUSUF', 'İ.KILIÇ', 'M.SEZEN'];
+const BILINEN_KISI_VARSAYILAN = ['CAHİT', 'SADETTİN', 'KERİM', 'SUAT', 'YUSUF', 'ERAY', 'İ.KILIÇ', 'M.SEZEN'];
 const BILINEN_MENSE_VARSAYILAN = ['ADANA', 'AFYON', 'AMASYA', 'ANKARA', 'ANTALYA', 'ANTEP', 'AYDIN', 'BALIKESİR', 'BİLECİK', 'BURSA', 'ÇANAKKALE', 'ÇORUM', 'DENİZLİ', 'ESKİŞEHİR', 'GAZİANTEP', 'HATAY', 'ISPARTA', 'İZMİR', 'KONYA', 'KÜTAHYA', 'MANİSA', 'MARDİN', 'MERSİN', 'MİDYAT', 'MUĞLA', 'NİĞDE', 'SAKARYA', 'SAMSUN', 'TAŞKÖPRÜ', 'TOKAT', 'URFA', 'UŞAK', 'YALOVA', 'YOZGAT'];
 const VARSAYILAN_URL = 'https://script.google.com/macros/s/AKfycbzr3-nsR1dLlyz6Z3aDtjahqkXnBx0QAF1ZRrd2jCoOUC4OnNaxCT05S3msWnAbpmsu3Q/exec';
 const VARSAYILAN_SIFRE = '2026';
@@ -1896,8 +1891,8 @@ async function etiketIsle(){
         // Ürün ise: Bu bidonda ürün okunduysa onu al; sadece tarih okunduysa (örn. 05.11.2026 okundu ama üstteki LAHANA yazısı parladıysa) aktif ürünü (`sonOkunanEtiket.urun`) tamamla.
         const okunanUrun = (r && r.urun) ? urunNorm(r.urun) : (elle.urun || (okunanTarih && sonOkunanEtiket ? sonOkunanEtiket.urun : ''));
         const urunDegisti = (r && r.urun && sonOkunanEtiket && sonOkunanEtiket.urun && urunNorm(r.urun) !== sonOkunanEtiket.urun);
-        const okunanKisi = (r && trBuyuk(r.kisi)) || elle.kisi || (!urunDegisti && okunanTarih && sonOkunanEtiket ? sonOkunanEtiket.kisi : '');
-        const okunanMense = (r && trBuyuk(r.mense)) || elle.mense || (!urunDegisti && okunanTarih && sonOkunanEtiket ? sonOkunanEtiket.mense : '');
+        const okunanKisi = (r && trBuyuk(r.kisi)) || elle.kisi || '';
+        const okunanMense = (r && trBuyuk(r.mense)) || elle.mense || '';
 
         if(okunanUrun && okunanTarih){
           const tamOkuma = !!(r && r.urun && r.tarih);
@@ -1994,7 +1989,7 @@ function listeCiz(){
 }
 $('tListe').onclick = e => {
   const ed = e.target.closest('button[data-edit]'); if(ed){ const o = liste.find(x => x.id === ed.dataset.edit); if(o){ o.duzenle = !o.duzenle; if(o.duzenle && !o.etiket) o.etiket = { durum:'tamam', guven:'yuksek' }; listeCiz(); } return; }
-  const ok = e.target.closest('button[data-edit-ok]'); if(ok){ const o = liste.find(x => x.id === ok.dataset.editOk); if(o){ o.duzenle = false; if(o.etiket){ if(o.etiket.ilkUrun && o.etiket.urun && o.etiket.ilkUrun !== o.etiket.urun) sozlukOgren(o.etiket.ilkUrun, o.etiket.urun); if(o.etiket.ilkKisi && o.etiket.kisi && o.etiket.ilkKisi !== o.etiket.kisi) sozlukOgren(o.etiket.ilkKisi, o.etiket.kisi); if(o.etiket.ilkMense && o.etiket.mense && o.etiket.ilkMense !== o.etiket.mense) sozlukOgren(o.etiket.ilkMense, o.etiket.mense); } const t = (o.etiket && o.etiket.tarih || '').trim(); if(t && !trToISO(t)){ mesaj('tDurum', 'Seri No GG.AA.YYYY veya GG.AA.YYYY-001 olmalı (örn. 13.10.2026-001).', 'hata'); o.etiket.tarih = ''; } else mesaj('tDurum', '✓ Düzeltme kaydedildi ve sözlüğe öğretildi.'); listeCiz(); } return; }
+  const ok = e.target.closest('button[data-edit-ok]'); if(ok){ const o = liste.find(x => x.id === ok.dataset.editOk); if(o){ o.duzenle = false; if(o.etiket){ if(o.etiket.urun) o.etiket.urun = urunNorm(o.etiket.urun); if(o.etiket.ilkUrun && o.etiket.urun && o.etiket.ilkUrun !== o.etiket.urun) sozlukOgren(o.etiket.ilkUrun, o.etiket.urun); if(o.etiket.ilkKisi && o.etiket.kisi && o.etiket.ilkKisi !== o.etiket.kisi) sozlukOgren(o.etiket.ilkKisi, o.etiket.kisi); if(o.etiket.ilkMense && o.etiket.mense && o.etiket.ilkMense !== o.etiket.mense) sozlukOgren(o.etiket.ilkMense, o.etiket.mense); } const t = (o.etiket && o.etiket.tarih || '').trim(); if(t && !trToISO(t)){ mesaj('tDurum', 'Seri No GG.AA.YYYY veya GG.AA.YYYY-001 olmalı (örn. 13.10.2026-001).', 'hata'); o.etiket.tarih = ''; } else mesaj('tDurum', '✓ Düzeltme kaydedildi ve sözlüğe öğretildi.'); listeCiz(); } return; }
   const b = e.target.closest('button[data-id]'); if(!b) return;
   liste = liste.filter(o => o.id !== b.dataset.id); listeCiz();
 };
@@ -2227,8 +2222,6 @@ $('stokUrunGrafik').addEventListener('click', e => {
     stok();
   }
 });
-/*
-}
 /* ---- özet kartlarına dokununca ayrıntı ---- */
 let acikOzet = null;
 const OZET_BASLIK = { toplam:'Tesisteki toplam stok', saha:'Sahadaki bidonlar', uretim:'Üretimde (bugün verilen)', kullanilan:'Kullanılan bidonlar (stoktan düşen)' };
